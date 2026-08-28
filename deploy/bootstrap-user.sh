@@ -131,6 +131,7 @@ echo "[*] Enabling HTTPS..."
 looking-glass config set http.enabled true
 
 echo "[*] Issuing Let's Encrypt certificate..."
+echo "    HTTP-01 will bind :80 (IPv4 and IPv6 if present)"
 renew_json="$(looking-glass --json https renew)" || {
   echo "[-] https renew failed." >&2
   printf '%s\n' "$renew_json" >&2

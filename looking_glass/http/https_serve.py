@@ -129,6 +129,10 @@ def status() -> Dict[str, Any]:
             "workers": int(http.get("workers") or 1),
             "staging": bool(http.get("staging")),
             "acme_port": int(http.get("acme_port") or 80),
+            "http01_listen": acme_issue.http01_listen_labels(
+                int(http.get("acme_port") or 80),
+                acme_issue.last_http01_hosts() or None,
+            ),
             "account_key": str(account),
             "account_key_exists": account.is_file(),
         }

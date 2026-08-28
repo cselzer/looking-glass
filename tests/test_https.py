@@ -2,6 +2,7 @@ import errno
 import json
 import os
 import signal
+import socket
 import tempfile
 import time
 import unittest
@@ -80,7 +81,7 @@ class AcmeIssueTests(unittest.TestCase):
     def test_bind_80_failure_message(self):
         err = OSError(errno.EACCES, "Permission denied")
         err.errno = errno.EACCES
-        with patch("looking_glass.http.acme_issue.HTTPServer", side_effect=err):
+        with patch.object(acme_issue.HTTPServer, "server_bind", side_effect=err):
             with self.assertRaises(OSError) as ctx:
                 with acme_issue.serve_http01(80, "token", "body"):
                     pass
@@ -88,6 +89,118 @@ class AcmeIssueTests(unittest.TestCase):
         self.assertIn("ip_unprivileged_port_start", text)
         self.assertIn("80", text)
         self.assertIn("EACCES", text)
+
+    def test_preflight_fails_before_acme_client(self):
+        err = OSError(errno.EACCES, "Permission denied")
+        err.errno = errno.EACCES
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            with (
+                patch.object(acme_issue.HTTPServer, "server_bind", side_effect=err),
+                patch("acme.client.ClientNetwork") as net,
+            ):
+                with self.assertRaises(OSError) as ctx:
+                    acme_issue.run_http01_order(
+                        "s1.example.com",
+                        "",
+                        staging=True,
+                        acme_port=80,
+                    )
+            net.assert_not_called()
+            self.assertIn("ip_unprivileged_port_start", str(ctx.exception))
+            log = Path(tmp).joinpath("data", "acme.log").read_text(encoding="utf-8")
+            self.assertIn("preflight failed", log)
+
+    def test_serve_http01_logs_listening(self):
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+                probe.bind(("127.0.0.1", 0))
+                port = probe.getsockname()[1]
+            with acme_issue.serve_http01(port, "token", "body"):
+                text = acme_issue.acme_log_path().read_text(encoding="utf-8")
+                self.assertIn("listening", text)
+                self.assertIn(str(port), text)
+            text = acme_issue.acme_log_path().read_text(encoding="utf-8")
+            self.assertIn("HTTP-01 closed", text)
+
+    def test_serve_http01_opens_v4_and_v6(self):
+        attempted = []
+        real = acme_issue._open_http01_server
+
+        def wrapper(host, port, handler):
+            attempted.append(host)
+            return real(host, port, handler)
+
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+                probe.bind(("127.0.0.1", 0))
+                port = probe.getsockname()[1]
+            with patch.object(acme_issue, "_open_http01_server", side_effect=wrapper):
+                with acme_issue.serve_http01(port, "token", "body"):
+                    pass
+        self.assertEqual(attempted[0], "0.0.0.0")
+        self.assertIn("::", attempted)
+
+    def _missing_family(self):
+        err = OSError(errno.EAFNOSUPPORT, "Address family not supported by protocol")
+        err.errno = errno.EAFNOSUPPORT
+        return err
+
+    def test_preflight_skips_missing_ipv4(self):
+        missing = self._missing_family()
+        fake = MagicMock()
+
+        def open_server(host, port, handler):
+            if host == "0.0.0.0":
+                raise missing
+            return fake
+
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            with patch.object(acme_issue, "_open_http01_server", side_effect=open_server):
+                bound = acme_issue.preflight_http01(80)
+            self.assertEqual(bound, ["::"])
+            log = Path(tmp).joinpath("data", "acme.log").read_text(encoding="utf-8")
+            self.assertIn("skip", log)
+            self.assertIn("0.0.0.0", log)
+            self.assertIn("preflight ok", log)
+            self.assertIn("[::]:80", log)
+        fake.server_close.assert_called()
+
+    def test_preflight_skips_missing_ipv6(self):
+        missing = self._missing_family()
+        fake = MagicMock()
+
+        def open_server(host, port, handler):
+            if host == "::":
+                raise missing
+            return fake
+
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            with patch.object(acme_issue, "_open_http01_server", side_effect=open_server):
+                bound = acme_issue.preflight_http01(80)
+            self.assertEqual(bound, ["0.0.0.0"])
+            log = Path(tmp).joinpath("data", "acme.log").read_text(encoding="utf-8")
+            self.assertIn("skip", log)
+            self.assertIn("[::]:80", log)
+            self.assertIn("0.0.0.0:80", log)
+        fake.server_close.assert_called()
+
+    def test_serve_http01_skips_missing_ipv4(self):
+        missing = self._missing_family()
+        fake = MagicMock()
+
+        def open_server(host, port, handler):
+            if host == "0.0.0.0":
+                raise missing
+            return fake
+
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            with patch.object(acme_issue, "_open_http01_server", side_effect=open_server):
+                with acme_issue.serve_http01(80, "token", "body"):
+                    self.assertEqual(acme_issue.last_http01_hosts(), ["::"])
+                    text = acme_issue.acme_log_path().read_text(encoding="utf-8")
+                    self.assertIn("skip", text)
+                    self.assertIn("listening", text)
+                    self.assertIn("[::]:80", text)
 
     def test_format_empty_str_is_type_name(self):
         class Silent(Exception):
@@ -235,12 +348,14 @@ class HttpsSupervisorTests(unittest.TestCase):
             set_value("http.hostname", "s1.example.com")
             set_value("http.email", "ops@example.com")
             acme_issue.write_self_signed("s1.example.com", days=90)
+            acme_issue._last_http01_hosts.clear()
             info = https_serve.status()
         self.assertTrue(info["enabled"])
         self.assertEqual(info["hostname"], "s1.example.com")
         self.assertFalse(info["needs_issue"])
         self.assertFalse(info["staging"])
         self.assertEqual(info["acme_port"], 80)
+        self.assertEqual(info["http01_listen"], ["0.0.0.0:80", "[::]:80"])
         self.assertTrue(info["fullchain_exists"])
         self.assertTrue(info["privkey_exists"])
         self.assertIn("privkey", info)

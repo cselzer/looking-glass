@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import errno
 import os
+import socket
+import sys
 import threading
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Tuple
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -22,11 +24,14 @@ DIRECTORY_PROD = "https://acme-v02.api.letsencrypt.org/directory"
 DIRECTORY_STAGING = "https://acme-staging-v02.api.letsencrypt.org/directory"
 RENEW_DAYS = 30
 ACME_LOG_NAME = "acme.log"
+HTTP01_HOSTS = ("0.0.0.0", "::")
+MISSING_FAMILY_ERRNOS = (errno.EAFNOSUPPORT, errno.EADDRNOTAVAIL, errno.EPROTONOSUPPORT)
 BIND_HINT = (
     "Cannot bind port {port} for Let's Encrypt HTTP-01 ({err}). "
     "Set net.ipv4.ip_unprivileged_port_start=0 (or 80) once on the host; "
     "this app does not run as root."
 )
+_last_http01_hosts: List[str] = []
 
 IssuerFn = Callable[..., Tuple[str, str]]
 
@@ -81,6 +86,109 @@ def append_acme_log(line: str) -> None:
             fh.write(f"{stamp} {text}\n")
     except OSError:
         pass
+
+
+def _announce(line: str) -> None:
+    text = str(line or "").strip()
+    if not text:
+        return
+    append_acme_log(text)
+    print(text, file=sys.stderr, flush=True)
+
+
+def _http01_label(host: str, port: int) -> str:
+    port = int(port)
+    if ":" in str(host):
+        return f"[{host}]:{port}"
+    return f"{host}:{port}"
+
+
+def http01_listen_labels(port: int, hosts: Optional[Sequence[str]] = None) -> List[str]:
+    used = list(hosts) if hosts else list(HTTP01_HOSTS)
+    return [_http01_label(h, int(port)) for h in used]
+
+
+def last_http01_hosts() -> List[str]:
+    return list(_last_http01_hosts)
+
+
+def _missing_family_errno(exc: BaseException) -> Optional[int]:
+    err = getattr(exc, "errno", None)
+    if err in MISSING_FAMILY_ERRNOS:
+        return err
+    cause = getattr(exc, "__cause__", None)
+    cerr = getattr(cause, "errno", None)
+    if cerr in MISSING_FAMILY_ERRNOS:
+        return cerr
+    return None
+
+
+def _is_missing_family(exc: BaseException) -> bool:
+    return _missing_family_errno(exc) is not None
+
+
+def _skip_reason(exc: BaseException) -> str:
+    code = _missing_family_errno(exc)
+    if isinstance(code, int):
+        return errno.errorcode.get(code, type(exc).__name__)
+    return type(exc).__name__
+
+
+def _open_http01_server(host: str, port: int, handler) -> HTTPServer:
+    family = socket.AF_INET6 if str(host) == "::" else socket.AF_INET
+
+    class Server(HTTPServer):
+        address_family = family
+        allow_reuse_address = True
+
+        def server_bind(self) -> None:
+            if family == socket.AF_INET6:
+                try:
+                    self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
+                except OSError:
+                    pass
+            super().server_bind()
+
+    try:
+        return Server((host, int(port)), handler)
+    except OSError as exc:
+        if _is_missing_family(exc):
+            raise
+        raise OSError(bind_error_message(exc, port)) from exc
+
+
+class _QuietHandler(BaseHTTPRequestHandler):
+    def log_message(self, fmt: str, *args: object) -> None:
+        return
+
+    def do_GET(self) -> None:  # noqa: N802
+        self.send_error(404)
+
+
+def preflight_http01(port: int) -> List[str]:
+    """Bind+close on 0.0.0.0 and :: before talking to Let's Encrypt."""
+    global _last_http01_hosts
+    bound: List[str] = []
+    port = int(port)
+    for host in HTTP01_HOSTS:
+        label = _http01_label(host, port)
+        try:
+            httpd = _open_http01_server(host, port, _QuietHandler)
+        except OSError as exc:
+            if _is_missing_family(exc):
+                _announce(f"HTTP-01 skip {label}: {_skip_reason(exc)}")
+                continue
+            _announce(f"HTTP-01 preflight failed on {label}")
+            raise
+        httpd.server_close()
+        bound.append(host)
+    if not bound:
+        err = OSError(bind_error_message(OSError("no HTTP-01 bind"), port))
+        _announce(f"HTTP-01 preflight failed on port {port}")
+        raise err
+    _last_http01_hosts = list(bound)
+    _announce(f"HTTP-01 preflight ok {', '.join(http01_listen_labels(port, bound))}")
+    return bound
 
 
 def _challenge_error_text(error: Any) -> str:
@@ -225,16 +333,23 @@ def _write_secret(path: Path, data: str) -> None:
 
 @contextmanager
 def serve_http01(port: int, token: str, body: str) -> Iterator[None]:
-    """Serve one ACME HTTP-01 token on 0.0.0.0:port."""
+    """Serve one ACME HTTP-01 token on 0.0.0.0 and ::."""
+    global _last_http01_hosts
+    port = int(port)
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt: str, *args: object) -> None:
             return
 
         def do_GET(self) -> None:  # noqa: N802
+            try:
+                client = self.client_address[0]
+            except Exception:
+                client = "?"
             want = "/.well-known/acme-challenge/" + token
             if self.path.split("?", 1)[0] != want:
                 self.send_error(404)
+                append_acme_log(f"HTTP-01 GET {client} status=404")
                 return
             payload = body.encode("utf-8")
             self.send_response(200)
@@ -242,19 +357,47 @@ def serve_http01(port: int, token: str, body: str) -> Iterator[None]:
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
+            append_acme_log(f"HTTP-01 GET {client} status=200")
 
+    servers: List[HTTPServer] = []
+    threads: List[threading.Thread] = []
+    bound: List[str] = []
+    listening = False
     try:
-        httpd = HTTPServer(("0.0.0.0", int(port)), Handler)
-    except OSError as exc:
-        raise OSError(bind_error_message(exc, port)) from exc
-    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
-    thread.start()
-    try:
+        for host in HTTP01_HOSTS:
+            label = _http01_label(host, port)
+            try:
+                httpd = _open_http01_server(host, port, Handler)
+            except OSError as exc:
+                if _is_missing_family(exc):
+                    _announce(f"HTTP-01 skip {label}: {_skip_reason(exc)}")
+                    continue
+                raise
+            servers.append(httpd)
+            bound.append(host)
+            thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+            thread.start()
+            threads.append(thread)
+        if not bound:
+            raise OSError(bind_error_message(OSError("no HTTP-01 bind"), port))
+        _last_http01_hosts = list(bound)
+        listening = True
+        _announce(f"HTTP-01 listening on {', '.join(http01_listen_labels(port, bound))}")
         yield
     finally:
-        httpd.shutdown()
-        httpd.server_close()
-        thread.join(timeout=2.0)
+        for httpd in servers:
+            try:
+                httpd.shutdown()
+            except Exception:
+                pass
+            try:
+                httpd.server_close()
+            except Exception:
+                pass
+        for thread in threads:
+            thread.join(timeout=2.0)
+        if listening:
+            _announce("HTTP-01 closed")
 
 
 def _load_or_create_account_key():
@@ -301,6 +444,7 @@ def run_http01_order(
     directory_url: Optional[str] = None,
 ) -> Tuple[str, str]:
     """Talk to Let's Encrypt; return (fullchain_pem, privkey_pem)."""
+    preflight_http01(acme_port)
     from acme import challenges, client, messages
 
     url = directory_url or (DIRECTORY_STAGING if staging else DIRECTORY_PROD)
