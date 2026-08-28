@@ -151,9 +151,11 @@ def _guess_kind(payload: Any) -> str:
         return "build"
     if "day" in payload and "week" in payload and "totals" in payload:
         return "logs-stats"
-    if "users" in payload and "count" in payload:
+    if "keys" in payload and "count" in payload:
         return "auth"
-    if payload.get("removed") is not None and "users" not in payload and "ok" in payload:
+    if "set" in payload and "ok" in payload and "result" not in payload:
+        return "auth"
+    if payload.get("removed") is not None and "ok" in payload and "keys" not in payload:
         return "auth"
     if "namespaces" in payload or ("files" in payload and "ttl_days" in payload):
         return "cache"
@@ -787,13 +789,34 @@ def _render_auth(payload: Any) -> None:
     if not isinstance(payload, dict):
         _render_pretty(payload)
         return
-    if "removed" in payload and "users" not in payload:
-        _console().print(f"removed {payload.get('removed')} session(s)")
+    con = _console()
+    if "removed" in payload and "keys" not in payload and "secret" not in payload:
+        con.print(f"removed {payload.get('removed')} session(s)")
         return
-    names = payload.get("users") or []
-    _console().print(f"{payload.get('count', len(names))} user(s)")
-    for name in names:
-        _console().print(f"  {name}")
+    if payload.get("secret"):
+        con.print(f"id {payload.get('id')}")
+        if payload.get("name"):
+            con.print(f"name {payload.get('name')}")
+        con.print(str(payload.get("secret")))
+        return
+    if "keys" in payload:
+        listed = payload.get("keys") or []
+        con.print(f"{payload.get('count', len(listed))} key(s)")
+        for item in listed:
+            if not isinstance(item, dict):
+                continue
+            con.print(f"  {item.get('id')}  {item.get('name')}")
+        return
+    if payload.get("id") and "set" not in payload:
+        con.print(f"revoked {payload.get('id')}")
+        return
+    if payload.get("set"):
+        con.print("password is set")
+        generated = payload.get("password")
+        if generated:
+            con.print(str(generated))
+        return
+    con.print("password is not set (login disabled)")
 
 
 def _render_validate(payload: Any) -> None:

@@ -979,7 +979,16 @@ def _envelope(
     if include_result:
         out["result"] = result
     extra = extra or {}
-    for key in ("via", "timings", "errors", "total_ms", "fetched_at", "qtype"):
+    for key in (
+        "via",
+        "timings",
+        "errors",
+        "total_ms",
+        "fetched_at",
+        "qtype",
+        "url",
+        "http_status",
+    ):
         if key in extra:
             out[key] = extra[key]
     if error is not None:
@@ -1382,7 +1391,16 @@ def _finish(
 ) -> Tuple[int, Dict[str, Any]]:
     extra = {
         key: payload[key]
-        for key in ("via", "timings", "errors", "total_ms", "fetched_at", "qtype")
+        for key in (
+            "via",
+            "timings",
+            "errors",
+            "total_ms",
+            "fetched_at",
+            "qtype",
+            "url",
+            "http_status",
+        )
         if key in payload
     }
     body = _envelope(
@@ -1399,7 +1417,12 @@ def _finish(
     if payload.get("error") == "intel server unavailable":
         status = 503
     elif kind == "rdap" and not payload.get("ok"):
-        status = 502
+        try:
+            status = int(payload.get("status") or 502)
+        except (TypeError, ValueError):
+            status = 502
+        if status < 400:
+            status = 502
     return status, body
 
 

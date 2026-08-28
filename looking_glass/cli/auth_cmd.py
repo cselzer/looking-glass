@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import getpass
+import secrets
 import sys
 
 import click
@@ -40,17 +41,26 @@ def _secret(label: str) -> str:
 
 
 @password_group.command("set")
-def password_set() -> None:
+@click.option("--random", "random_password", is_flag=True, help="Generate a password and print it once.")
+def password_set(random_password: bool) -> None:
     """Set the GUI admin password (prompted, not on the command line)."""
-    first = _secret("Password")
-    second = _secret("Confirm")
-    if first != second:
-        raise click.UsageError("passwords do not match")
+    generated = None
+    if random_password:
+        first = secrets.token_urlsafe(24)
+        generated = first
+    else:
+        first = _secret("Password")
+        second = _secret("Confirm")
+        if first != second:
+            raise click.UsageError("passwords do not match")
     try:
         password.set_password(first)
     except ValueError as exc:
         raise click.UsageError(str(exc)) from exc
-    emit({"ok": True, "set": True}, kind="auth")
+    payload = {"ok": True, "set": True}
+    if generated is not None:
+        payload["password"] = generated
+    emit(payload, kind="auth")
 
 
 @password_group.command("clear")

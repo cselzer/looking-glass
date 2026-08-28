@@ -155,6 +155,52 @@ class AuthCoreTests(unittest.TestCase):
                 self.assertEqual(cleared.exit_code, 0, cleared.output)
                 self.assertEqual(json.loads(cleared.output)["removed"], 1)
 
+    def test_cli_human_password_and_random(self):
+        runner = CliRunner()
+        with tempfile.TemporaryDirectory() as tmp:
+            with _roots(tmp)[0], _roots(tmp)[1]:
+                unset = runner.invoke(cli, ["auth", "password"])
+                self.assertEqual(unset.exit_code, 0, unset.output)
+                self.assertIn("password is not set (login disabled)", unset.output)
+                self.assertNotIn("user(s)", unset.output)
+                set_out = runner.invoke(
+                    cli, ["auth", "password", "set"], input="secret\nsecret\n"
+                )
+                self.assertEqual(set_out.exit_code, 0, set_out.output)
+                self.assertIn("password is set", set_out.output)
+                self.assertNotIn("user(s)", set_out.output)
+                random_json = runner.invoke(
+                    cli, ["--json", "auth", "password", "set", "--random"]
+                )
+                self.assertEqual(random_json.exit_code, 0, random_json.output)
+                payload = json.loads(random_json.output)
+                self.assertTrue(payload["set"])
+                secret = payload["password"]
+                self.assertTrue(secret)
+                self.assertTrue(password.verify(secret))
+                random_human = runner.invoke(cli, ["auth", "password", "set", "--random"])
+                self.assertEqual(random_human.exit_code, 0, random_human.output)
+                self.assertIn("password is set", random_human.output)
+                self.assertNotIn("user(s)", random_human.output)
+                generated = [
+                    line.strip()
+                    for line in random_human.output.splitlines()
+                    if line.strip() and line.strip() != "password is set"
+                ]
+                self.assertEqual(len(generated), 1)
+                self.assertTrue(password.verify(generated[0]))
+                created = runner.invoke(cli, ["auth", "keys", "create", "probe"])
+                self.assertEqual(created.exit_code, 0, created.output)
+                self.assertIn("lg_", created.output)
+                self.assertNotIn("user(s)", created.output)
+                listed = runner.invoke(cli, ["auth", "keys"])
+                self.assertEqual(listed.exit_code, 0, listed.output)
+                self.assertIn("key(s)", listed.output)
+                self.assertNotIn("user(s)", listed.output)
+                cleared = runner.invoke(cli, ["auth", "password", "clear"])
+                self.assertEqual(cleared.exit_code, 0, cleared.output)
+                self.assertIn("password is not set (login disabled)", cleared.output)
+
     def test_session_token_is_hex(self):
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:

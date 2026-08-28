@@ -1,8 +1,9 @@
 """RDAP client for IP, domain, and autnum.
 
-Talks to https://rdap.org (IANA bootstrap redirector). Responses are
-cached under ~/.looking-glass/data/cache/rdap via the shared lookup cache. The GUI uses
-the summarized fields; JSON includes the raw object as well.
+Domain lookups follow IANA dns.json (jp → JPRS, de → DENIC, com → Verisign).
+IP and autnum still try https://rdap.org then the RIRs. Responses are cached
+under ~/.looking-glass/data/cache/rdap. The GUI uses the summarized fields;
+JSON includes the raw object as well.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from .. import cache as query_cache
 from ..net.host import parse_asn_number
+from ..utility import get_cache_path, load_json_cache, save_json_cache
 
 _ASN = re.compile(r"^(?:AS)?(\d+)$", re.IGNORECASE)
 _LDH_LABEL = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)
@@ -640,6 +642,11 @@ _RIR_RDAP = (
     "https://rdap.lacnic.net",
     "https://rdap.afrinic.net/rdap",
 )
+_DNS_BOOTSTRAP_URL = "https://data.iana.org/rdap/dns.json"
+_DNS_BOOTSTRAP_TTL = 7 * 86400
+_FETCH_TIMEOUT = (3, 8)
+_DNS_BOOTSTRAP: Optional[List[Tuple[Tuple[str, ...], Tuple[str, ...]]]] = None
+_DNS_BOOTSTRAP_LOADED = 0.0
 
 
 def _rdap_json_body(resp: Any) -> Optional[dict]:
@@ -667,18 +674,152 @@ def _rdap_json_body(resp: Any) -> Optional[dict]:
     return data if isinstance(data, dict) else None
 
 
-def fetch_rdap(
+def _is_not_found(resp: Any, data: Optional[dict]) -> bool:
+    if int(getattr(resp, "status_code", 0) or 0) == 404:
+        return True
+    if not isinstance(data, dict):
+        return False
+    try:
+        return int(data.get("errorCode") or 0) == 404
+    except (TypeError, ValueError):
+        return False
+
+
+def _join_rdap(base: str, endpoint: str, quoted: str) -> str:
+    return f"{str(base).rstrip('/')}/{endpoint}/{quoted}"
+
+
+def _fail_message(url: Optional[str], status: Optional[int], detail: Optional[str] = None) -> str:
+    parts = ["rdap lookup failed"]
+    if url:
+        parts.append(str(url))
+    if status is not None:
+        parts.append(str(status))
+    if detail:
+        parts.append(str(detail))
+    return " ".join(parts)
+
+
+def _parse_dns_services(payload: Any) -> List[Tuple[Tuple[str, ...], Tuple[str, ...]]]:
+    if not isinstance(payload, dict):
+        return []
+    out: List[Tuple[Tuple[str, ...], Tuple[str, ...]]] = []
+    for entry in payload.get("services") or []:
+        if not isinstance(entry, list) or len(entry) < 2:
+            continue
+        tlds = tuple(
+            str(item).lower().strip(".")
+            for item in (entry[0] or [])
+            if str(item).strip()
+        )
+        urls = tuple(str(item).strip() for item in (entry[1] or []) if str(item).strip())
+        if tlds and urls:
+            out.append((tlds, urls))
+    return out
+
+
+def _dns_bootstrap_path() -> str:
+    return get_cache_path("rdap-dns.json")
+
+
+def dns_bootstrap_services(*, force: bool = False) -> List[Tuple[Tuple[str, ...], Tuple[str, ...]]]:
+    """IANA dns.json services: [(tlds, urls), ...], cached on disk."""
+    global _DNS_BOOTSTRAP, _DNS_BOOTSTRAP_LOADED
+    now = time.time()
+    if (
+        not force
+        and _DNS_BOOTSTRAP is not None
+        and (now - _DNS_BOOTSTRAP_LOADED) < _DNS_BOOTSTRAP_TTL
+    ):
+        return _DNS_BOOTSTRAP
+    path = _dns_bootstrap_path()
+    if not force:
+        cached = load_json_cache(path)
+        services = _parse_dns_services(cached)
+        fetched_at = float((cached or {}).get("_fetched_at") or 0) if cached else 0.0
+        if services and (now - fetched_at) < _DNS_BOOTSTRAP_TTL:
+            _DNS_BOOTSTRAP = services
+            _DNS_BOOTSTRAP_LOADED = fetched_at or now
+            return services
+    import requests
+
+    try:
+        resp = requests.get(
+            _DNS_BOOTSTRAP_URL,
+            timeout=_FETCH_TIMEOUT,
+            headers={"Accept": "application/json"},
+        )
+        if int(getattr(resp, "status_code", 0) or 0) == 200:
+            payload = resp.json()
+            if isinstance(payload, dict):
+                payload = dict(payload)
+                payload["_fetched_at"] = now
+                save_json_cache(path, payload)
+                services = _parse_dns_services(payload)
+                _DNS_BOOTSTRAP = services
+                _DNS_BOOTSTRAP_LOADED = now
+                return services
+    except Exception:
+        pass
+    cached = load_json_cache(path)
+    services = _parse_dns_services(cached)
+    _DNS_BOOTSTRAP = services
+    _DNS_BOOTSTRAP_LOADED = now
+    return services
+
+
+def domain_rdap_urls(alabel: str) -> List[str]:
+    """Registry URLs for an A-label domain, longest TLD match in IANA dns.json."""
+    ascii_name = str(alabel or "").strip().rstrip(".").lower()
+    quoted = urllib.parse.quote(ascii_name, safe="")
+    labels = ascii_name.split(".")
+    best: Tuple[str, ...] = ()
+    best_len = 0
+    for tlds, urls in dns_bootstrap_services():
+        for tld in tlds:
+            parts = tuple(part for part in tld.split(".") if part)
+            n = len(parts)
+            if n == 0 or n > len(labels) or n <= best_len:
+                continue
+            if tuple(labels[-n:]) == parts:
+                best = urls
+                best_len = n
+    if best:
+        return [_join_rdap(base, "domain", quoted) for base in best]
+    return [f"https://rdap.org/domain/{quoted}"]
+
+
+def _rdap_urls(kind: str, lookup: str) -> List[str]:
+    quoted = urllib.parse.quote(lookup, safe=":/" if kind == "ip" else "")
+    endpoint = {"ip": "ip", "domain": "domain", "autnum": "autnum"}.get(kind, "ip")
+    if kind == "domain":
+        return domain_rdap_urls(lookup)
+    urls = [f"https://rdap.org/{endpoint}/{quoted}"]
+    urls.extend(_join_rdap(base, endpoint, quoted) for base in _RIR_RDAP)
+    return urls
+
+
+def _fetch_rdap_result(
     target: str,
     target_type: Optional[str] = None,
     cache_days: int = 7,
     force: bool = False,
-    timeout: int = 20,
-) -> Optional[dict]:
-    """Fetch RDAP for an IP, domain, or autnum."""
+    timeout: Any = _FETCH_TIMEOUT,
+) -> Dict[str, Any]:
+    empty = {
+        "data": None,
+        "not_found": False,
+        "url": None,
+        "http_status": None,
+        "error": None,
+        "kind": None,
+        "lookup": None,
+    }
     try:
         detected = detect_rdap_type(target)
     except ValueError:
-        return None
+        empty["error"] = "rdap lookup failed"
+        return empty
     kind = (target_type or detected).strip().lower()
     if kind == "autnum":
         lookup = _autnum(target)
@@ -691,45 +832,110 @@ def fetch_rdap(
         except (UnicodeError, ValueError) as exc:
             raise ValueError(_RDAP_TARGET_ERROR) from exc
         kind = "domain"
-    endpoint = {"ip": "ip", "domain": "domain", "autnum": "autnum"}.get(kind, "ip")
+    empty["kind"] = kind
+    empty["lookup"] = lookup
     key = f"{kind}_{lookup}"
     _ = cache_days
     if not force:
         hit = query_cache.get("rdap", key)
         if hit is not None:
-            return hit
+            return {
+                "data": hit,
+                "not_found": False,
+                "url": None,
+                "http_status": 200,
+                "error": None,
+                "kind": kind,
+                "lookup": lookup,
+            }
 
     import requests
 
-    quoted = urllib.parse.quote(lookup, safe=":/" if kind == "ip" else "")
-    urls = [f"https://rdap.org/{endpoint}/{quoted}"]
-    if kind in {"ip", "autnum"}:
-        urls.extend(f"{base}/{endpoint}/{quoted}" for base in _RIR_RDAP)
-    last_error = None
+    urls = _rdap_urls(kind, lookup)
+    last_url = urls[0] if urls else None
+    last_status: Optional[int] = None
+    last_error = "rdap lookup failed"
     for url in urls:
+        last_url = url
         try:
             resp = requests.get(
                 url,
-                timeout=timeout,
+                timeout=timeout if timeout is not None else _FETCH_TIMEOUT,
                 allow_redirects=True,
                 headers={"Accept": "application/rdap+json, application/json"},
             )
-            if resp.status_code == 200:
-                rdap_data = _rdap_json_body(resp)
-                if rdap_data is None:
-                    last_error = "rdap lookup failed (not json)"
+            last_status = int(getattr(resp, "status_code", 0) or 0)
+            rdap_data = _rdap_json_body(resp)
+            if _is_not_found(resp, rdap_data):
+                if kind in {"ip", "autnum"}:
+                    last_error = _fail_message(url, last_status)
                     continue
+                return {
+                    "data": None,
+                    "not_found": True,
+                    "url": url,
+                    "http_status": last_status or 404,
+                    "error": "not found",
+                    "kind": kind,
+                    "lookup": lookup,
+                }
+            if last_status == 200 and rdap_data is not None:
                 query_cache.put("rdap", key, rdap_data)
-                return rdap_data
-            last_error = f"rdap lookup failed ({resp.status_code})"
+                return {
+                    "data": rdap_data,
+                    "not_found": False,
+                    "url": url,
+                    "http_status": 200,
+                    "error": None,
+                    "kind": kind,
+                    "lookup": lookup,
+                }
+            last_error = _fail_message(
+                url,
+                last_status,
+                None if rdap_data is not None or last_status != 200 else "not json",
+            )
         except Exception as exc:
-            last_error = str(exc) or "rdap lookup failed"
+            last_status = None
+            last_error = _fail_message(url, None, str(exc) or "timeout")
             continue
     cached = query_cache.get_any("rdap", key)
     if cached is not None:
-        return cached
-    _ = last_error
-    return None
+        return {
+            "data": cached,
+            "not_found": False,
+            "url": last_url,
+            "http_status": last_status,
+            "error": None,
+            "kind": kind,
+            "lookup": lookup,
+        }
+    return {
+        "data": None,
+        "not_found": False,
+        "url": last_url,
+        "http_status": last_status,
+        "error": last_error,
+        "kind": kind,
+        "lookup": lookup,
+    }
+
+
+def fetch_rdap(
+    target: str,
+    target_type: Optional[str] = None,
+    cache_days: int = 7,
+    force: bool = False,
+    timeout: Any = _FETCH_TIMEOUT,
+) -> Optional[dict]:
+    """Fetch RDAP for an IP, domain, or autnum."""
+    return _fetch_rdap_result(
+        target,
+        target_type=target_type,
+        cache_days=cache_days,
+        force=force,
+        timeout=timeout,
+    ).get("data")
 
 
 def get_rdap_for_ip(ip_address: str, cache_days: int = 7, force: bool = False) -> Optional[dict]:
@@ -752,20 +958,33 @@ def lookup_rdap(target: str, *, force: bool = False) -> Dict[str, Any]:
             "error": "rdap lookup failed",
             "total_ms": round((time.time() - start) * 1000.0, 3),
         }
-    data = fetch_rdap(target, target_type=kind, force=force)
-    if not data:
+    fetched = _fetch_rdap_result(target, target_type=kind, force=force)
+    elapsed = round((time.time() - start) * 1000.0, 3)
+    data = fetched.get("data")
+    if data:
         return {
-            "ok": False,
-            "result": None,
-            "error": "rdap lookup failed",
-            "total_ms": round((time.time() - start) * 1000.0, 3),
+            "ok": True,
+            "result": summarize_rdap(data, kind=kind, query=target),
+            "error": None,
+            "total_ms": elapsed,
         }
-    return {
-        "ok": True,
-        "result": summarize_rdap(data, kind=kind, query=target),
-        "error": None,
-        "total_ms": round((time.time() - start) * 1000.0, 3),
+    out: Dict[str, Any] = {
+        "ok": False,
+        "result": None,
+        "error": str(fetched.get("error") or "rdap lookup failed"),
+        "total_ms": elapsed,
+        "status": 404 if fetched.get("not_found") else 502,
     }
+    if fetched.get("url"):
+        out["url"] = fetched["url"]
+    if fetched.get("http_status") is not None:
+        out["http_status"] = fetched["http_status"]
+    if fetched.get("not_found"):
+        out["error"] = "not found"
+        out["status"] = 404
+    elif out["error"] == "rdap lookup failed":
+        out["error"] = _fail_message(fetched.get("url"), fetched.get("http_status"))
+    return out
 
 
 async def lookup_rdap_async(target: str, *, force: bool = False) -> Dict[str, Any]:
@@ -785,7 +1004,7 @@ def clear_rdap_cache(name: Optional[str] = None) -> Dict[str, Any]:
 def rdap_for_asn(asn: Any, *, force: bool = False) -> Optional[Dict[str, Any]]:
     """Summarized autnum RDAP, or None if the registry is unreachable."""
     try:
-        data = fetch_rdap(str(asn), target_type="autnum", force=force, timeout=20)
+        data = fetch_rdap(str(asn), target_type="autnum", force=force)
     except Exception:
         return None
     if not data:

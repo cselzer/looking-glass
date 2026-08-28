@@ -1,12 +1,36 @@
 import json
 import os
 import tempfile
+import time
 import unittest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 from looking_glass.http.site import respond
 from looking_glass.intel import rdap
+
+
+_DNS_SERVICES = [
+    (("jp",), ("https://rdap.jprs.jp/",)),
+    (("de",), ("https://rdap.denic.de/",)),
+    (("com", "net"), ("https://rdap.verisign.com/com/v1/",)),
+]
+
+
+def _bootstrap():
+    return patch(
+        "looking_glass.intel.rdap.dns_bootstrap_services",
+        return_value=_DNS_SERVICES,
+    )
+
+
+def _json_resp(payload, status=200):
+    resp = MagicMock()
+    resp.status_code = status
+    resp.headers = {"Content-Type": "application/rdap+json"}
+    resp.json.return_value = payload
+    resp.text = json.dumps(payload)
+    return resp
 
 
 class RdapHelpers(unittest.TestCase):
@@ -236,21 +260,20 @@ class RdapCacheTests(unittest.TestCase):
         get.assert_not_called()
 
     def test_idn_fetch_uses_punycode(self):
-        hit = MagicMock()
-        hit.status_code = 200
-        hit.headers = {"Content-Type": "application/rdap+json"}
-        hit.json.return_value = {"handle": "EXAMPLE", "ldhName": "xn--fsq.jp"}
-        hit.text = "{}"
+        hit = _json_resp({"handle": "EXAMPLE", "ldhName": "xn--fsq.jp"})
         with tempfile.TemporaryDirectory() as tmp:
             with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
-                with patch("requests.get", return_value=hit) as get:
-                    data = rdap.fetch_rdap("例.jp")
-                    again = rdap.fetch_rdap("xn--fsq.jp")
+                with _bootstrap():
+                    with patch("requests.get", return_value=hit) as get:
+                        data = rdap.fetch_rdap("例.jp")
+                        again = rdap.fetch_rdap("xn--fsq.jp")
         self.assertEqual(data["handle"], "EXAMPLE")
         self.assertEqual(again["handle"], "EXAMPLE")
         urls = [call[0][0] for call in get.call_args_list]
+        self.assertTrue(all("rdap.jprs.jp" in url for url in urls))
         self.assertTrue(any("xn--fsq.jp" in url for url in urls))
         self.assertFalse(any("例" in url for url in urls))
+        self.assertFalse(any("rdap.org" in url or "verisign" in url for url in urls))
 
     def test_html_200_is_not_cached(self):
         html = MagicMock()
@@ -260,27 +283,129 @@ class RdapCacheTests(unittest.TestCase):
         html.json.side_effect = AssertionError("must not parse HTML as JSON")
         with tempfile.TemporaryDirectory() as tmp:
             with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
-                with patch("looking_glass.intel.rdap.query_cache.put") as put:
-                    with patch("requests.get", return_value=html) as get:
-                        data = rdap.fetch_rdap("example.com")
+                with _bootstrap():
+                    with patch("looking_glass.intel.rdap.query_cache.put") as put:
+                        with patch("requests.get", return_value=html) as get:
+                            data = rdap.fetch_rdap("example.com")
         self.assertIsNone(data)
         get.assert_called()
         put.assert_not_called()
         html.json.assert_not_called()
+        self.assertIn("verisign", get.call_args[0][0])
 
     def test_domain_fetch_skips_rir_html_trap(self):
         miss = MagicMock()
         miss.status_code = 404
+        miss.headers = {"Content-Type": "application/rdap+json"}
+        miss.json.return_value = {"errorCode": 404}
+        miss.text = "{}"
         with tempfile.TemporaryDirectory() as tmp:
             with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
-                with patch("requests.get", return_value=miss) as get:
-                    data = rdap.fetch_rdap("example.com")
+                with _bootstrap():
+                    with patch("requests.get", return_value=miss) as get:
+                        data = rdap.fetch_rdap("example.com")
         self.assertIsNone(data)
         self.assertEqual(get.call_count, 1)
         url = get.call_args[0][0]
-        self.assertIn("rdap.org", url)
+        self.assertIn("rdap.verisign.com", url)
+        self.assertNotIn("rdap.org", url)
         self.assertNotIn("rdap.lacnic.net", url)
         self.assertFalse(any("rdap.lacnic.net" in call[0][0] for call in get.call_args_list))
+
+    def test_cctld_bootstrap_urls(self):
+        with _bootstrap():
+            jp = rdap.domain_rdap_urls("jprs.jp")
+            idn = rdap.domain_rdap_urls("xn--fsq.jp")
+            de = rdap.domain_rdap_urls("xn--bcher-kva.de")
+            com = rdap.domain_rdap_urls("example.com")
+        self.assertEqual(jp, ["https://rdap.jprs.jp/domain/jprs.jp"])
+        self.assertEqual(idn, ["https://rdap.jprs.jp/domain/xn--fsq.jp"])
+        self.assertEqual(de, ["https://rdap.denic.de/domain/xn--bcher-kva.de"])
+        self.assertEqual(com, ["https://rdap.verisign.com/com/v1/domain/example.com"])
+
+    def test_bootstrap_reads_disk_cache(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "rdap-dns.json")
+            with open(path, "w", encoding="utf-8") as handle:
+                json.dump(
+                    {
+                        "_fetched_at": time.time(),
+                        "services": [[["jp"], ["https://rdap.jprs.jp/"]]],
+                    },
+                    handle,
+                )
+            rdap._DNS_BOOTSTRAP = None
+            rdap._DNS_BOOTSTRAP_LOADED = 0.0
+            try:
+                with patch("looking_glass.intel.rdap.get_cache_path", return_value=path):
+                    with patch("requests.get") as get:
+                        urls = rdap.domain_rdap_urls("jprs.jp")
+                get.assert_not_called()
+                self.assertEqual(urls, ["https://rdap.jprs.jp/domain/jprs.jp"])
+            finally:
+                rdap._DNS_BOOTSTRAP = None
+                rdap._DNS_BOOTSTRAP_LOADED = 0.0
+
+    def test_jprs_and_denic_fetch(self):
+        hit = _json_resp({"handle": "JPRS.JP", "ldhName": "JPRS.JP"})
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
+                with _bootstrap():
+                    with patch("requests.get", return_value=hit) as get:
+                        data = rdap.fetch_rdap("jprs.jp")
+                        looked = rdap.lookup_rdap("例.jp")
+                        de = rdap.fetch_rdap("bücher.de")
+        self.assertEqual(data["handle"], "JPRS.JP")
+        jp_url = get.call_args_list[0][0][0]
+        self.assertIn("rdap.jprs.jp/domain/jprs.jp", jp_url)
+        self.assertNotIn("rdap.org", jp_url)
+        self.assertNotIn("verisign", jp_url)
+        self.assertTrue(looked["ok"])
+        self.assertEqual(looked["result"]["query"], "例.jp")
+        idn_url = get.call_args_list[1][0][0]
+        self.assertIn("rdap.jprs.jp/domain/xn--fsq.jp", idn_url)
+        de_url = get.call_args_list[2][0][0]
+        self.assertIn("rdap.denic.de/domain/xn--bcher-kva.de", de_url)
+
+    def test_registry_404_is_not_found(self):
+        miss = _json_resp({"errorCode": 404, "title": "Not Found"}, status=404)
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
+                with _bootstrap():
+                    with patch("requests.get", return_value=miss) as get:
+                        payload = rdap.lookup_rdap("missing.jp")
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["status"], 404)
+        self.assertEqual(payload["error"], "not found")
+        self.assertIn("rdap.jprs.jp", payload["url"])
+        self.assertEqual(payload["http_status"], 404)
+        self.assertNotEqual(payload["error"], "rdap lookup failed")
+        get.assert_called_once()
+
+    def test_html_timeout_is_502_with_url(self):
+        html = MagicMock()
+        html.status_code = 200
+        html.headers = {"Content-Type": "text/html"}
+        html.text = "<!DOCTYPE html><html></html>"
+        html.json.side_effect = AssertionError("must not parse HTML as JSON")
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
+                with _bootstrap():
+                    with patch("requests.get", return_value=html):
+                        html_fail = rdap.lookup_rdap("jprs.jp")
+                    with patch("requests.get", side_effect=TimeoutError("timed out")) as get:
+                        timed = rdap.lookup_rdap("nic.jp")
+        self.assertFalse(html_fail["ok"])
+        self.assertEqual(html_fail["status"], 502)
+        self.assertIn("rdap.jprs.jp", html_fail["error"])
+        self.assertIn("rdap.jprs.jp", html_fail["url"])
+        self.assertNotEqual(html_fail["error"], "rdap lookup failed")
+        self.assertFalse(timed["ok"])
+        self.assertEqual(timed["status"], 502)
+        self.assertIn("rdap.jprs.jp", timed["error"])
+        self.assertIn("nic.jp", get.call_args[0][0])
+        timeout = get.call_args[1]["timeout"]
+        self.assertEqual(timeout, (3, 8))
 
     def test_json_http_ok_and_garbage_400(self):
         fake = {
@@ -315,13 +440,40 @@ class RdapCacheTests(unittest.TestCase):
         failed = {
             "ok": False,
             "result": None,
-            "error": "rdap lookup failed",
+            "error": "rdap lookup failed https://rdap.jprs.jp/domain/nic.jp timeout",
+            "url": "https://rdap.jprs.jp/domain/nic.jp",
+            "http_status": None,
+            "status": 502,
             "total_ms": 1,
         }
         with patch("looking_glass.http.site.lookup_rdap", return_value=failed):
             status, _, body, *_ = respond(
-                "wsgi", "127.0.0.1", "/rdap/1.1.1.1", {}, accept="application/json"
+                "wsgi", "127.0.0.1", "/rdap/nic.jp", {}, accept="application/json"
             )
         self.assertEqual(status, 502)
         payload = json.loads(body)
         self.assertFalse(payload["ok"])
+        self.assertEqual(payload["query"], "nic.jp")
+        self.assertIn("rdap.jprs.jp", payload["error"])
+        self.assertEqual(payload["url"], "https://rdap.jprs.jp/domain/nic.jp")
+
+    def test_json_http_registry_404(self):
+        failed = {
+            "ok": False,
+            "result": None,
+            "error": "not found",
+            "url": "https://rdap.jprs.jp/domain/missing.jp",
+            "http_status": 404,
+            "status": 404,
+            "total_ms": 1,
+        }
+        with patch("looking_glass.http.site.lookup_rdap", return_value=failed):
+            status, _, body, *_ = respond(
+                "wsgi", "127.0.0.1", "/rdap/missing.jp", {}, accept="application/json"
+            )
+        self.assertEqual(status, 404)
+        payload = json.loads(body)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"], "not found")
+        self.assertNotEqual(payload["error"], "rdap lookup failed")
+        self.assertEqual(payload["http_status"], 404)
