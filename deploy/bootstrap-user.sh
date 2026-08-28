@@ -41,6 +41,12 @@ if [[ "$EUID" -eq 0 ]]; then
   exit 1
 fi
 
+uid="$(id -u)"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/${uid}}"
+if [[ -S "${XDG_RUNTIME_DIR}/bus" ]]; then
+  export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=${XDG_RUNTIME_DIR}/bus}"
+fi
+
 EMAIL="${EMAIL#"${EMAIL%%[![:space:]]*}"}"
 EMAIL="${EMAIL%"${EMAIL##*[![:space:]]}"}"
 if [[ -n "$EMAIL" && "$EMAIL" != *@* ]]; then
@@ -49,7 +55,7 @@ if [[ -n "$EMAIL" && "$EMAIL" != *@* ]]; then
 fi
 
 _https_ready() {
-  looking-glass https status | python3 -c '
+  looking-glass --json https status | python3 -c '
 import json, sys
 info = json.load(sys.stdin)
 ready = (
@@ -68,7 +74,9 @@ if [[ -d "$VENV" ]]; then
     "$VENV/bin/looking-glass" https stop || true
     "$VENV/bin/looking-glass" lookup-server stop || true
   fi
-  systemctl --user stop looking-glass.target || true
+  if [[ -S "${XDG_RUNTIME_DIR}/bus" ]]; then
+    systemctl --user stop looking-glass.target || true
+  fi
   echo "[*] Removing existing venv at ${VENV}..."
   rm -rf "$VENV"
 fi
@@ -123,11 +131,21 @@ echo "[*] Enabling HTTPS..."
 looking-glass config set http.enabled true
 
 echo "[*] Issuing Let's Encrypt certificate..."
-if ! looking-glass https renew; then
+renew_json="$(looking-glass --json https renew)" || {
   echo "[-] https renew failed." >&2
-  looking-glass https logs || true
+  printf '%s\n' "$renew_json" >&2
+  printf '%s\n' "$renew_json" | python3 -c '
+import json, sys
+try:
+    info = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+err = info.get("error")
+if err:
+    print(err, file=sys.stderr)
+' || true
   exit 1
-fi
+}
 
 echo "[*] Waiting for certificate (https status)..."
 deadline=$((SECONDS + 300))

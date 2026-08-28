@@ -348,7 +348,7 @@ def _serve_line(name: str, payload: Dict[str, Any]) -> Text:
     bits = [mark, name, word]
     if payload.get("pid"):
         bits.append(f"pid {payload['pid']}")
-    if name == "https" and payload.get("port"):
+    if name == "https" and payload.get("port") and not payload.get("error"):
         bits.append(f":{payload['port']}")
     up = _human_uptime(payload.get("uptime"))
     if up:
@@ -358,9 +358,6 @@ def _serve_line(name: str, payload: Dict[str, Any]) -> Text:
             bits.append(f"cert {int(payload['days_left'])}d")
         except (TypeError, ValueError):
             pass
-    err = payload.get("error")
-    if err:
-        bits.append(str(err))
     sd = payload.get("systemd")
     if isinstance(sd, dict) and sd.get("active_state"):
         bits.append(f"unit {sd['active_state']}")
@@ -368,6 +365,12 @@ def _serve_line(name: str, payload: Dict[str, Any]) -> Text:
             mark, style = "✗", "bold red"
             bits[0] = mark
     return Text("  ".join(str(b) for b in bits), style=style)
+
+
+def _print_serve_error(payload: Dict[str, Any]) -> None:
+    err = payload.get("error")
+    if err:
+        _console().print(Text(str(err), style="bold red"))
 
 
 def _render_serve(payload: Any) -> None:
@@ -379,9 +382,12 @@ def _render_serve(payload: Any) -> None:
     https = payload.get("https")
     if isinstance(intel, dict) and isinstance(https, dict):
         con.print(_serve_line("intel", intel))
+        _print_serve_error(intel)
         con.print(_serve_line("https", https))
+        _print_serve_error(https)
         return
     con.print(_serve_line(_daemon_name(payload), payload))
+    _print_serve_error(payload)
 
 
 def _render_kv(payload: Any) -> None:

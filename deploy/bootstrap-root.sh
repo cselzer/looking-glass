@@ -294,11 +294,17 @@ install -o "$LG_USER" -g "$LG_USER" -m 0755 \
 if [[ -z "$SCRIPT_DIR" || "$user_src" != "$SCRIPT_DIR/bootstrap-user.sh" ]]; then
   rm -f "$user_src"
 fi
+LG_UID="$(id -u "$LG_USER")"
+LG_RUNTIME="/run/user/${LG_UID}"
 if [[ -n "$EMAIL" ]]; then
   runuser -u "$LG_USER" -- env HOME="$LG_HOME" USER="$LG_USER" LOGNAME="$LG_USER" \
+    XDG_RUNTIME_DIR="$LG_RUNTIME" \
+    DBUS_SESSION_BUS_ADDRESS="unix:path=${LG_RUNTIME}/bus" \
     "$LG_HOME/.bootstrap-user.sh" --email "$EMAIL"
 else
   runuser -u "$LG_USER" -- env HOME="$LG_HOME" USER="$LG_USER" LOGNAME="$LG_USER" \
+    XDG_RUNTIME_DIR="$LG_RUNTIME" \
+    DBUS_SESSION_BUS_ADDRESS="unix:path=${LG_RUNTIME}/bus" \
     "$LG_HOME/.bootstrap-user.sh"
 fi
 
