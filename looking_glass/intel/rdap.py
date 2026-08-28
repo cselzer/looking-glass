@@ -18,6 +18,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from .. import cache as query_cache
 
 _ASN = re.compile(r"^(?:AS)?(\d+)$", re.IGNORECASE)
+_LDH_LABEL = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)
+_RDAP_TARGET_ERROR = "rdap path needs an IP, domain, or ASN, e.g. /rdap/AS13335"
 
 
 def parse_rdap_path(path: str) -> str:
@@ -30,8 +32,34 @@ def parse_rdap_path(path: str) -> str:
         raise ValueError("not an rdap path")
     rest = "" if text == "rdap" else text[len("rdap/") :]
     if not rest or rest.count("/") > 4:
-        raise ValueError("rdap path needs an IP, domain, or ASN, e.g. /rdap/AS13335")
+        raise ValueError(_RDAP_TARGET_ERROR)
+    detect_rdap_type(rest)
     return rest
+
+
+def _is_rdap_domain(text: str) -> bool:
+    name = str(text or "").strip().rstrip(".")
+    if not name or " " in name or "/" in name:
+        return False
+    try:
+        ascii_name = name.encode("idna").decode("ascii").lower()
+    except (UnicodeError, ValueError):
+        return False
+    labels = ascii_name.split(".")
+    if len(labels) < 2:
+        return False
+    tld = labels[-1]
+    if tld.startswith("xn--"):
+        if len(tld) < 5:
+            return False
+    elif not tld.isalpha() or len(tld) < 2:
+        return False
+    for label in labels:
+        if not label or len(label) > 63:
+            return False
+        if not _LDH_LABEL.match(label):
+            return False
+    return True
 
 
 def detect_rdap_type(target: str) -> str:
@@ -45,7 +73,9 @@ def detect_rdap_type(target: str) -> str:
         pass
     if _ASN.match(text):
         return "autnum"
-    return "domain"
+    if _is_rdap_domain(text):
+        return "domain"
+    raise ValueError(_RDAP_TARGET_ERROR)
 
 
 def _autnum(target: str) -> str:
@@ -611,6 +641,31 @@ _RIR_RDAP = (
 )
 
 
+def _rdap_json_body(resp: Any) -> Optional[dict]:
+    """Return a RDAP object dict, or None for HTML / non-object bodies."""
+    headers = getattr(resp, "headers", None)
+    ctype = ""
+    getter = getattr(headers, "get", None) if headers is not None else None
+    if callable(getter):
+        raw = getter("Content-Type")
+        if raw is None:
+            raw = getter("content-type")
+        if isinstance(raw, str):
+            ctype = raw
+    if "html" in ctype.lower():
+        return None
+    text = getattr(resp, "text", None)
+    if isinstance(text, str):
+        head = text.lstrip()[:64].lower()
+        if head.startswith("<!doctype") or head.startswith("<html"):
+            return None
+    try:
+        data = resp.json()
+    except (TypeError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def fetch_rdap(
     target: str,
     target_type: Optional[str] = None,
@@ -619,7 +674,11 @@ def fetch_rdap(
     timeout: int = 20,
 ) -> Optional[dict]:
     """Fetch RDAP for an IP, domain, or autnum."""
-    kind = (target_type or detect_rdap_type(target)).strip().lower()
+    try:
+        detected = detect_rdap_type(target)
+    except ValueError:
+        return None
+    kind = (target_type or detected).strip().lower()
     if kind == "autnum":
         lookup = _autnum(target)
     elif kind == "ip":
@@ -639,7 +698,8 @@ def fetch_rdap(
 
     quoted = urllib.parse.quote(lookup, safe=":/" if kind == "ip" else "")
     urls = [f"https://rdap.org/{endpoint}/{quoted}"]
-    urls.extend(f"{base}/{endpoint}/{quoted}" for base in _RIR_RDAP)
+    if kind in {"ip", "autnum"}:
+        urls.extend(f"{base}/{endpoint}/{quoted}" for base in _RIR_RDAP)
     last_error = None
     for url in urls:
         try:
@@ -650,10 +710,10 @@ def fetch_rdap(
                 headers={"Accept": "application/rdap+json, application/json"},
             )
             if resp.status_code == 200:
-                try:
-                    rdap_data = resp.json()
-                except ValueError:
-                    rdap_data = {"raw": resp.text}
+                rdap_data = _rdap_json_body(resp)
+                if rdap_data is None:
+                    last_error = "rdap lookup failed (not json)"
+                    continue
                 query_cache.put("rdap", key, rdap_data)
                 return rdap_data
             last_error = f"rdap lookup failed ({resp.status_code})"
@@ -678,7 +738,15 @@ def get_rdap_for_ip(ip_address: str, cache_days: int = 7, force: bool = False) -
 
 def lookup_rdap(target: str, *, force: bool = False) -> Dict[str, Any]:
     start = time.time()
-    kind = detect_rdap_type(target)
+    try:
+        kind = detect_rdap_type(target)
+    except ValueError:
+        return {
+            "ok": False,
+            "result": None,
+            "error": "rdap lookup failed",
+            "total_ms": round((time.time() - start) * 1000.0, 3),
+        }
     data = fetch_rdap(target, target_type=kind, force=force)
     if not data:
         return {

@@ -1361,6 +1361,8 @@ def _finish(
     status = 200
     if payload.get("error") == "intel server unavailable":
         status = 503
+    elif kind == "rdap" and not payload.get("ok"):
+        status = 502
     return status, body
 
 

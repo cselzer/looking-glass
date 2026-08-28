@@ -5,6 +5,7 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
+from looking_glass.http.site import respond
 from looking_glass.intel import rdap
 
 
@@ -14,11 +15,19 @@ class RdapHelpers(unittest.TestCase):
         self.assertEqual(rdap.detect_rdap_type("AS13335"), "autnum")
         self.assertEqual(rdap.detect_rdap_type("13335"), "autnum")
         self.assertEqual(rdap.detect_rdap_type("example.com"), "domain")
+        with self.assertRaises(ValueError):
+            rdap.detect_rdap_type("notanip")
+        with self.assertRaises(ValueError):
+            rdap.detect_rdap_type("999.999.999.999")
 
     def test_parse_path(self):
         self.assertEqual(rdap.parse_rdap_path("/rdap/AS13335"), "AS13335")
         with self.assertRaises(ValueError):
             rdap.parse_rdap_path("/rdap")
+        with self.assertRaises(ValueError):
+            rdap.parse_rdap_path("/rdap/notanip")
+        with self.assertRaises(ValueError):
+            rdap.parse_rdap_path("/rdap/999.999.999.999")
 
     def test_summarize_entities_and_cidr(self):
         summary = rdap.summarize_rdap(
@@ -209,3 +218,87 @@ class RdapCacheTests(unittest.TestCase):
                 self.assertNotIn("%3A", first)
                 self.assertIn("rdap.arin.net", second)
                 self.assertIn("2001:db8::1", second)
+
+    def test_junk_does_not_fetch(self):
+        with patch("requests.get") as get:
+            self.assertIsNone(rdap.fetch_rdap("notanip"))
+            payload = rdap.lookup_rdap("notanip")
+            self.assertFalse(payload["ok"])
+            self.assertIsNone(rdap.fetch_rdap("999.999.999.999"))
+            bogus = rdap.lookup_rdap("999.999.999.999")
+            self.assertFalse(bogus["ok"])
+        get.assert_not_called()
+
+    def test_html_200_is_not_cached(self):
+        html = MagicMock()
+        html.status_code = 200
+        html.headers = {"Content-Type": "text/html; charset=utf-8"}
+        html.text = "<!DOCTYPE html><html><body>LACNIC RDAP client</body></html>"
+        html.json.side_effect = AssertionError("must not parse HTML as JSON")
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
+                with patch("looking_glass.intel.rdap.query_cache.put") as put:
+                    with patch("requests.get", return_value=html) as get:
+                        data = rdap.fetch_rdap("example.com")
+        self.assertIsNone(data)
+        get.assert_called()
+        put.assert_not_called()
+        html.json.assert_not_called()
+
+    def test_domain_fetch_skips_rir_html_trap(self):
+        miss = MagicMock()
+        miss.status_code = 404
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
+                with patch("requests.get", return_value=miss) as get:
+                    data = rdap.fetch_rdap("example.com")
+        self.assertIsNone(data)
+        self.assertEqual(get.call_count, 1)
+        url = get.call_args[0][0]
+        self.assertIn("rdap.org", url)
+        self.assertNotIn("rdap.lacnic.net", url)
+        self.assertFalse(any("rdap.lacnic.net" in call[0][0] for call in get.call_args_list))
+
+    def test_json_http_ok_and_garbage_400(self):
+        fake = {
+            "ok": True,
+            "result": {"type": "ip", "handle": "NET", "query": "1.1.1.1"},
+            "error": None,
+            "total_ms": 1,
+        }
+        with patch("looking_glass.http.site.lookup_rdap", return_value=fake) as lookup:
+            status, _, body, *_ = respond(
+                "wsgi", "127.0.0.1", "/rdap/1.1.1.1", {}, accept="application/json"
+            )
+        self.assertEqual(status, 200)
+        payload = json.loads(body)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["result"]["type"], "ip")
+        lookup.assert_called_once()
+
+        with patch("looking_glass.http.site.lookup_rdap") as lookup:
+            for path in ("/rdap/notanip", "/rdap/999.999.999.999"):
+                status, _, body, *_ = respond(
+                    "wsgi", "127.0.0.1", path, {}, accept="application/json"
+                )
+                self.assertEqual(status, 400)
+                denied = json.loads(body)
+                self.assertFalse(denied["ok"])
+                self.assertNotIn("result", denied)
+                self.assertNotEqual(denied.get("kind"), "domain")
+            lookup.assert_not_called()
+
+    def test_json_http_lookup_failure_is_502(self):
+        failed = {
+            "ok": False,
+            "result": None,
+            "error": "rdap lookup failed",
+            "total_ms": 1,
+        }
+        with patch("looking_glass.http.site.lookup_rdap", return_value=failed):
+            status, _, body, *_ = respond(
+                "wsgi", "127.0.0.1", "/rdap/1.1.1.1", {}, accept="application/json"
+            )
+        self.assertEqual(status, 502)
+        payload = json.loads(body)
+        self.assertFalse(payload["ok"])
