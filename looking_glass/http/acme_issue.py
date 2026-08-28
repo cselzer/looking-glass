@@ -238,10 +238,15 @@ def run_http01_order(
     net = client.ClientNetwork(account_key, user_agent="looking-glass")
     directory = messages.Directory.from_json(net.get(url).json())
     acme = client.ClientV2(directory, net)
+    mail = str(email or "").strip()
     try:
-        acme.new_account(
-            messages.NewRegistration.from_data(email=email, terms_of_service_agreed=True)
-        )
+        if mail:
+            reg = messages.NewRegistration.from_data(
+                email=mail, terms_of_service_agreed=True
+            )
+        else:
+            reg = messages.NewRegistration.from_data(terms_of_service_agreed=True)
+        acme.new_account(reg)
     except messages.Error as exc:
         if "already been registered" not in str(exc).lower():
             raise
@@ -283,8 +288,6 @@ def ensure_certificate(
     mail = str(email or "").strip()
     if not host:
         raise ValueError("http.hostname is required to issue a certificate")
-    if not mail:
-        raise ValueError("http.email is required to issue a certificate")
     fullchain, privkey = cert_files(host)
     if not force and not needs_issue(host, days=days):
         return {"fullchain": str(fullchain), "privkey": str(privkey), "issued": False}

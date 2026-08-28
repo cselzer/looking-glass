@@ -1524,7 +1524,8 @@ def https_cmd() -> None:
     TLS listens on http.port (default 5555) for IPv4 and IPv6 (http.bind default *).
     Pin one family with `looking-glass config set http.bind 0.0.0.0` or `::`.
     Let's Encrypt HTTP-01 uses http.acme_port (default 80). Enable with
-    `looking-glass config set http.enabled true` after setting hostname and email.
+    `looking-glass config set http.enabled true` after setting hostname
+    (email is optional).
     The intel server is a separate Unix socket.
     """
 

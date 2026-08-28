@@ -171,8 +171,8 @@
       "en": "Inspect HTTP status chain, redirects, headers, and TTFB."
     },
     "cli.https.help": {
-      "text": "Inicia, detiene, inspecciona o renueva el supervisor HTTPS de looking-glass.\n\nTLS escucha en http.port (por defecto 5555) para IPv4 e IPv6 (http.bind por defecto *).\nFije una familia con `looking-glass config set http.bind 0.0.0.0` o `::`.\nLet's Encrypt HTTP-01 usa http.acme_port (por defecto 80). Habilítelo con\n`looking-glass config set http.enabled true` después de definir hostname y email.\nEl servidor de intel es un socket Unix aparte.",
-      "en": "Start, stop, inspect, or renew the looking-glass HTTPS supervisor.\n\nTLS listens on http.port (default 5555) for IPv4 and IPv6 (http.bind default *).\nPin one family with `looking-glass config set http.bind 0.0.0.0` or `::`.\nLet's Encrypt HTTP-01 uses http.acme_port (default 80). Enable with\n`looking-glass config set http.enabled true` after setting hostname and email.\nThe intel server is a separate Unix socket."
+      "text": "Inicia, detiene, inspecciona o renueva el supervisor HTTPS de looking-glass.\n\nTLS escucha en http.port (por defecto 5555) para IPv4 e IPv6 (http.bind por defecto *).\nFije una familia con `looking-glass config set http.bind 0.0.0.0` o `::`.\nLet's Encrypt HTTP-01 usa http.acme_port (por defecto 80). Habilítelo con\n`looking-glass config set http.enabled true` después de definir hostname (el email es opcional).\nEl servidor de intel es un socket Unix aparte.",
+      "en": "Start, stop, inspect, or renew the looking-glass HTTPS supervisor.\n\nTLS listens on http.port (default 5555) for IPv4 and IPv6 (http.bind default *).\nPin one family with `looking-glass config set http.bind 0.0.0.0` or `::`.\nLet's Encrypt HTTP-01 uses http.acme_port (default 80). Enable with\n`looking-glass config set http.enabled true` after setting hostname (email is optional).\nThe intel server is a separate Unix socket."
     },
     "cli.https.logs.help": {
       "text": "Muestra las últimas líneas de stdout y stderr del supervisor HTTPS.",

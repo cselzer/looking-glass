@@ -25,14 +25,33 @@ def _roots(tmp: str):
 
 
 class AcmeIssueTests(unittest.TestCase):
-    def test_refuse_without_hostname_or_email(self):
+    def test_refuse_without_hostname(self):
         with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
             with self.assertRaises(ValueError) as ctx:
                 acme_issue.ensure_certificate("", "ops@example.com")
             self.assertIn("hostname", str(ctx.exception))
-            with self.assertRaises(ValueError) as ctx:
-                acme_issue.ensure_certificate("s1.example.com", "")
-            self.assertIn("email", str(ctx.exception))
+
+    def test_mocked_issuer_allows_blank_email(self):
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            seen = {}
+
+            def issuer(host, email, **_kwargs):
+                seen["email"] = email
+                written = acme_issue.write_self_signed(host, days=90)
+                return (
+                    open(written["fullchain"], encoding="utf-8").read(),
+                    open(written["privkey"], encoding="utf-8").read(),
+                )
+
+            out = acme_issue.ensure_certificate(
+                "s1.example.com",
+                "",
+                issuer=issuer,
+            )
+            self.assertTrue(out["issued"])
+            self.assertEqual(seen["email"], "")
+            self.assertTrue(os.path.isfile(out["fullchain"]))
+            self.assertTrue(os.path.isfile(out["privkey"]))
 
     def test_mocked_issuer_writes_pems(self):
         with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
@@ -72,14 +91,31 @@ class AcmeIssueTests(unittest.TestCase):
 
 
 class HttpsSupervisorTests(unittest.TestCase):
-    def test_start_requires_email(self):
+    def test_start_requires_hostname(self):
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            load()
+            set_value("http.enabled", True)
+            report = https_serve.start()
+            self.assertFalse(report["ok"])
+            self.assertIn("hostname", report["error"])
+
+    def test_start_allows_blank_email(self):
         with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
             load()
             set_value("http.enabled", True)
             set_value("http.hostname", "s1.example.com")
-            report = https_serve.start()
-            self.assertFalse(report["ok"])
-            self.assertIn("email", report["error"])
+            with (
+                patch(
+                    "looking_glass.http.https_serve._busy_hosts",
+                    return_value=["0.0.0.0"],
+                ),
+                patch("looking_glass.http.https_serve.ensure_ready") as ready,
+            ):
+                report = https_serve.start()
+        self.assertFalse(report["ok"])
+        self.assertIn("already in use", report["error"])
+        self.assertNotIn("email", report["error"].lower())
+        ready.assert_not_called()
 
     def test_restart_when_workers_change(self):
         with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:

@@ -5,6 +5,40 @@ set -euo pipefail
 LG_USER="looking-glass"
 LG_HOME="/home/looking-glass"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+USAGE="usage: $0 [--email ADDRESS]"
+
+EMAIL=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --email)
+      if [[ $# -lt 2 ]]; then
+        echo "$USAGE" >&2
+        exit 1
+      fi
+      EMAIL="$2"
+      shift 2
+      ;;
+    --email=*)
+      EMAIL="${1#--email=}"
+      shift
+      ;;
+    -h|--help)
+      echo "$USAGE"
+      exit 0
+      ;;
+    *)
+      echo "unknown argument: $1" >&2
+      echo "$USAGE" >&2
+      exit 1
+      ;;
+  esac
+done
+EMAIL="${EMAIL#"${EMAIL%%[![:space:]]*}"}"
+EMAIL="${EMAIL%"${EMAIL##*[![:space:]]}"}"
+if [[ -n "$EMAIL" && "$EMAIL" != *@* ]]; then
+  echo "[-] --email must be an email address (or omit it)." >&2
+  exit 1
+fi
 
 if [[ "$EUID" -ne 0 ]]; then
   echo "This script must be run as root." >&2
@@ -204,9 +238,19 @@ echo
 EOF
 chmod +x /etc/update-motd.d/99-looking-glass
 
+echo "[*] Running user bootstrap as ${LG_USER}..."
+install -o "$LG_USER" -g "$LG_USER" -m 0755 \
+  "$SCRIPT_DIR/bootstrap-user.sh" "$LG_HOME/.bootstrap-user.sh"
+if [[ -n "$EMAIL" ]]; then
+  runuser -u "$LG_USER" -- env HOME="$LG_HOME" USER="$LG_USER" LOGNAME="$LG_USER" \
+    "$LG_HOME/.bootstrap-user.sh" --email "$EMAIL"
+else
+  runuser -u "$LG_USER" -- env HOME="$LG_HOME" USER="$LG_USER" LOGNAME="$LG_USER" \
+    "$LG_HOME/.bootstrap-user.sh"
+fi
+
 echo
 echo "[*] Done. This box is a looking glass; the service account is ${LG_USER}."
-echo "    Next (as root): sudo -u ${LG_USER} ${SCRIPT_DIR}/bootstrap-user.sh"
 echo
 echo "[*] Unbound tests:"
 echo "    dig @127.0.0.1 example.com +short"

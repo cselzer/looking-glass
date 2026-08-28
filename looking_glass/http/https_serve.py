@@ -169,8 +169,6 @@ def _listen_hosts(bind: str) -> List[str]:
 def _require_acme(http: Dict[str, Any]) -> Optional[str]:
     if not str(http.get("hostname") or "").strip():
         return "http.hostname is required (looking-glass config hostname)"
-    if not str(http.get("email") or "").strip():
-        return "http.email is required to issue a Let's Encrypt certificate"
     return None
 
 

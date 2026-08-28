@@ -13,10 +13,11 @@ pip install -e .
 looking-glass --help
 ```
 
-VM (Debian/Ubuntu): run [`deploy/bootstrap-root.sh`](deploy/bootstrap-root.sh) as root, then:
+VM (Debian/Ubuntu): run [`deploy/bootstrap-root.sh`](deploy/bootstrap-root.sh) as root. It creates the `looking-glass` user and then runs [`deploy/bootstrap-user.sh`](deploy/bootstrap-user.sh) as that account. Let's Encrypt contact email is optional:
 
 ```
-sudo -u looking-glass /path/to/looking-glass/deploy/bootstrap-user.sh
+./deploy/bootstrap-root.sh
+./deploy/bootstrap-root.sh --email you@example.com
 ```
 
 Config, datasets, caches, sessions, and certs live under `~/.looking-glass` (`config.json`, `data/`, `certs/`).
@@ -88,7 +89,7 @@ looking-glass tls s1.example.com -p 5555
 looking-glass https stop
 ```
 
-TLS listens on `http.port` (default 5555) on **both IPv4 and IPv6** (`http.bind` default `*`: `0.0.0.0` and `::`). Pin one family with `looking-glass config set http.bind 0.0.0.0` or `::`. HTTP-01 uses `http.acme_port` (default 80). Port 80 must be free and bindable as a non-root user (`net.ipv4.ip_unprivileged_port_start`). Certs live in `~/.looking-glass/certs/<hostname>/`. `https status` shows bind, listen addresses, paths, expiry, and whether a renew is due. `https logs` tails the supervisor stdout/stderr. `https renew` issues without starting TLS; `--force` ignores the 30-day window. The supervisor reloads uvicorn when the cert files change. `looking-glass tls … -p 5555` inspects the live handshake.
+TLS listens on `http.port` (default 5555) on **both IPv4 and IPv6** (`http.bind` default `*`: `0.0.0.0` and `::`). Pin one family with `looking-glass config set http.bind 0.0.0.0` or `::`. HTTP-01 uses `http.acme_port` (default 80). Port 80 must be free and bindable as a non-root user (`net.ipv4.ip_unprivileged_port_start`). `http.email` is optional (Let's Encrypt expiry notices). Certs live in `~/.looking-glass/certs/<hostname>/`. `https status` shows bind, listen addresses, paths, expiry, and whether a renew is due. `https logs` tails the supervisor stdout/stderr. `https renew` issues without starting TLS; `--force` ignores the 30-day window. The supervisor reloads uvicorn when the cert files change. `looking-glass tls … -p 5555` inspects the live handshake.
 
 Host firewall is not enough if the provider has a **cloud firewall**: allow 5555 on IPv4 and IPv6. After `https stop` / `https start` (or `config set http.bind '*'` if an older config still has `0.0.0.0` or `::`), check from a laptop with `nc -vz s1.example.com 5555`. If that times out, open 5555 on the cloud firewall.
 
