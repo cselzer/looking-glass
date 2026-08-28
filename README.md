@@ -73,7 +73,7 @@ looking-glass restart
 
 ## HTTPS
 
-Optional user-space GUI with Let's Encrypt. Does not replace Apache/Passenger on :443.
+The site daemon: TLS on `http.port` (default 5555) and Let's Encrypt HTTP-01 on port 80. No reverse proxy. Enable linger and `looking-glass boot enable` (see Boot) so it survives reboot.
 
 ```
 looking-glass config hostname s1.example.com
@@ -94,12 +94,12 @@ Host firewall is not enough if the provider has a **cloud firewall**: allow 5555
 
 ## HTTP
 
+Local demos (localhost only). The public GUI is `looking-glass https start` / `boot`.
+
 ```
 looking-glass wall wsgi --host 127.0.0.1 --port 8000
 looking-glass wall asgi --host 127.0.0.1 --port 8001
 ```
-
-Passenger entrypoints are `looking_glass.http.wsgi:app` and `looking_glass.http.asgi:app`. See [`deploy/apache-passenger.conf`](deploy/apache-passenger.conf) for `AllowEncodedSlashes NoDecode` (PATH tokens that contain `%2F`).
 
 GET `/` is the HTML GUI (or a JSON lookup of the TCP peer). Tools are path-shaped: `/1.1.1.1`, `/dns/example.com/MX`, `/register/example`, `/tls/example.com`, `/ping/1.1.1.1`, `/status`.
 
