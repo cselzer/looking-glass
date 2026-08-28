@@ -57,51 +57,89 @@ _die_hostname() {
   echo "    This box needs a full hostname (FQDN) whose A and AAAA records" >&2
   echo "    are assigned on local interfaces (global scope, not link-local)." >&2
   echo >&2
+  if [[ -n "${FQDN:-}" && "$FQDN" == *.* ]]; then
+    echo "    DNS A:    $(dig +short A "$FQDN" 2>/dev/null | tr '\n' ' ')" >&2
+    echo "    DNS AAAA: $(dig +short AAAA "$FQDN" 2>/dev/null | tr '\n' ' ')" >&2
+    echo "    NIC IPv4 (scope global):" >&2
+    ip -4 -o addr show scope global >&2 || true
+    echo "    NIC IPv6 (scope global):" >&2
+    ip -6 -o addr show scope global >&2 || true
+    echo >&2
+  fi
   echo "    1. hostnamectl set-hostname s1.example.com" >&2
   echo "    2. Publish A and AAAA for that name pointing at this VM." >&2
   echo "    3. Assign both addresses on the NIC (not only fe80::)." >&2
   echo "    4. Re-run this script." >&2
+  echo >&2
+  echo "    Debian /etc/hosts often aliases the FQDN to 127.0.1.1; this" >&2
+  echo "    check uses dig (DNS), not getent (NSS / hosts)." >&2
   exit 1
 }
 
+# stdin: one address per line (optional /prefix or %iface). Prints compressed public IPs.
+_usable_ips() {
+  python3 -c '
+import ipaddress, sys
+for raw in sys.stdin:
+    text = raw.strip().split("%", 1)[0].split("/", 1)[0]
+    if not text:
+        continue
+    try:
+        addr = ipaddress.ip_address(text)
+    except ValueError:
+        continue
+    if addr.is_loopback or addr.is_unspecified or addr.is_multicast or addr.is_link_local:
+        continue
+    print(addr.compressed)
+'
+}
+
 _addrs() {
-  # family is 4 or 6
   local family="$1"
-  ip -"${family}" -o addr show scope global | awk '{print $4}' | cut -d/ -f1
+  ip -"${family}" -o addr show scope global | awk '{print $4}' | _usable_ips
 }
 
 _resolved() {
-  # family is 4 or 6
   local family="$1" name="$2"
+  local qtype
   if [[ "$family" == 4 ]]; then
-    getent ahostsv4 "$name" 2>/dev/null | awk '{print $1}' | sort -u
+    qtype=A
   else
-    getent ahostsv6 "$name" 2>/dev/null | awk '{print $1}' | sort -u
+    qtype=AAAA
   fi
+  dig +short "$qtype" "$name" | _usable_ips
 }
 
 _has_match() {
   local family="$1" name="$2"
-  local local_addrs resolved addr
+  local local_addrs resolved
   local_addrs="$(_addrs "$family")"
   resolved="$(_resolved "$family" "$name")"
-  if [[ -z "$local_addrs" ]]; then
+  if [[ -z "$local_addrs" || -z "$resolved" ]]; then
     return 1
   fi
-  if [[ -z "$resolved" ]]; then
-    return 1
-  fi
-  while read -r addr; do
-    [[ -z "$addr" ]] && continue
-    if [[ "$family" == 6 && "$addr" == fe80:* ]]; then
-      continue
-    fi
-    if printf '%s\n' "$local_addrs" | grep -Fxq "$addr"; then
-      return 0
-    fi
-  done <<<"$resolved"
-  return 1
+  LOCAL_ADDRS="$local_addrs" DNS_ADDRS="$resolved" python3 -c '
+import ipaddress, os, sys
+
+def parse(blob):
+    out = []
+    for line in blob.splitlines():
+        text = line.strip()
+        if not text:
+            continue
+        out.append(ipaddress.ip_address(text))
+    return out
+
+local = parse(os.environ.get("LOCAL_ADDRS") or "")
+dns = parse(os.environ.get("DNS_ADDRS") or "")
+sys.exit(0 if any(a == b for a in local for b in dns) else 1)
+'
 }
+
+echo "[*] Installing packages..."
+apt-get update -y
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  unbound unbound-anchor curl ca-certificates python3-venv git ufw bind9-dnsutils
 
 echo "[*] Checking FQDN has IPv4 and IPv6 on this box..."
 FQDN="$(hostname -f 2>/dev/null || true)"
@@ -116,11 +154,6 @@ if ! _has_match 6 "$FQDN"; then
   _die_hostname "'${FQDN}' does not resolve to a global IPv6 address on this box"
 fi
 echo "    ${FQDN} is on this box (IPv4 and IPv6)"
-
-echo "[*] Installing packages..."
-apt-get update -y
-DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  unbound unbound-anchor curl ca-certificates python3-venv git ufw
 
 if ! getent passwd "$LG_USER" >/dev/null; then
   echo "[*] Creating user ${LG_USER} (${LG_HOME})..."
