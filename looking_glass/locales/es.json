@@ -1,0 +1,3218 @@
+{
+  "locale": "es",
+  "source": "en",
+  "messages": {
+    "cli.apex.help": {
+      "text": "Salud de zona y correo (igual que GET /apex/<domain>).",
+      "en": "Zone and mail health (same as GET /apex/<domain>)."
+    },
+    "cli.asn.help": {
+      "text": "Consultar un sistema autónomo (igual que GET /AS<number>).",
+      "en": "Look up an autonomous system (same as GET /AS<number>)."
+    },
+    "cli.auth.help": {
+      "text": "Gestionar usuarios administradores de la GUI y sesiones en archivo.\n\nEl primer inicio de sesión PAM correcto (nunca root) se añade automáticamente.\nLos inicios de sesión posteriores deben estar en la lista de permitidos. Las contraseñas permanecen en PAM.\n\n\b\nlooking-glass auth users\nlooking-glass auth users add alice\nlooking-glass auth users remove alice\nlooking-glass auth sessions clear",
+      "en": "Manage GUI admin users and file sessions.\n\nThe first successful PAM login (never root) is added automatically.\nLater logins must be on the allowlist. Passwords stay in PAM.\n\n\b\nlooking-glass auth users\nlooking-glass auth users add alice\nlooking-glass auth users remove alice\nlooking-glass auth sessions clear"
+    },
+    "cli.auth.sessions.clear.help": {
+      "text": "Eliminar todas las sesiones GUI en disco.",
+      "en": "Delete every on-disk GUI session."
+    },
+    "cli.auth.sessions.help": {
+      "text": "Sesiones en archivo en ~/.looking-glass/data/sessions.",
+      "en": "File sessions under ~/.looking-glass/data/sessions."
+    },
+    "cli.auth.users.add.help": {
+      "text": "Permitir que NAME inicie sesión tras un PAM correcto.",
+      "en": "Allow NAME to log in after PAM succeeds."
+    },
+    "cli.auth.users.help": {
+      "text": "Listar o editar la lista de administradores permitidos en ~/.looking-glass/config.json.",
+      "en": "List or edit the admin allowlist in ~/.looking-glass/config.json."
+    },
+    "cli.auth.users.remove.help": {
+      "text": "Quitar NAME de la lista de administradores permitidos.",
+      "en": "Remove NAME from the admin allowlist."
+    },
+    "cli.bgp.help": {
+      "text": "ASN de origen del prefijo y estado de RPKI ROA (igual que GET /bgp/<ip>).",
+      "en": "Prefix origin ASN and RPKI ROA status (same as GET /bgp/<ip>)."
+    },
+    "cli.boot.check.help": {
+      "text": "Mostrar linger y si las unidades de usuario de looking-glass están instaladas.",
+      "en": "Show linger and whether the looking-glass user units are installed."
+    },
+    "cli.boot.enable.help": {
+      "text": "Escribir las unidades de usuario intel/HTTPS y habilitar looking-glass.target.",
+      "en": "Write intel/HTTPS user units and enable looking-glass.target."
+    },
+    "cli.boot.help": {
+      "text": "Instalar unidades systemd --user para que intel y HTTPS arranquen al reiniciar.\n\nRequiere linger (un comando como root): loginctl enable-linger $USER.\nDespués, `looking-glass boot enable`. Las unidades se ejecutan en primer plano con\nRestart=on-failure. Tras habilitar, `looking-glass restart` y\n`looking-glass status` se comunican con systemd --user.\n\n\b\nlooking-glass boot check\nlooking-glass boot enable",
+      "en": "Install systemd --user units so intel and HTTPS start at reboot.\n\nRequires linger (one root command): loginctl enable-linger $USER.\nThen `looking-glass boot enable`. Units run in the foreground with\nRestart=on-failure. After enable, `looking-glass restart` and\n`looking-glass status` talk to systemd --user.\n\n\b\nlooking-glass boot check\nlooking-glass boot enable"
+    },
+    "cli.build.help": {
+      "text": "Descargar conjuntos de datos de consulta en ~/.looking-glass/data.\n\nCada conjunto de datos se actualiza según su propio calendario desde ~/.looking-glass/config.json\n(se crea con valores predeterminados si no existe). Pase --force para descargarlo todo ahora.\nEl paso de origen ASN puede tardar varios minutos. Las barras de progreso van a stderr;\nel resultado es una vista compacta de terminal (o JSON con `--json`).",
+      "en": "Download lookup datasets into ~/.looking-glass/data.\n\nEach dataset refreshes on its own schedule from ~/.looking-glass/config.json\n(created with defaults if missing). Pass --force to fetch everything now.\nThe ASN origin step can take several minutes. Progress bars go to stderr;\nthe result is a compact terminal view (or JSON with `--json`)."
+    },
+    "cli.build.opt.all_flag": {
+      "text": "Construir todos los conjuntos de datos (este es el valor predeterminado).",
+      "en": "Build every dataset (this is the default)."
+    },
+    "cli.build.opt.do_asn": {
+      "text": "Solo prefijos de origen ASN (lento; RIB de RouteViews).",
+      "en": "ASN origin prefixes only (slow; RouteViews RIB)."
+    },
+    "cli.build.opt.do_asn_org": {
+      "text": "Solo nombres de organizaciones ASN (RIPE).",
+      "en": "ASN organization names only (RIPE)."
+    },
+    "cli.build.opt.do_dns_types": {
+      "text": "Solo tipos RR de DNS de IANA.",
+      "en": "IANA DNS RR types only."
+    },
+    "cli.build.opt.do_iana": {
+      "text": "Solo rangos de uso especial de IANA.",
+      "en": "IANA special-use ranges only."
+    },
+    "cli.build.opt.do_rir": {
+      "text": "Solo asignaciones por país de RIR.",
+      "en": "RIR country allocations only."
+    },
+    "cli.build.opt.do_tlds": {
+      "text": "Solo la lista de TLD de IANA.",
+      "en": "IANA TLD list only."
+    },
+    "cli.build.opt.force": {
+      "text": "Volver a descargar aunque ya existan cachés.",
+      "en": "Re-download even if caches already exist."
+    },
+    "cli.build.opt.verbose": {
+      "text": "Mostrar cada paso de descarga/análisis.",
+      "en": "Show each download/parse step."
+    },
+    "cli.cache.clear.help": {
+      "text": "Eliminar archivos en caché. Sin argumentos borra todos los espacios de nombres.",
+      "en": "Delete cached files. No args clears every namespace."
+    },
+    "cli.cache.help": {
+      "text": "Inspeccionar y borrar la caché de consultas en disco.\n\nLas respuestas RDAP y BGP están en ~/.looking-glass/data/cache. El TTL y el interruptor de la GUI\nweb están en ~/.looking-glass/config.json (`looking-glass config`).\n\n\b\nlooking-glass cache stats\nlooking-glass cache stats rdap\nlooking-glass cache clear\nlooking-glass cache clear bgp\nlooking-glass cache clear rdap ip_1.1.1.1.json",
+      "en": "Inspect and clear the on-disk lookup cache.\n\nRDAP and BGP responses live under ~/.looking-glass/data/cache. TTL and the web GUI\nswitch are ~/.looking-glass/config.json (`looking-glass config`).\n\n\b\nlooking-glass cache stats\nlooking-glass cache stats rdap\nlooking-glass cache clear\nlooking-glass cache clear bgp\nlooking-glass cache clear rdap ip_1.1.1.1.json"
+    },
+    "cli.cache.stats.help": {
+      "text": "Mostrar archivos en caché. NAMESPACE es rdap o bgp.",
+      "en": "Show cached files. NAMESPACE is rdap or bgp."
+    },
+    "cli.config.get.help": {
+      "text": "Imprime una clave con puntos (locale, cache.gui, refresh.rir, …).",
+      "en": "Print one dotted key (locale, cache.gui, refresh.rir, …)."
+    },
+    "cli.config.help": {
+      "text": "Muestra y edita ~/.looking-glass/config.json (locale, cache TTL/GUI, actualización de datasets).\n\nLos catálogos de locale se guardan en ~/.looking-glass/locales. Los datasets se guardan en ~/.looking-glass/data.\nLas cachés de lookup se guardan en ~/.looking-glass/data/cache. Usuarios admin: `looking-glass auth users`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com",
+      "en": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin users: `looking-glass auth users`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com"
+    },
+    "cli.config.hostname.help": {
+      "text": "Define http.hostname a partir del FQDN del nodo (Python getfqdn) o NAME.",
+      "en": "Set http.hostname from the node FQDN (Python getfqdn) or NAME."
+    },
+    "cli.config.set.help": {
+      "text": "Define una clave con puntos y escribe ~/.looking-glass/config.json.",
+      "en": "Set one dotted key and write ~/.looking-glass/config.json."
+    },
+    "cli.config.show.help": {
+      "text": "Imprime el archivo de configuración del operador.",
+      "en": "Print the operator config file."
+    },
+    "cli.dns.err.need_name": {
+      "text": "Pase un nombre, p. ej. looking-glass dns example.com DS",
+      "en": "Pass a name, e.g. looking-glass dns example.com DS"
+    },
+    "cli.dns.err.need_server": {
+      "text": "@ necesita un nameserver, p. ej. @1.1.1.1",
+      "en": "@ needs a nameserver, e.g. @1.1.1.1"
+    },
+    "cli.dns.err.one_server": {
+      "text": "solo se permite un @server",
+      "en": "only one @server is allowed"
+    },
+    "cli.dns.err.too_many": {
+      "text": "Demasiados argumentos; se esperaba [@server] name [type]",
+      "en": "Too many arguments; expected [@server] name [type]"
+    },
+    "cli.dns.opt.port": {
+      "text": "Puerto del nameserver (por defecto 53).",
+      "en": "Nameserver port (default 53)."
+    },
+    "cli.dns.opt.rrtype": {
+      "text": "Tipo RR (A, AAAA, MX, DS, …). El tipo posicional tiene prioridad si se indican ambos.",
+      "en": "RR type (A, AAAA, MX, DS, …). Positional type wins if both are given."
+    },
+    "cli.dns.opt.server_opt": {
+      "text": "IP del nameserver (o IP:port).",
+      "en": "Nameserver IP (or IP:port)."
+    },
+    "cli.dnssec.help": {
+      "text": "Recorre la cadena de confianza DNSSEC (igual que GET /dnssec/<domain>).",
+      "en": "Walk the DNSSEC chain of trust (same as GET /dnssec/<domain>)."
+    },
+    "cli.dnstrace.help": {
+      "text": "Recorrido DNS iterativo desde la raíz, como dig +trace.",
+      "en": "Iterative DNS walk from the root, like dig +trace."
+    },
+    "cli.docs.help": {
+      "text": "Escribe documentación HTML para la API HTTP, la CLI de Click y la GUI web.\n\nLa ruta por defecto es ~/.looking-glass/data/docs.html (lo que sirve GET /docs). Pase una\nruta para escribir una copia en cualquier lugar.",
+      "en": "Write HTML docs for the HTTP API, Click CLI, and web GUI.\n\nDefault path is ~/.looking-glass/data/docs.html (what GET /docs serves). Pass a\npath to write a copy anywhere."
+    },
+    "cli.help": {
+      "text": "Inteligencia IP local: país, ASN y organización.\n\nLos comandos imprimen una vista compacta en la terminal. Pase `--json` (o defina LOOKING_GLASS_JSON=1)\npara el volcado JSON para máquinas. Una sola consulta es un objeto; `--file` o `-`\nescribe un objeto JSON por línea (JSONL) cuando `--json` está definido.\n\n\b\nPara empezar:\n  looking-glass build\n  looking-glass validate\n  looking-glass lookup 1.1.1.1\n  looking-glass dns example.com DS\n  looking-glass lookup --file ips.txt\n  looking-glass lookup bench 1.1.1.1\n  looking-glass docs\n  looking-glass lookup-server start\n  looking-glass wall block ip 203.0.113.0/24\n  looking-glass wall list ip\n  looking-glass --json wall list\n\nLos datasets se guardan en ~/.looking-glass/data. Construya una vez y luego consulte tantas IP como quiera.\nEl servidor de intel (lookup-server) usa un socket Unix en ese mismo directorio.",
+      "en": "Local IP intelligence: country, ASN, and organization.\n\nCommands print a compact terminal view. Pass `--json` (or set LOOKING_GLASS_JSON=1)\nfor the machine JSON dump. A single lookup is one object; `--file` or `-`\nwrites one JSON object per line (JSONL) when `--json` is set.\n\n\b\nGet started:\n  looking-glass build\n  looking-glass validate\n  looking-glass lookup 1.1.1.1\n  looking-glass dns example.com DS\n  looking-glass lookup --file ips.txt\n  looking-glass lookup bench 1.1.1.1\n  looking-glass docs\n  looking-glass lookup-server start\n  looking-glass wall block ip 203.0.113.0/24\n  looking-glass wall list ip\n  looking-glass --json wall list\n\nDatasets live in ~/.looking-glass/data. Build once, then look up as many IPs as you want.\nThe intel server (lookup-server) uses a Unix socket in that same directory."
+    },
+    "cli.http.help": {
+      "text": "Inspecciona la cadena de estado HTTP, redirecciones, encabezados y TTFB.",
+      "en": "Inspect HTTP status chain, redirects, headers, and TTFB."
+    },
+    "cli.https.help": {
+      "text": "Inicia, detiene, inspecciona o renueva el supervisor HTTPS de looking-glass.\n\nTLS escucha en http.port (por defecto 5555) para IPv4 e IPv6 (http.bind por defecto *).\nFije una familia con `looking-glass config set http.bind 0.0.0.0` o `::`.\nLet's Encrypt HTTP-01 usa http.acme_port (por defecto 80). Habilítelo con\n`looking-glass config set http.enabled true` después de definir hostname y email.\nEl servidor de intel es un socket Unix aparte.",
+      "en": "Start, stop, inspect, or renew the looking-glass HTTPS supervisor.\n\nTLS listens on http.port (default 5555) for IPv4 and IPv6 (http.bind default *).\nPin one family with `looking-glass config set http.bind 0.0.0.0` or `::`.\nLet's Encrypt HTTP-01 uses http.acme_port (default 80). Enable with\n`looking-glass config set http.enabled true` after setting hostname and email.\nThe intel server is a separate Unix socket."
+    },
+    "cli.https.logs.help": {
+      "text": "Muestra las últimas líneas de stdout y stderr del supervisor HTTPS.",
+      "en": "Show the HTTPS supervisor stdout and stderr tails."
+    },
+    "cli.https.logs.opt.lines": {
+      "text": "Últimas N líneas de cada log.",
+      "en": "Last N lines of each log."
+    },
+    "cli.https.renew.help": {
+      "text": "Emite o renueva un certificado Let's Encrypt sin iniciar el supervisor.",
+      "en": "Issue or renew a Let's Encrypt certificate without starting the supervisor."
+    },
+    "cli.https.renew.opt.force": {
+      "text": "Emite aunque el certificado siga siendo válido.",
+      "en": "Issue even if the certificate is still valid."
+    },
+    "cli.https.start.help": {
+      "text": "Emite o renueva un certificado y sirve la GUI a través de TLS.",
+      "en": "Issue or renew a certificate and serve the GUI over TLS."
+    },
+    "cli.https.start.opt.foreground": {
+      "text": "Ejecuta en esta terminal en lugar de desprenderse.",
+      "en": "Run in this terminal instead of detaching."
+    },
+    "cli.https.start.opt.timeout": {
+      "text": "Segundos de espera para el puerto TLS.",
+      "en": "Seconds to wait for the TLS port."
+    },
+    "cli.https.status.help": {
+      "text": "Mostrar el estado del supervisor, las rutas de certificados y la caducidad de Let's Encrypt.",
+      "en": "Show supervisor state, certificate paths, and Let's Encrypt expiry."
+    },
+    "cli.https.stop.help": {
+      "text": "Detener el supervisor HTTPS.",
+      "en": "Stop the HTTPS supervisor."
+    },
+    "cli.https.stop.opt.timeout": {
+      "text": "Segundos de espera para el apagado.",
+      "en": "Seconds to wait for shutdown."
+    },
+    "cli.ip.help": {
+      "text": "Consultar una dirección IPv4 o IPv6 (igual que GET /<ip>). También acepta ASN o país.",
+      "en": "Look up an IPv4 or IPv6 address (same as GET /<ip>). Also accepts ASN or country."
+    },
+    "cli.locale.add.help": {
+      "text": "Instalar LANG desde FILE, o clonar los marcadores de posición en inglés.",
+      "en": "Install LANG from FILE, or clone English placeholders."
+    },
+    "cli.locale.delete.help": {
+      "text": "Eliminar un archivo de locale del operador. El inglés no se puede eliminar.",
+      "en": "Remove an operator locale file. English cannot be deleted."
+    },
+    "cli.locale.edit.help": {
+      "text": "Mostrar LANG, o establecer KEY con --text.",
+      "en": "Print LANG, or set KEY with --text."
+    },
+    "cli.locale.edit.opt.text_value": {
+      "text": "Establecer el texto traducido de esta clave.",
+      "en": "Set this key's translated text."
+    },
+    "cli.locale.err.delete_en": {
+      "text": "El inglés es el locale de origen y no se puede eliminar",
+      "en": "English is the source locale and cannot be deleted"
+    },
+    "cli.locale.err.no_file": {
+      "text": "no hay locale de operador en {path}",
+      "en": "no operator locale at {path}"
+    },
+    "cli.locale.help": {
+      "text": "Listar y gestionar archivos de locale de la UI del operador (las API JSON permanecen en inglés).",
+      "en": "List and manage operator UI locale files (JSON APIs stay English)."
+    },
+    "cli.locale.list.help": {
+      "text": "Listar los locales incluidos y los del operador.",
+      "en": "List shipped and operator locales."
+    },
+    "cli.logs.help": {
+      "text": "Volcados de solo lectura del almacén de estadísticas de logs de la GUI.\n\nEl mismo payload que carga la recarga de la ventana de logs desde GET /logs/stats\n(~/.looking-glass/data/logs/stats.json). No reconstruye a partir del JSONL de acceso.\n\n\b\nlooking-glass logs stats",
+      "en": "Read-only dumps of the GUI log stats store.\n\nSame payload the logs window refresh loads from GET /logs/stats\n(~/.looking-glass/data/logs/stats.json). Does not rebuild from access JSONL.\n\n\b\nlooking-glass logs stats"
+    },
+    "cli.logs.stats.help": {
+      "text": "Mostrar las series de hits y errores por día/semana (unix t más ISO).",
+      "en": "Print day/week hit and error series (unix t plus ISO)."
+    },
+    "cli.lookup-server.help": {
+      "text": "Iniciar, detener o inspeccionar el servidor intel local.\n\nEl proceso escucha en un socket Unix en ~/.looking-glass/data (las cachés de lookup están en data/cache).\n`looking-glass wall wsgi` / `wall asgi` y el cliente de socket usan ese socket.",
+      "en": "Start, stop, or inspect the local intel server.\n\nThe process listens on a Unix socket in ~/.looking-glass/data (lookup caches are in data/cache).\n`looking-glass wall wsgi` / `wall asgi` and the socket client use that socket."
+    },
+    "cli.lookup-server.start.help": {
+      "text": "Iniciar el servidor intel si aún no está en ejecución.",
+      "en": "Start the intel server if it is not already running."
+    },
+    "cli.lookup-server.start.opt.foreground": {
+      "text": "Ejecuta en esta terminal en lugar de desprenderse.",
+      "en": "Run in this terminal instead of detaching."
+    },
+    "cli.lookup-server.start.opt.timeout": {
+      "text": "Segundos de espera hasta que esté listo (por defecto 5, o 1800 cuando corresponde construir un dataset).",
+      "en": "Seconds to wait until ready (default 5, or 1800 when a dataset build is due)."
+    },
+    "cli.lookup-server.start.opt.workers": {
+      "text": "workers de uvicorn (por defecto 1).",
+      "en": "uvicorn workers (default 1)."
+    },
+    "cli.lookup-server.status.help": {
+      "text": "Mostrar si el servidor intel está en ejecución.",
+      "en": "Show whether the intel server is running."
+    },
+    "cli.lookup-server.stop.help": {
+      "text": "Detener el servidor intel.",
+      "en": "Stop the intel server."
+    },
+    "cli.lookup-server.stop.opt.timeout": {
+      "text": "Segundos de espera para el apagado.",
+      "en": "Seconds to wait for shutdown."
+    },
+    "cli.lookup.bench.help": {
+      "text": "Saturar GET /{ip} en el servidor intel (IPv4 e IPv6).\n\nRequiere `looking-glass lookup-server start`. No carga RIR en este proceso.\nEl progreso va a stderr; el informe es una vista compacta de terminal (o JSON con `--json`).",
+      "en": "Hammer GET /{ip} on the intel server (IPv4 and IPv6).\n\nRequires `looking-glass lookup-server start`. Does not load RIR in this process.\nProgress is on stderr; the report is a compact terminal view (or JSON with `--json`)."
+    },
+    "cli.lookup.bench.opt.concurrency": {
+      "text": "Workers concurrentes por hilo (por defecto 200).",
+      "en": "Concurrent workers per thread (default 200)."
+    },
+    "cli.lookup.bench.opt.connections": {
+      "text": "Tamaño del pool de conexiones UDS (por defecto: min(concurrency, process fd limit)).",
+      "en": "UDS connection pool size (default: min(concurrency, process fd limit))."
+    },
+    "cli.lookup.bench.opt.duration": {
+      "text": "Segundos de ejecución (por defecto 30).",
+      "en": "Seconds to run (default 30)."
+    },
+    "cli.lookup.bench.opt.socket": {
+      "text": "Sobrescribir ~/.looking-glass/data/lookup.sock.",
+      "en": "Override ~/.looking-glass/data/lookup.sock."
+    },
+    "cli.lookup.bench.opt.threads": {
+      "text": "Bucles de eventos (cada uno con su propia sesión UDS).",
+      "en": "Event loops (each with its own UDS session)."
+    },
+    "cli.lookup.bench.opt.timeout": {
+      "text": "Tiempo de espera por solicitud en segundos (predeterminado 0.5).",
+      "en": "Per-request timeout seconds (default 0.5)."
+    },
+    "cli.lookup.err.both": {
+      "text": "Pase una consulta o --file, no ambos",
+      "en": "Pass a query or --file, not both"
+    },
+    "cli.lookup.err.need_query": {
+      "text": "Pase una IP, ASN o país, '-' para stdin, o --file",
+      "en": "Pass an IP, ASN, or country, '-' for stdin, or --file"
+    },
+    "cli.lookup.err.port_dns": {
+      "text": "--port solo se aplica a nombres DNS",
+      "en": "--port only applies to DNS names"
+    },
+    "cli.lookup.err.rbl_ip": {
+      "text": "--rbl solo se aplica a direcciones IP",
+      "en": "--rbl only applies to IP addresses"
+    },
+    "cli.lookup.err.server_dns": {
+      "text": "--server solo se aplica a nombres DNS",
+      "en": "--server only applies to DNS names"
+    },
+    "cli.lookup.err.type_dns": {
+      "text": "--type solo se aplica a nombres DNS",
+      "en": "--type only applies to DNS names"
+    },
+    "cli.lookup.help": {
+      "text": "Consultar una IP, ASN, país o nombre DNS, o hacer un benchmark del servidor intel.\n\n\b\n  looking-glass lookup 1.1.1.1\n  looking-glass lookup 2001:db8::1\n  looking-glass lookup example.com\n  looking-glass lookup example.com --type AAAA\n  looking-glass lookup --file ips.txt\n  looking-glass lookup bench 1.1.1.1",
+      "en": "Look up an IP, ASN, country, or DNS name, or bench the intel server.\n\n\b\n  looking-glass lookup 1.1.1.1\n  looking-glass lookup 2001:db8::1\n  looking-glass lookup example.com\n  looking-glass lookup example.com --type AAAA\n  looking-glass lookup --file ips.txt\n  looking-glass lookup bench 1.1.1.1"
+    },
+    "cli.lookup.query.help": {
+      "text": "Consultar una IP, ASN, código de país o nombre DNS.\n\nUna consulta imprime una vista compacta de terminal (JSON con `--json`). `--file` o\n`-` (stdin) imprime una línea breve por consulta, o JSONL con `--json`.\nEl tipo se detecta a partir del token. Las IP y los códigos de país usan el\nservidor intel cuando está en ejecución; un volcado de país incluye todos los CIDR de RIR.\nLos nombres que no son una IP, ASN o país son consultas DNS (`--type`, predeterminado A).\nLos resultados RBL se almacenan en caché 24 horas.",
+      "en": "Look up an IP, ASN, country code, or DNS name.\n\nOne query prints a compact terminal view (JSON with `--json`). `--file` or\n`-` (stdin) prints one short line per query, or JSONL with `--json`.\nThe kind is detected from the token. IPs and country codes use the\nintel server when it is running; a country dump includes every RIR CIDR.\nNames that are not an IP, ASN, or country are DNS lookups (`--type`, default A).\nRBL results cache 24 hours."
+    },
+    "cli.lookup.query.opt.concurrency": {
+      "text": "Consultas concurrentes (predeterminado 128, o 16 con --rbl).",
+      "en": "In-flight lookups (default 128, or 16 with --rbl)."
+    },
+    "cli.lookup.query.opt.do_rbl": {
+      "text": "Comprobar DNSBLs (Spamhaus ZEN, Barracuda, SpamCop, DroneBL). Usa TXT+A.",
+      "en": "Check DNSBLs (Spamhaus ZEN, Barracuda, SpamCop, DroneBL). Uses TXT+A."
+    },
+    "cli.lookup.query.opt.force": {
+      "text": "Omitir la caché RBL de 24 horas.",
+      "en": "Bypass the 24-hour RBL cache."
+    },
+    "cli.lookup.query.opt.ip_file": {
+      "text": "Archivo de IP, ASN, códigos de país o nombres DNS, uno por línea. Con --json, escribe un objeto JSON por línea.",
+      "en": "File of IPs, ASNs, country codes, or DNS names, one per line. With --json, writes one JSON object per line."
+    },
+    "cli.lookup.query.opt.nameserver": {
+      "text": "IP del nameserver (o IP:puerto) para consultas DNS. Predeterminado: resolver del sistema (resolv.conf).",
+      "en": "Nameserver IP (or IP:port) for DNS lookups. Default: system resolver (resolv.conf)."
+    },
+    "cli.lookup.query.opt.ns_port": {
+      "text": "Puerto del nameserver para consultas DNS (predeterminado 53). Sobrescribe un puerto en --server.",
+      "en": "Nameserver port for DNS lookups (default 53). Overrides a port in --server."
+    },
+    "cli.lookup.query.opt.rbls": {
+      "text": "RBL como name=domain o domain. Repetible. Implica --rbl.",
+      "en": "RBL as name=domain or domain. Repeatable. Implies --rbl."
+    },
+    "cli.lookup.query.opt.rrtype": {
+      "text": "Tipo RR de DNS para una consulta de nombre (A, AAAA, MX, TXT, …). Predeterminado A.",
+      "en": "DNS RR type for a name lookup (A, AAAA, MX, TXT, …). Default A."
+    },
+    "cli.lookup.query.opt.timeout": {
+      "text": "Tiempo de espera DNS por RBL o consulta DNS.",
+      "en": "DNS timeout per RBL or DNS lookup."
+    },
+    "cli.mail.help": {
+      "text": "MX, SPF, DMARC, selectores DKIM, banner SMTP y STARTTLS.",
+      "en": "MX, SPF, DMARC, DKIM selectors, SMTP banner and STARTTLS."
+    },
+    "cli.mtr.help": {
+      "text": "Informe de ruta al estilo MTR (igual que GET /mtr/<host>).",
+      "en": "MTR-style path report (same as GET /mtr/<host>)."
+    },
+    "cli.opt.as_json": {
+      "text": "Imprimir JSON en stdout en lugar de una vista compacta de terminal.",
+      "en": "Print JSON on stdout instead of a compact terminal view."
+    },
+    "cli.opt.lang": {
+      "text": "Idioma de la UI para la ayuda y el HTML. Las consultas JSON siguen en inglés.",
+      "en": "UI locale for help and HTML. JSON lookups stay English."
+    },
+    "cli.opt.version": {
+      "text": "Mostrar la versión y salir.",
+      "en": "Show the version and exit."
+    },
+    "cli.ping.help": {
+      "text": "ICMP ping (igual que GET /ping/<host>).",
+      "en": "ICMP ping (same as GET /ping/<host>)."
+    },
+    "cli.pmtu.help": {
+      "text": "Descubrimiento de Path MTU con sondas ping don't-fragment.",
+      "en": "Path MTU discovery with don't-fragment ping probes."
+    },
+    "cli.ptr.help": {
+      "text": "PTR más forward-confirmed reverse DNS.",
+      "en": "PTR plus forward-confirmed reverse DNS."
+    },
+    "cli.rdap.help": {
+      "text": "Consulta RDAP (igual que GET /rdap/<token>).",
+      "en": "RDAP lookup (same as GET /rdap/<token>)."
+    },
+    "cli.register.help": {
+      "text": "Comprueba una etiqueta frente a cada TLD de IANA (igual que GET /register/<name>).",
+      "en": "Check a label against every IANA TLD (same as GET /register/<name>)."
+    },
+    "cli.register.opt.tlds_opt": {
+      "text": "Lista de TLD separados por comas (igual que ?tlds=).",
+      "en": "Comma-separated TLD list (same as ?tlds=)."
+    },
+    "cli.reputation.help": {
+      "text": "Listas de bloqueo de dominio o IP (igual que GET /reputation/<name>).",
+      "en": "Domain or IP blocklists (same as GET /reputation/<name>)."
+    },
+    "cli.restart.help": {
+      "text": "Detiene y luego inicia el servidor intel y el supervisor HTTPS.\n\nCuando las unidades systemd --user están habilitadas, reinicia esas unidades.\nDe lo contrario, stop es un no-op si un daemon ya está detenido, así que esto\ntambién inicia ambos desde un estado en frío.",
+      "en": "Stop then start the intel server and the HTTPS supervisor.\n\nWhen the systemd --user units are enabled, restarts those units.\nOtherwise stop is a no-op when a daemon is already down, so this\nalso starts both from a cold state."
+    },
+    "cli.status.help": {
+      "text": "Muestra la salud de los daemons intel y HTTPS.\n\nUsa systemd --user cuando looking-glass-intel y looking-glass-https\nestán habilitados; de lo contrario, pidfiles.",
+      "en": "Show intel and HTTPS daemon health.\n\nUses systemd --user when looking-glass-intel and looking-glass-https\nare enabled; otherwise pidfiles."
+    },
+    "cli.tcp.help": {
+      "text": "Comprobación de conexión TCP: RTT y una inspección opcional del banner.",
+      "en": "TCP connect check: RTT and an optional banner peek."
+    },
+    "cli.tcptraceroute.help": {
+      "text": "TCP traceroute (igual que GET /tcptraceroute/<host>/<port>).",
+      "en": "TCP traceroute (same as GET /tcptraceroute/<host>/<port>)."
+    },
+    "cli.tls.help": {
+      "text": "Inspecciona un handshake TLS y el certificado (igual que GET /tls/<host> con /<port> opcional).",
+      "en": "Inspect a TLS handshake and certificate (same as GET /tls/<host> with optional /<port>)."
+    },
+    "cli.tls.opt.sni": {
+      "text": "Sobrescribe el hostname SNI.",
+      "en": "Override SNI hostname."
+    },
+    "cli.traceroute.help": {
+      "text": "UDP traceroute (igual que GET /traceroute/<host>).",
+      "en": "UDP traceroute (same as GET /traceroute/<host>)."
+    },
+    "cli.validate.help": {
+      "text": "Comprueba que los datasets locales se carguen y que se consulten IPs conocidas correctamente.\n\nUsa ~/.looking-glass/data (los mismos archivos que `looking-glass lookup`). No vuelve a descargar.\nLas consultas son muestras aleatorias de esos datasets, no una lista fija de IP.\nLas cachés obsoletas emiten advertencias; --strict las trata como fallos. Código de salida 2 si falla una comprobación requerida.",
+      "en": "Check that local datasets load and look up known IPs correctly.\n\nUses ~/.looking-glass/data (the same files as `looking-glass lookup`). Does not re-download.\nLookups are random samples from those datasets, not a fixed IP list.\nStale caches warn; pass --strict to fail them. Exit 2 if a required check fails."
+    },
+    "cli.validate.opt.seed": {
+      "text": "Reproduce las mismas muestras aleatorias.",
+      "en": "Replay the same random samples."
+    },
+    "cli.validate.opt.strict": {
+      "text": "Trata las advertencias de dataset obsoleto como fallos.",
+      "en": "Treat stale-dataset warnings as failures."
+    },
+    "cli.wall.allow.help": {
+      "text": "Permite una IP o CIDR. Ese visitante omite el challenge.",
+      "en": "Allow an IP or CIDR. That visitor skips challenge."
+    },
+    "cli.wall.allow.opt.note": {
+      "text": "Se guarda con la entrada de la lista y la línea de wall.log.",
+      "en": "Stored with the list entry and wall.log line."
+    },
+    "cli.wall.asgi.help": {
+      "text": "Aplicación de prueba HTTP (ASGI) que consulta la IP del cliente a través del wall.",
+      "en": "HTTP test app (ASGI) that looks up the client IP through the wall."
+    },
+    "cli.wall.asgi.opt.host": {
+      "text": "Dirección de enlace.",
+      "en": "Bind address."
+    },
+    "cli.wall.asgi.opt.port": {
+      "text": "Puerto de enlace.",
+      "en": "Bind port."
+    },
+    "cli.wall.block.help": {
+      "text": "Bloquea una IP/CIDR, ASN o código de país.",
+      "en": "Block an IP/CIDR, ASN, or country code."
+    },
+    "cli.wall.block.opt.note": {
+      "text": "Se guarda con la entrada de la lista y la línea de wall.log.",
+      "en": "Stored with the list entry and wall.log line."
+    },
+    "cli.wall.challenge.help": {
+      "text": "Aplica un challenge a una IP/CIDR o ASN. El visitante resuelve un puzzle para obtener un pase temporal.",
+      "en": "Challenge an IP/CIDR or ASN. The visitor solves a puzzle for a timed pass."
+    },
+    "cli.wall.challenge.opt.note": {
+      "text": "Se guarda con la entrada de la lista y la línea de wall.log.",
+      "en": "Stored with the list entry and wall.log line."
+    },
+    "cli.wall.help": {
+      "text": "Listas de allow y block usadas por el request wall.\n\nLas listas están en ~/.looking-glass/data/wall.json. Los CIDR IPv4 e IPv6 son válidos.\nLos visitantes desconocidos están permitidos. Challenge sirve un puzzle first-party;\nuna cookie de pase dura wall.challenge_ttl_days (5 por defecto).\n\n\b\nlooking-glass wall block ip 203.0.113.0/24\nlooking-glass wall block asn 13335\nlooking-glass wall block country CN\nlooking-glass wall allow ip 2001:db8::1\nlooking-glass wall challenge ip 198.51.100.0/24\nlooking-glass wall list ip\nlooking-glass wall log\nlooking-glass wall reset --force\nlooking-glass wall remove ip 203.0.113.0/24\nlooking-glass wall wsgi\nlooking-glass wall asgi",
+      "en": "Allow and block lists used by the request wall.\n\nLists live in ~/.looking-glass/data/wall.json. IPv4 and IPv6 CIDRs are fine.\nUnknown visitors are allowed. Challenge serves a first-party puzzle;\na pass cookie lasts wall.challenge_ttl_days (default 5).\n\n\b\nlooking-glass wall block ip 203.0.113.0/24\nlooking-glass wall block asn 13335\nlooking-glass wall block country CN\nlooking-glass wall allow ip 2001:db8::1\nlooking-glass wall challenge ip 198.51.100.0/24\nlooking-glass wall list ip\nlooking-glass wall log\nlooking-glass wall reset --force\nlooking-glass wall remove ip 203.0.113.0/24\nlooking-glass wall wsgi\nlooking-glass wall asgi"
+    },
+    "cli.wall.list.help": {
+      "text": "Muestra las listas de block (y allow). KIND es ip, asn o country.",
+      "en": "Show block (and allow) lists. KIND is ip, asn, or country."
+    },
+    "cli.wall.log.help": {
+      "text": "Muestra el registro de acciones de wall (bloqueos, desafíos, permisos, eliminaciones).",
+      "en": "Show the wall actions log (bans, challenges, allows, removals)."
+    },
+    "cli.wall.log.opt.limit": {
+      "text": "Eventos más recientes que se devolverán. 0 significa todos.",
+      "en": "Newest events to return. 0 means all."
+    },
+    "cli.wall.remove.help": {
+      "text": "Elimina una IP/CIDR, un ASN o un código de país de las listas.",
+      "en": "Remove an IP/CIDR, ASN, or country code from the lists."
+    },
+    "cli.wall.remove.opt.note": {
+      "text": "Se guarda en la línea remove de wall.log.",
+      "en": "Stored on the wall.log remove line."
+    },
+    "cli.wall.reset.help": {
+      "text": "Vacía todas las listas de allow, block y challenge.\n\nEscribe un wall.json vacío y añade una línea reset a wall.log.\nLas cookies de superación de challenge existentes caducan según su propio TTL.",
+      "en": "Clear every allow, block, and challenge list.\n\nWrites an empty wall.json and appends one reset line to wall.log.\nExisting challenge pass cookies expire on their own TTL."
+    },
+    "cli.wall.reset.opt.force": {
+      "text": "No pedir confirmación.",
+      "en": "Do not ask for confirmation."
+    },
+    "cli.wall.reset.opt.note": {
+      "text": "Se guarda en la línea reset de wall.log.",
+      "en": "Stored on the wall.log reset line."
+    },
+    "cli.wall.wsgi.help": {
+      "text": "Aplicación HTTP de prueba (WSGI) que consulta la IP del cliente a través de wall.",
+      "en": "HTTP test app (WSGI) that looks up the client IP through the wall."
+    },
+    "cli.wall.wsgi.opt.host": {
+      "text": "Dirección de enlace.",
+      "en": "Bind address."
+    },
+    "cli.wall.wsgi.opt.port": {
+      "text": "Puerto de enlace.",
+      "en": "Bind port."
+    },
+    "cli.whois.help": {
+      "text": "Datos de registro. RDAP por defecto; --legacy para WHOIS clásico.",
+      "en": "Registration data. RDAP by default; --legacy for classic WHOIS."
+    },
+    "cli.whois.opt.legacy": {
+      "text": "Usa WHOIS del puerto 43 en lugar de RDAP.",
+      "en": "Use port-43 WHOIS instead of RDAP."
+    },
+    "docs.cli_intro": {
+      "text": "Cada comando imprime JSON en stdout. La GUI no es necesaria. looking-glass ip se comunica con el servidor de inteligencia (looking-glass lookup-server start), no con el sitio web. Seleccione un bloque para copiar.",
+      "en": "Every command prints JSON on stdout. The GUI is not required. looking-glass ip talks to the intel server (looking-glass lookup-server start), not the website. Select a block to copy."
+    },
+    "docs.col.cli": {
+      "text": "CLI",
+      "en": "CLI"
+    },
+    "docs.col.form": {
+      "text": "Formulario",
+      "en": "Form"
+    },
+    "docs.col.http": {
+      "text": "HTTP",
+      "en": "HTTP"
+    },
+    "docs.col.tab": {
+      "text": "Pestaña",
+      "en": "Tab"
+    },
+    "docs.gui_intro": {
+      "text": "El índice es una superficie de formularios con pestañas. Cada formulario construye una ruta HTTP (toolPath) y muestra howto de curl / HTTPie / looking-glass mientras escribe. Los informes HTML a página completa usan el mismo renderizador paintInspect. Las tarjetas Inspect en IPs/dominios abren herramientas adicionales; los clics en ASN van a RDAP.",
+      "en": "The index is a tabbed form surface. Each form builds an HTTP path (toolPath) and shows curl / HTTPie / looking-glass howto as you type. Full-page HTML reports use the same paintInspect renderer. Inspect cards on IPs/domains open extra tools; ASN clicks go to RDAP."
+    },
+    "docs.http.apex.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.apex.notes": {
+      "text": "Rechaza una IP suelta; normalize_qname.",
+      "en": "Rejects a bare IP; normalize_qname."
+    },
+    "docs.http.apex.summary": {
+      "text": "Salud de zona y correo (informe Apex).",
+      "en": "Zone and mail health (Apex report)."
+    },
+    "docs.http.bgp.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.bgp.notes": {
+      "text": "ipaddress.ip_network / ip_address.",
+      "en": "ipaddress.ip_network / ip_address."
+    },
+    "docs.http.bgp.summary": {
+      "text": "ASN de origen de RIPEstat y RPKI.",
+      "en": "RIPEstat origin ASN and RPKI."
+    },
+    "docs.http.cache-clear.accept": {
+      "text": "JSON.",
+      "en": "JSON."
+    },
+    "docs.http.cache-clear.notes": {
+      "text": "401 sin sesión. Los nombres de archivo usan basename; ns en {rdap,bgp}.",
+      "en": "401 without a session. Filenames use basename; ns in {rdap,bgp}."
+    },
+    "docs.http.cache-clear.summary": {
+      "text": "Vacía la caché. También POST. /cache/<ns> o /cache/<ns>/<file>.",
+      "en": "Clear cache. Also POST. /cache/<ns> or /cache/<ns>/<file>."
+    },
+    "docs.http.cache.accept": {
+      "text": "JSON.",
+      "en": "JSON."
+    },
+    "docs.http.cache.notes": {
+      "text": "401 a menos que haya una sesión de administrador PAM.",
+      "en": "401 unless a PAM admin session is present."
+    },
+    "docs.http.cache.summary": {
+      "text": "Estadísticas de caché en disco de RDAP/BGP. También /cache/<ns>.",
+      "en": "RDAP/BGP on-disk cache stats. Also /cache/<ns>."
+    },
+    "docs.http.config.accept": {
+      "text": "JSON.",
+      "en": "JSON."
+    },
+    "docs.http.config.notes": {
+      "text": "401 sin sesión. auth.users no se puede establecer aquí; utilice looking-glass auth users.",
+      "en": "401 without a session. auth.users cannot be set here; use looking-glass auth users."
+    },
+    "docs.http.config.summary": {
+      "text": "config.json del operador. POST establece claves con puntos (docs.enabled, locale, cache, refresh, wall, history).",
+      "en": "Operator config.json. POST sets dotted keys (docs.enabled, locale, cache, refresh, wall, history)."
+    },
+    "docs.http.dns.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.dns.notes": {
+      "text": "normalize_qname + canonicalize_qtype. ?server= es solo una IP. El --timeout de CLI no es un parámetro de consulta HTTP.",
+      "en": "normalize_qname + canonicalize_qtype. ?server= is an IP only. CLI --timeout is not an HTTP query param."
+    },
+    "docs.http.dns.summary": {
+      "text": "Consulta DNS. /<type> opcional (A, AAAA, MX, DS, …).",
+      "en": "DNS lookup. Optional /<type> (A, AAAA, MX, DS, …)."
+    },
+    "docs.http.dnssec.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.dnssec.notes": {
+      "text": "Rechaza una IP suelta; normalize_qname.",
+      "en": "Rejects a bare IP; normalize_qname."
+    },
+    "docs.http.dnssec.summary": {
+      "text": "Recorre DS/DNSKEY desde las anclas de confianza de la raíz IANA.",
+      "en": "Walk DS/DNSKEY from the IANA root anchors."
+    },
+    "docs.http.dnstrace.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.dnstrace.notes": {
+      "text": "_plan no ejecuta normalize_qname / canonicalize_qtype.",
+      "en": "_plan does not run normalize_qname / canonicalize_qtype."
+    },
+    "docs.http.dnstrace.summary": {
+      "text": "Recorrido iterativo desde la raíz IANA. /<type> opcional.",
+      "en": "Iterative walk from the IANA root. Optional /<type>."
+    },
+    "docs.http.docs-regen.accept": {
+      "text": "JSON.",
+      "en": "JSON."
+    },
+    "docs.http.docs-regen.notes": {
+      "text": "401 sin sesión. Reescribe ~/.looking-glass/data/docs.html.",
+      "en": "401 without a session. Rewrites ~/.looking-glass/data/docs.html."
+    },
+    "docs.http.docs-regen.summary": {
+      "text": "Reconstruye el archivo de documentación a partir del catálogo.",
+      "en": "Rebuild the documentation file from the catalog."
+    },
+    "docs.http.docs.accept": {
+      "text": "text/html. 404 hasta que se genere.",
+      "en": "text/html. 404 until generated."
+    },
+    "docs.http.docs.notes": {
+      "text": "Desactivado de forma predeterminada (docs.enabled). Cuando está desactivado, GET /docs es 404. Lee ~/.looking-glass/data/docs.html e inyecta el chrome de sesión en vivo. No se regenera en GET.",
+      "en": "Off by default (docs.enabled). When disabled, GET /docs is 404. Reads ~/.looking-glass/data/docs.html and injects live session chrome. Does not regenerate on GET."
+    },
+    "docs.http.docs.summary": {
+      "text": "Esta documentación (archivo escrito por looking-glass docs).",
+      "en": "This documentation (file written by looking-glass docs)."
+    },
+    "docs.http.history.accept": {
+      "text": "JSON, o HTML para /history/<id>.",
+      "en": "JSON, or HTML for /history/<id>."
+    },
+    "docs.http.history.notes": {
+      "text": "GET /history enumera cada consulta exitosa y necesita una sesión. GET /history/<id> es un permalink compartible (JSON o HTML) y no la necesita.",
+      "en": "GET /history lists every successful lookup and needs a session. GET /history/<id> is a shareable permalink (JSON or HTML) and does not."
+    },
+    "docs.http.history.summary": {
+      "text": "Lista global de acciones con sesión iniciada. También /history/<id> para JSON o HTML de reproducción.",
+      "en": "Logged-in global action list. Also /history/<id> for replay JSON or HTML."
+    },
+    "docs.http.http.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.http.notes": {
+      "text": "Se conecta al host indicado (consulta abierta / SSRF si el servidor puede alcanzar redes privadas).",
+      "en": "Connects to the named host (open lookup / SSRF if the server can reach private nets)."
+    },
+    "docs.http.http.summary": {
+      "text": "Sigue redirecciones; cabeceras, versión HTTP, TTFB.",
+      "en": "Follow redirects; headers, HTTP version, TTFB."
+    },
+    "docs.http.login.accept": {
+      "text": "JSON. Establece una cookie HttpOnly looking_glass_session (sesión de archivo opaca, no un JWT).",
+      "en": "JSON. Sets an HttpOnly looking_glass_session cookie (opaque file session, not a JWT)."
+    },
+    "docs.http.login.notes": {
+      "text": "Root nunca está permitido. El cuerpo es JSON o un formulario username/password.",
+      "en": "Root is never allowed. Body is JSON or form username/password."
+    },
+    "docs.http.login.summary": {
+      "text": "Inicio de sesión PAM. El primer usuario no root inicializa la allowlist.",
+      "en": "PAM login. First non-root user bootstraps the allowlist."
+    },
+    "docs.http.logout.accept": {
+      "text": "JSON.",
+      "en": "JSON."
+    },
+    "docs.http.logout.notes": {
+      "text": "Elimina el archivo de sesión en disco.",
+      "en": "Deletes the on-disk session file."
+    },
+    "docs.http.logout.summary": {
+      "text": "Finaliza la sesión GUI y borra la cookie.",
+      "en": "End the GUI session and clear the cookie."
+    },
+    "docs.http.logs-stats.accept": {
+      "text": "JSON.",
+      "en": "JSON."
+    },
+    "docs.http.logs-stats.notes": {
+      "text": "401 sin sesión. Instantáneas de 15 minutos de las últimas 24h (día) y 7d (semana); solo buckets almacenados, sin relleno de ceros.",
+      "en": "401 without a session. 15-minute snapshots for the last 24h (day) and 7d (week); stored buckets only, no zero fill."
+    },
+    "docs.http.logs-stats.summary": {
+      "text": "Series temporales de aciertos/errores por página para los gráficos del visor de logs.",
+      "en": "Per-page hit/error time series for the log viewer charts."
+    },
+    "docs.http.logs.accept": {
+      "text": "JSON.",
+      "en": "JSON."
+    },
+    "docs.http.logs.notes": {
+      "text": "401 sin sesión. kind=access|error|login|lookup|serve-err|wall|build (serve-out es un alias de lookup). ok=true|false filtra login.",
+      "en": "401 without a session. kind=access|error|login|lookup|serve-err|wall|build (serve-out is an alias of lookup). ok=true|false filters login."
+    },
+    "docs.http.logs.summary": {
+      "text": "Hacer tail de los registros de GUI, servidor intel, wall y build como líneas JSON.",
+      "en": "Tail GUI, intel server, wall, and build logs as JSON lines."
+    },
+    "docs.http.mail.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.mail.notes": {
+      "text": "normalize_qname dentro del comprobador de correo.",
+      "en": "normalize_qname inside the mail checker."
+    },
+    "docs.http.mail.summary": {
+      "text": "MX/SPF/DMARC/DKIM, banner SMTP y STARTTLS.",
+      "en": "MX/SPF/DMARC/DKIM, SMTP banner and STARTTLS."
+    },
+    "docs.http.mtr.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.mtr.notes": {
+      "text": "IP o normalize_qname. ?cycles= es mtr -c, por defecto 10, acotado por mtr.max_cycles.",
+      "en": "IP or normalize_qname. ?cycles= is mtr -c, default 10, clamped by mtr.max_cycles."
+    },
+    "docs.http.mtr.summary": {
+      "text": "Ruta repetida, pérdida y RTT como mtr --report.",
+      "en": "Repeated path, loss and RTT like mtr --report."
+    },
+    "docs.http.ping.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.ping.notes": {
+      "text": "IP o normalize_qname. Sockets de Python, sin shell.",
+      "en": "IP or normalize_qname. Python sockets, no shell."
+    },
+    "docs.http.ping.summary": {
+      "text": "ICMP echo (fallback TCP 443 si ICMP está filtrado).",
+      "en": "ICMP echo (TCP 443 fallback if ICMP is filtered)."
+    },
+    "docs.http.pmtu.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.pmtu.notes": {
+      "text": "lista argv de subprocess (sin shell); el destino sigue controlado por el usuario.",
+      "en": "subprocess argv list (no shell); target is still user-controlled."
+    },
+    "docs.http.pmtu.summary": {
+      "text": "Path MTU mediante payloads de ping don't-fragment.",
+      "en": "Path MTU via don't-fragment ping payloads."
+    },
+    "docs.http.ptr.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.ptr.notes": {
+      "text": "Requiere una IP válida.",
+      "en": "Requires a valid IP."
+    },
+    "docs.http.ptr.summary": {
+      "text": "PTR más forward-confirmed reverse DNS.",
+      "en": "PTR plus forward-confirmed reverse DNS."
+    },
+    "docs.http.rdap.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.rdap.notes": {
+      "text": "El resto del path es principalmente pass-through (entrecomillado hacia rdap.org).",
+      "en": "Path rest is mostly pass-through (quoted into rdap.org)."
+    },
+    "docs.http.rdap.summary": {
+      "text": "RDAP para una IP, un dominio o un ASN.",
+      "en": "RDAP for an IP, domain, or ASN."
+    },
+    "docs.http.register.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.register.notes": {
+      "text": "example.com conserva la primera etiqueta. NXDOMAIN es no-dns; NS es has-ns; NODATA/wildcard/RDAP-registered es unknown. No es un carrito de registrador. Rechaza una IP suelta.",
+      "en": "example.com keeps the first label. NXDOMAIN is no-dns; NS is has-ns; NODATA/wildcard/RDAP-registered is unknown. Not a registrar cart. Rejects a bare IP."
+    },
+    "docs.http.register.summary": {
+      "text": "Tablero de ajedrez de delegación DNS de una etiqueta en cada TLD de IANA.",
+      "en": "DNS-delegation chessboard of a label across every IANA TLD."
+    },
+    "docs.http.reputation.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.reputation.notes": {
+      "text": "IP mediante ipaddress; de lo contrario, normalize_qname.",
+      "en": "IP via ipaddress; otherwise normalize_qname."
+    },
+    "docs.http.reputation.summary": {
+      "text": "DNSBL / listas de dominios, más Sender Score.",
+      "en": "DNSBL / domain lists, plus Sender Score."
+    },
+    "docs.http.root.accept": {
+      "text": "HTML si Accept prefiere text/html; JSON en caso contrario.",
+      "en": "HTML if Accept prefers text/html; JSON otherwise."
+    },
+    "docs.http.root.notes": {
+      "text": "JSON usa classify_query en la dirección del visitante.",
+      "en": "JSON uses classify_query on the visitor address."
+    },
+    "docs.http.root.summary": {
+      "text": "Índice HTML de la GUI, o consulta JSON del peer TCP.",
+      "en": "HTML GUI index, or JSON lookup of the TCP peer."
+    },
+    "docs.http.serve-start.accept": {
+      "text": "JSON.",
+      "en": "JSON."
+    },
+    "docs.http.serve-start.notes": {
+      "text": "401 sin una sesión. La barra de estado muestra ready frente a building y el uptime de intel.",
+      "en": "401 without a session. Status bar shows ready vs building and intel uptime."
+    },
+    "docs.http.serve-start.summary": {
+      "text": "Iniciar el servidor intel. También POST /serve/stop.",
+      "en": "Start the intel server. Also POST /serve/stop."
+    },
+    "docs.http.session.accept": {
+      "text": "JSON.",
+      "en": "JSON."
+    },
+    "docs.http.session.notes": {
+      "text": "Público. No filtra la allowlist. Las sesiones son secretos de 256 bits en disco; la cookie es solo el id.",
+      "en": "Public. Does not leak the allowlist. Sessions are 256-bit secrets on disk; the cookie is only the id."
+    },
+    "docs.http.session.summary": {
+      "text": "Usuario admin actual, o user: null.",
+      "en": "Current admin user, or user: null."
+    },
+    "docs.http.status.accept": {
+      "text": "Siempre JSON (Cache-Control: no-store).",
+      "en": "Always JSON (Cache-Control: no-store)."
+    },
+    "docs.http.status.notes": {
+      "text": "No está restringido por GUI. Lo usa la barra de estado. `ip` es ipv4 o ipv6; ambas familias también están en ipv4 / ipv6. Las respuestas autenticadas añaden user y serve.running / serve.uptime.",
+      "en": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user and serve.running / serve.uptime."
+    },
+    "docs.http.status.summary": {
+      "text": "Hostname, IPv4 y/o IPv6, reloj, uptime, carga, WSGI/ASGI.",
+      "en": "Hostname, IPv4 and/or IPv6, clock, uptime, load, WSGI/ASGI."
+    },
+    "docs.http.tcp.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.tcp.notes": {
+      "text": "Rango de puertos comprobado; el host no se normaliza en _plan.",
+      "en": "Port range checked; host is not normalized in _plan."
+    },
+    "docs.http.tcp.summary": {
+      "text": "Conexión TCP y un banner breve.",
+      "en": "TCP connect and a short banner."
+    },
+    "docs.http.tcptraceroute.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.tcptraceroute.notes": {
+      "text": "Puerto 1–65535; IP o normalize_qname.",
+      "en": "Port 1–65535; IP or normalize_qname."
+    },
+    "docs.http.tcptraceroute.summary": {
+      "text": "Recorrido TCP de TTL. Opcional /<port> (por defecto 443).",
+      "en": "TCP TTL walk. Optional /<port> (default 443)."
+    },
+    "docs.http.tls.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.tls.notes": {
+      "text": "Puerto 1–65535. Solo se elimina ?sni=.",
+      "en": "Port 1–65535. ?sni= is stripped only."
+    },
+    "docs.http.tls.summary": {
+      "text": "Handshake TLS y certificado. Opcional /<port> (por defecto 443).",
+      "en": "TLS handshake and certificate. Optional /<port> (default 443)."
+    },
+    "docs.http.token.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.token.notes": {
+      "text": "classify_query: ipaddress, luego dígitos de ASN, luego canonical_country.",
+      "en": "classify_query: ipaddress, then ASN digits, then canonical_country."
+    },
+    "docs.http.token.summary": {
+      "text": "Detecta automáticamente IP, ASN (AS13335) o país ISO (AU).",
+      "en": "Auto-detect IP, ASN (AS13335), or ISO country (AU)."
+    },
+    "docs.http.traceroute.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.traceroute.notes": {
+      "text": "IP o normalize_qname.",
+      "en": "IP or normalize_qname."
+    },
+    "docs.http.traceroute.summary": {
+      "text": "Traceroute UDP, tres sondas por salto.",
+      "en": "UDP traceroute, three probes per hop."
+    },
+    "docs.http.whois.accept": {
+      "text": "Informe JSON o HTML.",
+      "en": "JSON or HTML report."
+    },
+    "docs.http.whois.notes": {
+      "text": "Los tokens de dominio/IP no se normalizan en _plan.",
+      "en": "Domain/IP tokens are not normalized in _plan."
+    },
+    "docs.http.whois.summary": {
+      "text": "RDAP por defecto; WHOIS legado del puerto 43 con ?legacy=1.",
+      "en": "RDAP by default; legacy port-43 WHOIS with ?legacy=1."
+    },
+    "docs.http_intro": {
+      "text": "Todas las consultas pasan por respond / respond_async. Envíe Accept: application/json (o el valor por defecto de curl) para JSON. Los navegadores reciben HTML pintado por paintInspect.",
+      "en": "All lookups go through respond / respond_async. Send Accept: application/json (or curl’s default) for JSON. Browsers get HTML painted by paintInspect."
+    },
+    "docs.lede": {
+      "text": "API HTTP, CLI de Click y GUI web. Se regenera con {cmd} o POST /docs. GET /docs sirve el archivo en disco con el chrome de la sesión en vivo y no lo reconstruye.",
+      "en": "HTTP API, Click CLI, and the web GUI. Regenerated by {cmd} or POST /docs. GET /docs serves the file on disk with live session chrome and does not rebuild it."
+    },
+    "docs.missing": {
+      "text": "La documentación no se ha generado. Ejecute {cmd}.",
+      "en": "Docs have not been generated. Run {cmd}."
+    },
+    "docs.missing_exit": {
+      "text": "salir al sitio principal.",
+      "en": "exit to the main site."
+    },
+    "docs.nav_cli": {
+      "text": "CLI de Click",
+      "en": "Click CLI"
+    },
+    "docs.nav_gui": {
+      "text": "GUI web",
+      "en": "Web GUI"
+    },
+    "docs.nav_http": {
+      "text": "API HTTP",
+      "en": "HTTP API"
+    },
+    "docs.notes": {
+      "text": "Notas",
+      "en": "Notes"
+    },
+    "docs.on_this_page": {
+      "text": "En esta página",
+      "en": "On this page"
+    },
+    "docs.open_lookup": {
+      "text": "Este es un servicio de consulta abierto: las herramientas se conectan a los nombres que se indican. Las consultas no tienen autenticación. Los enlaces compartidos /history/<id> son públicos. La barra de historial, la caché, los registros y los controles de serve requieren una sesión de administrador PAM. XSS y la inyección de shell no son el modelo de amenaza; el egreso a direcciones privadas o de metadatos sí lo es, si este host puede enrutar hacia allí.",
+      "en": "This is an open lookup service: tools connect to names you pass. Lookups have no auth. Shared /history/<id> links are public. The history rail, cache, logs, and serve controls need a PAM admin session. XSS and shell injection are not the threat model; egress to private or metadata addresses is, if this host can route there."
+    },
+    "docs.query": {
+      "text": "Consulta",
+      "en": "Query"
+    },
+    "docs.response": {
+      "text": "Respuesta",
+      "en": "Response"
+    },
+    "docs.title": {
+      "text": "Documentación de looking-glass",
+      "en": "looking-glass docs"
+    },
+    "gui.all_lookup_types": {
+      "text": "Todos los tipos de consulta",
+      "en": "All lookup types"
+    },
+    "gui.apex.domain": {
+      "text": "Dominio",
+      "en": "Domain"
+    },
+    "gui.apex.hint": {
+      "text": "Comprobar la salud de la zona y del correo: glue del padre, NS, SOA, MX, WWW y SMTP, citando los mismos RFC que usa una auditoría DNS clásica.",
+      "en": "Check zone and mail health: parent glue, NS, SOA, MX, WWW, and SMTP, citing the same RFCs a classic DNS audit uses."
+    },
+    "gui.apex.submit": {
+      "text": "Ejecutar Apex",
+      "en": "Run Apex"
+    },
+    "gui.apex.tab": {
+      "text": "Apex",
+      "en": "Apex"
+    },
+    "gui.apex.title": {
+      "text": "Apex",
+      "en": "Apex"
+    },
+    "gui.asn.hint": {
+      "text": "Consultar un sistema autónomo: el nombre de la organización y los contactos RDAP cuando el registro los tenga.",
+      "en": "Look up an autonomous system: the organisation name, and RDAP contacts when the registry has them."
+    },
+    "gui.asn.label": {
+      "text": "ASN",
+      "en": "ASN"
+    },
+    "gui.asn.submit": {
+      "text": "Consultar ASN",
+      "en": "Look up ASN"
+    },
+    "gui.asn.tab": {
+      "text": "ASN",
+      "en": "ASN"
+    },
+    "gui.asn.title": {
+      "text": "ASN",
+      "en": "ASN"
+    },
+    "gui.bgp.hint": {
+      "text": "Asociar un prefijo a su ASN de origen y comprobar el ROA: válido, inválido o no encontrado.",
+      "en": "Map a prefix to its origin ASN and check the ROA: valid, invalid, or not found."
+    },
+    "gui.bgp.label": {
+      "text": "IP o prefijo",
+      "en": "IP or prefix"
+    },
+    "gui.bgp.submit": {
+      "text": "Comprobar BGP",
+      "en": "Check BGP"
+    },
+    "gui.bgp.tab": {
+      "text": "BGP / RPKI",
+      "en": "BGP / RPKI"
+    },
+    "gui.bgp.title": {
+      "text": "BGP / RPKI",
+      "en": "BGP / RPKI"
+    },
+    "gui.cache": {
+      "text": "Caché",
+      "en": "Cache"
+    },
+    "gui.cache.age": {
+      "text": "edad",
+      "en": "age"
+    },
+    "gui.cache.all": {
+      "text": "todos",
+      "en": "all"
+    },
+    "gui.cache.clear": {
+      "text": "Vaciar",
+      "en": "Clear"
+    },
+    "gui.cache.clear_all": {
+      "text": "Vaciar todo",
+      "en": "Clear all"
+    },
+    "gui.cache.close": {
+      "text": "Cerrar",
+      "en": "Close"
+    },
+    "gui.cache.empty": {
+      "text": "La caché está vacía.",
+      "en": "Cache is empty."
+    },
+    "gui.cache.kind": {
+      "text": "tipo",
+      "en": "kind"
+    },
+    "gui.cache.loading": {
+      "text": "Cargando…",
+      "en": "Loading…"
+    },
+    "gui.cache.namespace": {
+      "text": "namespace",
+      "en": "namespace"
+    },
+    "gui.cache.none": {
+      "text": "No hay coincidencias.",
+      "en": "No matches."
+    },
+    "gui.cache.query": {
+      "text": "consulta",
+      "en": "query"
+    },
+    "gui.cache.search": {
+      "text": "Buscar consulta, namespace o tipo",
+      "en": "Search query, namespace, or kind"
+    },
+    "gui.cache.size": {
+      "text": "tamaño",
+      "en": "size"
+    },
+    "gui.cache.title": {
+      "text": "Caché",
+      "en": "Cache"
+    },
+    "gui.cache.when": {
+      "text": "cuándo",
+      "en": "when"
+    },
+    "gui.cancel": {
+      "text": "Cancelar",
+      "en": "Cancel"
+    },
+    "gui.choose_tool": {
+      "text": "Elija una herramienta…",
+      "en": "Choose a tool…"
+    },
+    "gui.clear_result": {
+      "text": "Borrar resultado",
+      "en": "Clear result"
+    },
+    "gui.close": {
+      "text": "Cerrar",
+      "en": "Close"
+    },
+    "gui.common": {
+      "text": "Común",
+      "en": "Common"
+    },
+    "gui.config": {
+      "text": "Configuración",
+      "en": "Config"
+    },
+    "gui.config.cache": {
+      "text": "Caché",
+      "en": "Cache"
+    },
+    "gui.config.cache.gui": {
+      "text": "Caché de la GUI",
+      "en": "Cache GUI"
+    },
+    "gui.config.cache.ttl_days": {
+      "text": "TTL de caché (días)",
+      "en": "Cache TTL (days)"
+    },
+    "gui.config.docs": {
+      "text": "Documentación",
+      "en": "Documentation"
+    },
+    "gui.config.docs.enabled": {
+      "text": "Activar documentación",
+      "en": "Enable documentation"
+    },
+    "gui.config.history": {
+      "text": "Historial",
+      "en": "History"
+    },
+    "gui.config.history.snapshots": {
+      "text": "Instantáneas",
+      "en": "Snapshots"
+    },
+    "gui.config.http": {
+      "text": "HTTPS",
+      "en": "HTTPS"
+    },
+    "gui.config.http.email": {
+      "text": "Correo de Let's Encrypt",
+      "en": "Let's Encrypt email"
+    },
+    "gui.config.http.enabled": {
+      "text": "Servir la GUI por TLS",
+      "en": "Serve the GUI over TLS"
+    },
+    "gui.config.http.hostname": {
+      "text": "Hostname (FQDN)",
+      "en": "Hostname (FQDN)"
+    },
+    "gui.config.http.port": {
+      "text": "Puerto TLS",
+      "en": "TLS port"
+    },
+    "gui.config.http.staging": {
+      "text": "Usar Let's Encrypt staging",
+      "en": "Use Let's Encrypt staging"
+    },
+    "gui.config.http.workers": {
+      "text": "Workers de Uvicorn",
+      "en": "Uvicorn workers"
+    },
+    "gui.config.loading": {
+      "text": "Cargando…",
+      "en": "Loading…"
+    },
+    "gui.config.locale": {
+      "text": "Configuración regional",
+      "en": "Locale"
+    },
+    "gui.config.mtr": {
+      "text": "MTR",
+      "en": "MTR"
+    },
+    "gui.config.mtr.cycles": {
+      "text": "Pases predeterminados",
+      "en": "Default passes"
+    },
+    "gui.config.mtr.max_cycles": {
+      "text": "Pases máximos",
+      "en": "Max passes"
+    },
+    "gui.config.path": {
+      "text": "Archivo",
+      "en": "File"
+    },
+    "gui.config.refresh": {
+      "text": "Actualización del conjunto de datos (días)",
+      "en": "Dataset refresh (days)"
+    },
+    "gui.config.refresh.asn": {
+      "text": "ASN",
+      "en": "ASN"
+    },
+    "gui.config.refresh.asn_org": {
+      "text": "Org. ASN",
+      "en": "ASN org"
+    },
+    "gui.config.refresh.dns_types": {
+      "text": "Tipos DNS",
+      "en": "DNS types"
+    },
+    "gui.config.refresh.iana": {
+      "text": "IANA",
+      "en": "IANA"
+    },
+    "gui.config.refresh.rir": {
+      "text": "RIR",
+      "en": "RIR"
+    },
+    "gui.config.refresh.tlds": {
+      "text": "TLDs",
+      "en": "TLDs"
+    },
+    "gui.config.save": {
+      "text": "Guardar",
+      "en": "Save"
+    },
+    "gui.config.saved": {
+      "text": "Guardado",
+      "en": "Saved"
+    },
+    "gui.config.title": {
+      "text": "Configuración",
+      "en": "Config"
+    },
+    "gui.config.users": {
+      "text": "Usuarios administradores",
+      "en": "Admin users"
+    },
+    "gui.config.users.hint": {
+      "text": "Utilice looking-glass auth users para añadir o quitar nombres.",
+      "en": "Use looking-glass auth users to add or remove names."
+    },
+    "gui.config.wall": {
+      "text": "Desafío de firewall",
+      "en": "Firewall challenge"
+    },
+    "gui.config.wall.challenge_bits": {
+      "text": "Bits del puzzle (8–24)",
+      "en": "Puzzle bits (8–24)"
+    },
+    "gui.config.wall.challenge_ttl_days": {
+      "text": "TTL de la cookie de paso (días)",
+      "en": "Pass cookie TTL (days)"
+    },
+    "gui.dns.filter": {
+      "text": "Filtrar tipos",
+      "en": "Filter types"
+    },
+    "gui.dns.hint": {
+      "text": "Pida un tipo de registro del catálogo IANA, como dig. Deje el nameserver vacío para usar el resolver del sistema operativo (resolv.conf). Rellénelo solo para anularlo, como dig @. Los metatipos como ANY, AXFR y OPT se omiten. DS y DNSKEY viven en el apex de la zona (example.com), no en www.",
+      "en": "Ask for a record type from the IANA catalog, like dig. Leave nameserver empty to use the OS resolver (resolv.conf). Fill it in only to override, like dig @. Meta types such as ANY, AXFR, and OPT are left out. DS and DNSKEY live at the zone apex (example.com), not at www."
+    },
+    "gui.dns.name": {
+      "text": "Nombre",
+      "en": "Name"
+    },
+    "gui.dns.nameserver": {
+      "text": "Nameserver",
+      "en": "Nameserver"
+    },
+    "gui.dns.port": {
+      "text": "Puerto",
+      "en": "Port"
+    },
+    "gui.dns.submit": {
+      "text": "Consultar DNS",
+      "en": "Query DNS"
+    },
+    "gui.dns.tab": {
+      "text": "DNS",
+      "en": "DNS"
+    },
+    "gui.dns.title": {
+      "text": "DNS",
+      "en": "DNS"
+    },
+    "gui.dns.type": {
+      "text": "Tipo",
+      "en": "Type"
+    },
+    "gui.dnssec.domain": {
+      "text": "Dominio",
+      "en": "Domain"
+    },
+    "gui.dnssec.hint": {
+      "text": "Recorra la cadena de confianza desde las anclas raíz de IANA hasta este dominio. Los nombres sin firmar (google.com) son delegaciones inseguras, no una ruptura. Una ruptura es bogus: una discrepancia DS/DNSKEY o un RRSIG incorrecto.",
+      "en": "Walk the chain of trust from the IANA root anchors down to this domain. Unsigned names (google.com) are insecure delegations, not a break. A break is bogus: a DS/DNSKEY mismatch or a bad RRSIG."
+    },
+    "gui.dnssec.submit": {
+      "text": "Validar DNSSEC",
+      "en": "Validate DNSSEC"
+    },
+    "gui.dnssec.tab": {
+      "text": "DNSSEC",
+      "en": "DNSSEC"
+    },
+    "gui.dnssec.title": {
+      "text": "DNSSEC",
+      "en": "DNSSEC"
+    },
+    "gui.dnstrace.hint": {
+      "text": "Recorra de forma iterativa desde la raíz IANA a través del TLD hasta los servidores autoritativos, como dig +trace. Esto no es una consulta recursiva.",
+      "en": "Walk iteratively from the IANA root through TLD to the authoritative servers, like dig +trace. This is not a recursive lookup."
+    },
+    "gui.dnstrace.submit": {
+      "text": "Trazar DNS",
+      "en": "Trace DNS"
+    },
+    "gui.dnstrace.tab": {
+      "text": "DNS trace",
+      "en": "DNS trace"
+    },
+    "gui.dnstrace.title": {
+      "text": "Traza DNS",
+      "en": "DNS trace"
+    },
+    "gui.domain": {
+      "text": "Dominio",
+      "en": "Domain"
+    },
+    "gui.elapsed": {
+      "text": "{n}s transcurridos",
+      "en": "{n}s elapsed"
+    },
+    "gui.group.dns": {
+      "text": "DNS",
+      "en": "DNS"
+    },
+    "gui.group.lookup": {
+      "text": "Consultar",
+      "en": "Look up"
+    },
+    "gui.group.mail": {
+      "text": "Correo",
+      "en": "Mail"
+    },
+    "gui.group.path": {
+      "text": "Ruta",
+      "en": "Path"
+    },
+    "gui.group.web": {
+      "text": "Web",
+      "en": "Web"
+    },
+    "gui.history": {
+      "text": "Historial",
+      "en": "History"
+    },
+    "gui.history.all": {
+      "text": "todos",
+      "en": "all"
+    },
+    "gui.history.copy": {
+      "text": "copiar",
+      "en": "copy"
+    },
+    "gui.history.details": {
+      "text": "Detalles",
+      "en": "Details"
+    },
+    "gui.history.empty": {
+      "text": "Aún no hay acciones.",
+      "en": "No actions yet."
+    },
+    "gui.history.guest": {
+      "text": "invitado",
+      "en": "guest"
+    },
+    "gui.history.intel": {
+      "text": "intel",
+      "en": "intel"
+    },
+    "gui.history.kind": {
+      "text": "tipo",
+      "en": "kind"
+    },
+    "gui.history.link": {
+      "text": "enlace",
+      "en": "link"
+    },
+    "gui.history.looked_up": {
+      "text": "consultado",
+      "en": "looked up"
+    },
+    "gui.history.none": {
+      "text": "No hay coincidencias.",
+      "en": "No matches."
+    },
+    "gui.history.open": {
+      "text": "abrir",
+      "en": "open"
+    },
+    "gui.history.path": {
+      "text": "ruta",
+      "en": "path"
+    },
+    "gui.history.permalink": {
+      "text": "Enlace del historial",
+      "en": "History link"
+    },
+    "gui.history.query": {
+      "text": "consulta",
+      "en": "query"
+    },
+    "gui.history.search": {
+      "text": "Consulta, usuario o fecha",
+      "en": "Search query, user, or date"
+    },
+    "gui.history.visitor": {
+      "text": "visitante",
+      "en": "visitor"
+    },
+    "gui.history.when": {
+      "text": "cuándo",
+      "en": "when"
+    },
+    "gui.history.who": {
+      "text": "quién",
+      "en": "who"
+    },
+    "gui.host_or_ip": {
+      "text": "Host o IP",
+      "en": "Host or IP"
+    },
+    "gui.howto.cli": {
+      "text": "CLI",
+      "en": "CLI"
+    },
+    "gui.howto.copy": {
+      "text": "Haga doble clic en un comando para copiarlo",
+      "en": "Double-click a command to copy"
+    },
+    "gui.howto.curl": {
+      "text": "curl",
+      "en": "curl"
+    },
+    "gui.howto.httpie": {
+      "text": "HTTPie",
+      "en": "HTTPie"
+    },
+    "gui.http.hint": {
+      "text": "Siga la cadena de estado: redirecciones, encabezados de respuesta, versión HTTP / ALPN, TTFB, HSTS y tiempos.",
+      "en": "Follow the status chain: redirects, response headers, HTTP version / ALPN, TTFB, HSTS, and timing."
+    },
+    "gui.http.label": {
+      "text": "Host o URL",
+      "en": "Host or URL"
+    },
+    "gui.http.submit": {
+      "text": "Inspeccionar HTTP",
+      "en": "Inspect HTTP"
+    },
+    "gui.http.tab": {
+      "text": "HTTP",
+      "en": "HTTP"
+    },
+    "gui.http.title": {
+      "text": "Inspector HTTP",
+      "en": "HTTP inspector"
+    },
+    "gui.ip.hint": {
+      "text": "Vea quién anuncia esta dirección, en qué red se encuentra y el país GeoIP.",
+      "en": "See who announces this address, which network it sits on, and the GeoIP country."
+    },
+    "gui.ip.label": {
+      "text": "IPv4 o IPv6",
+      "en": "IPv4 or IPv6"
+    },
+    "gui.ip.submit": {
+      "text": "Consultar IP",
+      "en": "Look up IP"
+    },
+    "gui.ip.tab": {
+      "text": "IP",
+      "en": "IP"
+    },
+    "gui.ip.title": {
+      "text": "IP",
+      "en": "IP"
+    },
+    "gui.login": {
+      "text": "iniciar sesión",
+      "en": "login"
+    },
+    "gui.login.error": {
+      "text": "error al iniciar sesión",
+      "en": "login failed"
+    },
+    "gui.login.password": {
+      "text": "Contraseña",
+      "en": "Password"
+    },
+    "gui.login.submit": {
+      "text": "Iniciar sesión",
+      "en": "Login"
+    },
+    "gui.login.title": {
+      "text": "Iniciar sesión",
+      "en": "Login"
+    },
+    "gui.login.username": {
+      "text": "Usuario",
+      "en": "Username"
+    },
+    "gui.logout": {
+      "text": "cerrar sesión",
+      "en": "logout"
+    },
+    "gui.logs.access": {
+      "text": "acceso",
+      "en": "access"
+    },
+    "gui.logs.all": {
+      "text": "todos",
+      "en": "all"
+    },
+    "gui.logs.avg_ms": {
+      "text": "ms prom.",
+      "en": "avg ms"
+    },
+    "gui.logs.build": {
+      "text": "compilación",
+      "en": "build"
+    },
+    "gui.logs.challenge": {
+      "text": "desafío",
+      "en": "challenge"
+    },
+    "gui.logs.datasets": {
+      "text": "conjuntos de datos",
+      "en": "datasets"
+    },
+    "gui.logs.day": {
+      "text": "día",
+      "en": "day"
+    },
+    "gui.logs.empty": {
+      "text": "sin datos",
+      "en": "no data"
+    },
+    "gui.logs.error": {
+      "text": "error",
+      "en": "error"
+    },
+    "gui.logs.errors": {
+      "text": "errores",
+      "en": "errors"
+    },
+    "gui.logs.events": {
+      "text": "eventos",
+      "en": "events"
+    },
+    "gui.logs.fail": {
+      "text": "fallido",
+      "en": "unsuccessful"
+    },
+    "gui.logs.hits": {
+      "text": "aciertos",
+      "en": "hits"
+    },
+    "gui.logs.kinds": {
+      "text": "tipos",
+      "en": "kinds"
+    },
+    "gui.logs.last": {
+      "text": "último",
+      "en": "last"
+    },
+    "gui.logs.loggers": {
+      "text": "registradores",
+      "en": "loggers"
+    },
+    "gui.logs.login": {
+      "text": "iniciar sesión",
+      "en": "login"
+    },
+    "gui.logs.lookup": {
+      "text": "consulta",
+      "en": "lookup"
+    },
+    "gui.logs.ok": {
+      "text": "exitoso",
+      "en": "successful"
+    },
+    "gui.logs.overview": {
+      "text": "resumen",
+      "en": "overview"
+    },
+    "gui.logs.pages": {
+      "text": "páginas",
+      "en": "pages"
+    },
+    "gui.logs.paths": {
+      "text": "rutas",
+      "en": "paths"
+    },
+    "gui.logs.peak": {
+      "text": "pico",
+      "en": "peak"
+    },
+    "gui.logs.queries": {
+      "text": "consultas",
+      "en": "queries"
+    },
+    "gui.logs.rows": {
+      "text": "filas",
+      "en": "rows"
+    },
+    "gui.logs.serve_err": {
+      "text": "error serv.",
+      "en": "serve err"
+    },
+    "gui.logs.sort": {
+      "text": "orden",
+      "en": "sort"
+    },
+    "gui.logs.users": {
+      "text": "usuarios",
+      "en": "users"
+    },
+    "gui.logs.values": {
+      "text": "valores",
+      "en": "values"
+    },
+    "gui.logs.visitors": {
+      "text": "visitantes",
+      "en": "visitors"
+    },
+    "gui.logs.wall": {
+      "text": "reloj",
+      "en": "wall"
+    },
+    "gui.logs.week": {
+      "text": "semana",
+      "en": "week"
+    },
+    "gui.looking_up": {
+      "text": "Consultando…",
+      "en": "Looking up…"
+    },
+    "gui.lookup": {
+      "text": "consulta",
+      "en": "lookup"
+    },
+    "gui.lookup_cancelled": {
+      "text": "Consulta cancelada.",
+      "en": "Lookup cancelled."
+    },
+    "gui.mail.domain": {
+      "text": "Dominio",
+      "en": "Domain"
+    },
+    "gui.mail.hint": {
+      "text": "MX, SPF, DMARC, selectores DKIM comunes, luego conexión SMTP, banner y STARTTLS.",
+      "en": "MX, SPF, DMARC, common DKIM selectors, then SMTP connect, banner, and STARTTLS."
+    },
+    "gui.mail.submit": {
+      "text": "Comprobar correo",
+      "en": "Check mail"
+    },
+    "gui.mail.tab": {
+      "text": "Mail",
+      "en": "Mail"
+    },
+    "gui.mail.title": {
+      "text": "Diagnóstico de correo",
+      "en": "Mail diagnostics"
+    },
+    "gui.maximize": {
+      "text": "Maximizar",
+      "en": "Maximize"
+    },
+    "gui.minimize": {
+      "text": "Minimizar",
+      "en": "Minimize"
+    },
+    "gui.mtr.cycles": {
+      "text": "Pasadas",
+      "en": "Passes"
+    },
+    "gui.mtr.hint": {
+      "text": "Repita la ruta y resuma la pérdida y el tiempo de ida y vuelta en cada salto. Establezca las pasadas (mtr -c); el valor predeterminado es 10.",
+      "en": "Repeat the path and summarise loss and round-trip time at each hop. Set passes (mtr -c); default is 10."
+    },
+    "gui.mtr.submit": {
+      "text": "Ejecutar MTR",
+      "en": "Run MTR"
+    },
+    "gui.mtr.tab": {
+      "text": "MTR",
+      "en": "MTR"
+    },
+    "gui.mtr.title": {
+      "text": "MTR",
+      "en": "MTR"
+    },
+    "gui.name": {
+      "text": "Nombre",
+      "en": "Name"
+    },
+    "gui.new_lookup": {
+      "text": "Nueva consulta",
+      "en": "New lookup"
+    },
+    "gui.peer_title": {
+      "text": "Par TCP de esta solicitud",
+      "en": "TCP peer for this request"
+    },
+    "gui.pill.cancelled": {
+      "text": "cancelado",
+      "en": "cancelled"
+    },
+    "gui.pill.error": {
+      "text": "error",
+      "en": "error"
+    },
+    "gui.pill.idle": {
+      "text": "inactivo",
+      "en": "idle"
+    },
+    "gui.pill.loading": {
+      "text": "cargando",
+      "en": "loading"
+    },
+    "gui.pill.ok": {
+      "text": "ok",
+      "en": "ok"
+    },
+    "gui.pill.running": {
+      "text": "en ejecución",
+      "en": "running"
+    },
+    "gui.ping.hint": {
+      "text": "Enviar solicitudes de eco ICMP (RFC 792 / 4443). Si ICMP está filtrado, recurrir a TCP.",
+      "en": "Send ICMP echo requests (RFC 792 / 4443). If ICMP is filtered, fall back to TCP."
+    },
+    "gui.ping.label": {
+      "text": "Host o IP",
+      "en": "Host or IP"
+    },
+    "gui.ping.submit": {
+      "text": "Ping",
+      "en": "Ping"
+    },
+    "gui.ping.tab": {
+      "text": "Ping",
+      "en": "Ping"
+    },
+    "gui.ping.title": {
+      "text": "Ping",
+      "en": "Ping"
+    },
+    "gui.pmtu.hint": {
+      "text": "Encontrar el ping don't-fragment más grande que aún responde, para detectar agujeros negros de PMTUD.",
+      "en": "Find the largest don't-fragment ping that still returns, to catch PMTUD black holes."
+    },
+    "gui.pmtu.submit": {
+      "text": "Encontrar Path MTU",
+      "en": "Find path MTU"
+    },
+    "gui.pmtu.tab": {
+      "text": "Path MTU",
+      "en": "Path MTU"
+    },
+    "gui.pmtu.title": {
+      "text": "Path MTU",
+      "en": "Path MTU"
+    },
+    "gui.ptr.hint": {
+      "text": "DNS inverso y luego confirmar que el hostname PTR resuelve de nuevo a la IP original.",
+      "en": "Reverse DNS, then confirm the PTR hostname resolves back to the original IP."
+    },
+    "gui.ptr.label": {
+      "text": "IP",
+      "en": "IP"
+    },
+    "gui.ptr.submit": {
+      "text": "Comprobar PTR",
+      "en": "Check PTR"
+    },
+    "gui.ptr.tab": {
+      "text": "PTR",
+      "en": "PTR"
+    },
+    "gui.ptr.title": {
+      "text": "PTR / FCrDNS",
+      "en": "PTR / FCrDNS"
+    },
+    "gui.rdap.hint": {
+      "text": "RDAP (HTTPS JSON) es el predeterminado. El WHOIS heredado sigue las referencias de IANA hasta el volcado de texto del registro o del registrador en el puerto 43.",
+      "en": "RDAP (HTTPS JSON) is the default. Legacy WHOIS follows IANA referrals to the registry or registrar text dump on port 43."
+    },
+    "gui.rdap.label": {
+      "text": "IP, dominio o ASN",
+      "en": "IP, domain, or ASN"
+    },
+    "gui.rdap.legacy": {
+      "text": "WHOIS heredado (puerto 43)",
+      "en": "Legacy WHOIS (port 43)"
+    },
+    "gui.rdap.protocol": {
+      "text": "Protocolo",
+      "en": "Protocol"
+    },
+    "gui.rdap.rdap": {
+      "text": "RDAP (HTTPS JSON)",
+      "en": "RDAP (HTTPS JSON)"
+    },
+    "gui.rdap.submit": {
+      "text": "Consultar",
+      "en": "Look up"
+    },
+    "gui.rdap.tab": {
+      "text": "WHOIS",
+      "en": "WHOIS"
+    },
+    "gui.rdap.title": {
+      "text": "WHOIS",
+      "en": "WHOIS"
+    },
+    "gui.refresh": {
+      "text": "Actualizar",
+      "en": "Refresh"
+    },
+    "gui.register.filter.all": {
+      "text": "Todos",
+      "en": "All"
+    },
+    "gui.register.filter.has-ns": {
+      "text": "Tiene NS",
+      "en": "Has NS"
+    },
+    "gui.register.filter.no-dns": {
+      "text": "Sin DNS",
+      "en": "No DNS"
+    },
+    "gui.register.filter.unknown": {
+      "text": "Desconocido",
+      "en": "Unknown"
+    },
+    "gui.register.has-ns": {
+      "text": "tiene NS",
+      "en": "has NS"
+    },
+    "gui.register.hint": {
+      "text": "Comprobar una etiqueta frente a cada TLD de IANA mediante DNS. NXDOMAIN significa que no hay DNS; los nameservers indican que el nombre está delegado. Esto no es un carrito de registrador — los nombres reservados y premium pueden seguir bloqueados.",
+      "en": "Check one label against every IANA TLD via DNS. NXDOMAIN means no DNS; nameservers mean the name is delegated. This is not a registrar cart — reserved and premium names can still be blocked."
+    },
+    "gui.register.kicker": {
+      "text": "Tablero de TLD de IANA",
+      "en": "IANA TLD board"
+    },
+    "gui.register.label": {
+      "text": "Nombre",
+      "en": "Name"
+    },
+    "gui.register.legend": {
+      "text": "Verde no está en el DNS. Rojo tiene nameservers. Amarillo agotó el tiempo de espera, es un wildcard o RDAP indica que está registrado.",
+      "en": "Green is not in the DNS. Red has nameservers. Yellow timed out, is a wildcard, or RDAP says registered."
+    },
+    "gui.register.no-dns": {
+      "text": "sin DNS",
+      "en": "no DNS"
+    },
+    "gui.register.search": {
+      "text": "Filtrar TLD",
+      "en": "Filter TLDs"
+    },
+    "gui.register.sub": {
+      "text": "TLD de IANA · Delegación DNS",
+      "en": "IANA TLDs · DNS delegation"
+    },
+    "gui.register.submit": {
+      "text": "Comprobar TLD",
+      "en": "Check TLDs"
+    },
+    "gui.register.tab": {
+      "text": "Register",
+      "en": "Register"
+    },
+    "gui.register.title": {
+      "text": "Registro",
+      "en": "Register"
+    },
+    "gui.register.unknown": {
+      "text": "desconocido",
+      "en": "unknown"
+    },
+    "gui.reputation.hint": {
+      "text": "DNSBL al estilo SpamAssassin mediante el resolvedor del sistema (resolv.conf), más Validity Sender Score para IPv4. Los rechazos de resolvedores públicos de Spamhaus son errores de consulta, no listados.",
+      "en": "SpamAssassin-style DNSBLs via the system resolver (resolv.conf), plus Validity Sender Score for IPv4. Public-resolver refusals from Spamhaus are query errors, not listings."
+    },
+    "gui.reputation.label": {
+      "text": "Dominio o IP",
+      "en": "Domain or IP"
+    },
+    "gui.reputation.submit": {
+      "text": "Comprobar listas",
+      "en": "Check lists"
+    },
+    "gui.reputation.tab": {
+      "text": "Reputation",
+      "en": "Reputation"
+    },
+    "gui.reputation.title": {
+      "text": "Reputación",
+      "en": "Reputation"
+    },
+    "gui.result": {
+      "text": "Resultado",
+      "en": "Result"
+    },
+    "gui.result.empty": {
+      "text": "Ejecuten una consulta. Los informes se muestran aquí.",
+      "en": "Run a lookup. Reports paint here."
+    },
+    "gui.tcp.hint": {
+      "text": "Conectar a un host y un puerto, mostrar el RTT y examinar el banner del protocolo si se ofrece.",
+      "en": "Connect to a host and port, show RTT, and peek at a protocol banner if one is offered."
+    },
+    "gui.tcp.host": {
+      "text": "Host",
+      "en": "Host"
+    },
+    "gui.tcp.port": {
+      "text": "Puerto",
+      "en": "Port"
+    },
+    "gui.tcp.submit": {
+      "text": "Comprobar TCP",
+      "en": "Check TCP"
+    },
+    "gui.tcp.tab": {
+      "text": "TCP",
+      "en": "TCP"
+    },
+    "gui.tcp.title": {
+      "text": "Servicio TCP",
+      "en": "TCP service"
+    },
+    "gui.tcptraceroute.hint": {
+      "text": "Recorrer TTL 1–30 con SYN TCP hacia un puerto que elijan. Útil cuando el traceroute UDP está filtrado.",
+      "en": "Walk TTL 1–30 with TCP SYNs to a port you choose. Useful when UDP traceroute is filtered."
+    },
+    "gui.tcptraceroute.port": {
+      "text": "Puerto TCP",
+      "en": "TCP port"
+    },
+    "gui.tcptraceroute.submit": {
+      "text": "Traceroute TCP",
+      "en": "TCP traceroute"
+    },
+    "gui.tcptraceroute.tab": {
+      "text": "TCP traceroute",
+      "en": "TCP traceroute"
+    },
+    "gui.tcptraceroute.title": {
+      "text": "Traceroute TCP",
+      "en": "TCP traceroute"
+    },
+    "gui.tls.hint": {
+      "text": "Abrir una sesión TLS y mostrar el handshake, el certificado leaf, las fingerprints de la cadena y el ASN de la IP del peer. El puerto predeterminado es 443.",
+      "en": "Open a TLS session and show the handshake, leaf certificate, chain fingerprints, and the peer IP’s ASN. Port defaults to 443."
+    },
+    "gui.tls.host": {
+      "text": "Host o IP",
+      "en": "Host or IP"
+    },
+    "gui.tls.port": {
+      "text": "Puerto",
+      "en": "Port"
+    },
+    "gui.tls.sni": {
+      "text": "SNI",
+      "en": "SNI"
+    },
+    "gui.tls.submit": {
+      "text": "Inspeccionar TLS",
+      "en": "Inspect TLS"
+    },
+    "gui.tls.tab": {
+      "text": "TLS",
+      "en": "TLS"
+    },
+    "gui.tls.title": {
+      "text": "TLS",
+      "en": "TLS"
+    },
+    "gui.tool.against_host": {
+      "text": "Ejecuten una herramienta contra este hostname.",
+      "en": "Run a tool against this hostname."
+    },
+    "gui.tool.against_ip": {
+      "text": "Ejecuten una herramienta contra esta dirección.",
+      "en": "Run a tool against this address."
+    },
+    "gui.tools_label": {
+      "text": "Herramientas de consulta",
+      "en": "Lookup tools"
+    },
+    "gui.traceroute.hint": {
+      "text": "Traceroute UDP como traceroute(8): tres sondas por salto, varios saltos en vuelo. Los timeouts se muestran como *.",
+      "en": "UDP traceroute like traceroute(8): three probes per hop, several hops in flight. Timeouts show as *."
+    },
+    "gui.traceroute.submit": {
+      "text": "Trazar",
+      "en": "Trace"
+    },
+    "gui.traceroute.tab": {
+      "text": "Traceroute",
+      "en": "Traceroute"
+    },
+    "gui.traceroute.title": {
+      "text": "Traceroute",
+      "en": "Traceroute"
+    },
+    "gui.type": {
+      "text": "Tipo",
+      "en": "Type"
+    },
+    "gui.wait.bgp": {
+      "text": "Consultando a RIPEstat el origen del prefijo y el estado de RPKI ROA.",
+      "en": "Asking RIPEstat for prefix origin and RPKI ROA status."
+    },
+    "gui.wait.dnssec": {
+      "text": "Recorriendo DS y DNSKEY desde las anclas de confianza de la raíz hasta el Apex.",
+      "en": "Walking DS and DNSKEY from the root trust anchors to the apex."
+    },
+    "gui.wait.dnstrace": {
+      "text": "Recorriendo desde la raíz de IANA, el TLD y luego los servidores autoritativos. No es recursivo.",
+      "en": "Walking from the IANA root, TLD, then authoritative servers. Not recursive."
+    },
+    "gui.wait.http": {
+      "text": "Obteniendo la URL, siguiendo las redirecciones y midiendo el TTFB.",
+      "en": "Fetching the URL, following redirects, and timing TTFB."
+    },
+    "gui.wait.mail": {
+      "text": "MX/SPF/DMARC/DKIM, luego el banner SMTP y STARTTLS.",
+      "en": "MX/SPF/DMARC/DKIM, then SMTP banner and STARTTLS."
+    },
+    "gui.wait.mtr": {
+      "text": "Repitiendo la ruta durante {n} ciclos y agregando pérdida y RTT, como mtr --report.",
+      "en": "Repeating the path for {n} cycles and aggregating loss and RTT, like mtr --report."
+    },
+    "gui.wait.ping": {
+      "text": "Enviando solicitudes de eco. TCP en 443 si ICMP está filtrado.",
+      "en": "Sending echo requests. TCP on 443 if ICMP is filtered."
+    },
+    "gui.wait.pmtu": {
+      "text": "Realizando una búsqueda binaria de payloads de ping con don't-fragment. Esto puede tardar un rato.",
+      "en": "Binary-searching don't-fragment ping payloads. This can take a while."
+    },
+    "gui.wait.ptr": {
+      "text": "Búsqueda PTR más DNS inverso confirmado hacia adelante.",
+      "en": "PTR lookup plus forward-confirmed reverse DNS."
+    },
+    "gui.wait.rdap": {
+      "text": "Consultando el bootstrap de RDAP para esta IP, dominio o ASN.",
+      "en": "Querying the RDAP bootstrap for this IP, domain, or ASN."
+    },
+    "gui.wait.register": {
+      "text": "Consultando al resolver del sistema por NS en cada TLD de IANA. Esto tarda un poco.",
+      "en": "Asking the system resolver for NS at every IANA TLD. This takes a bit."
+    },
+    "gui.wait.reputation": {
+      "text": "Consultando DNSBLs a través de resolv.conf, más Sender Score.",
+      "en": "Querying DNSBLs through resolv.conf, plus Sender Score."
+    },
+    "gui.wait.tcp": {
+      "text": "Conectando al puerto y leyendo un banner breve.",
+      "en": "Connecting to the port and reading a short banner."
+    },
+    "gui.wait.tcptraceroute": {
+      "text": "Recorriendo TTL 1–30 con SYN TCP al puerto elegido.",
+      "en": "Walking TTL 1–30 with TCP SYNs to the port you chose."
+    },
+    "gui.wait.tls": {
+      "text": "Abriendo una sesión TLS y leyendo la cadena de certificados.",
+      "en": "Opening a TLS session and reading the certificate chain."
+    },
+    "gui.wait.traceroute": {
+      "text": "Traceroute UDP como traceroute(8): tres sondas por salto, varios saltos en vuelo. Los timeouts se muestran como *.",
+      "en": "UDP traceroute like traceroute(8): three probes per hop, several hops in flight. Timeouts show as *."
+    },
+    "gui.wait.whois": {
+      "text": "RDAP por defecto; el WHOIS heredado usa referidos del puerto 43 desde IANA.",
+      "en": "RDAP by default; legacy WHOIS uses port 43 referrals from IANA."
+    },
+    "gui.wall.add": {
+      "text": "agregar",
+      "en": "add"
+    },
+    "gui.wall.added": {
+      "text": "agregado",
+      "en": "added"
+    },
+    "gui.wall.all": {
+      "text": "todos",
+      "en": "all"
+    },
+    "gui.wall.allow": {
+      "text": "permitir",
+      "en": "allow"
+    },
+    "gui.wall.asn": {
+      "text": "ASN",
+      "en": "ASN"
+    },
+    "gui.wall.block": {
+      "text": "bloquear",
+      "en": "block"
+    },
+    "gui.wall.challenge": {
+      "text": "desafío",
+      "en": "challenge"
+    },
+    "gui.wall.cidr": {
+      "text": "CIDR",
+      "en": "CIDR"
+    },
+    "gui.wall.collapse": {
+      "text": "contraer",
+      "en": "collapse"
+    },
+    "gui.wall.confirm_allow": {
+      "text": "¿Permitir {value}?",
+      "en": "Allow {value}?"
+    },
+    "gui.wall.confirm_block": {
+      "text": "¿Bloquear {value}?",
+      "en": "Block {value}?"
+    },
+    "gui.wall.confirm_challenge": {
+      "text": "¿Desafiar {value}?",
+      "en": "Challenge {value}?"
+    },
+    "gui.wall.confirm_remove": {
+      "text": "¿Eliminar {value}?",
+      "en": "Remove {value}?"
+    },
+    "gui.wall.country": {
+      "text": "país",
+      "en": "country"
+    },
+    "gui.wall.decision": {
+      "text": "decisión",
+      "en": "decision"
+    },
+    "gui.wall.empty": {
+      "text": "sin entradas",
+      "en": "no entries"
+    },
+    "gui.wall.event": {
+      "text": "evento",
+      "en": "event"
+    },
+    "gui.wall.expand": {
+      "text": "expandir",
+      "en": "expand"
+    },
+    "gui.wall.failed": {
+      "text": "fallido",
+      "en": "failed"
+    },
+    "gui.wall.firewall": {
+      "text": "firewall",
+      "en": "firewall"
+    },
+    "gui.wall.hint": {
+      "text": "Seleccione una IP o CIDR para permitir, bloquear o desafiar.",
+      "en": "Select an IP or CIDR to allow, block, or challenge."
+    },
+    "gui.wall.ip": {
+      "text": "ip",
+      "en": "ip"
+    },
+    "gui.wall.ip_or_cidr": {
+      "text": "IP o CIDR",
+      "en": "IP or CIDR"
+    },
+    "gui.wall.ipv4": {
+      "text": "IPv4",
+      "en": "IPv4"
+    },
+    "gui.wall.ipv6": {
+      "text": "IPv6",
+      "en": "IPv6"
+    },
+    "gui.wall.issued": {
+      "text": "emitido",
+      "en": "issued"
+    },
+    "gui.wall.lists": {
+      "text": "listas",
+      "en": "lists"
+    },
+    "gui.wall.live": {
+      "text": "en vivo",
+      "en": "live"
+    },
+    "gui.wall.lookup": {
+      "text": "consulta",
+      "en": "lookup"
+    },
+    "gui.wall.method": {
+      "text": "método",
+      "en": "method"
+    },
+    "gui.wall.ms": {
+      "text": "ms",
+      "en": "ms"
+    },
+    "gui.wall.note": {
+      "text": "nota",
+      "en": "note"
+    },
+    "gui.wall.path": {
+      "text": "ruta",
+      "en": "path"
+    },
+    "gui.wall.reason": {
+      "text": "motivo",
+      "en": "reason"
+    },
+    "gui.wall.remove": {
+      "text": "eliminar",
+      "en": "remove"
+    },
+    "gui.wall.requests": {
+      "text": "{n} solicitudes",
+      "en": "{n} requests"
+    },
+    "gui.wall.search": {
+      "text": "Buscar listas, tráfico o desafío",
+      "en": "Search lists, traffic, or challenge"
+    },
+    "gui.wall.search_country": {
+      "text": "Buscar país",
+      "en": "Search country"
+    },
+    "gui.wall.solved": {
+      "text": "resuelto",
+      "en": "solved"
+    },
+    "gui.wall.status": {
+      "text": "estado",
+      "en": "status"
+    },
+    "gui.wall.time": {
+      "text": "tiempo",
+      "en": "time"
+    },
+    "gui.wall.traffic": {
+      "text": "tráfico",
+      "en": "traffic"
+    },
+    "gui.wall.value": {
+      "text": "valor",
+      "en": "value"
+    },
+    "gui.working": {
+      "text": "Trabajando…",
+      "en": "Working…"
+    },
+    "gui.you": {
+      "text": "tú",
+      "en": "you"
+    },
+    "inspect.additional": {
+      "text": "Adicional",
+      "en": "Additional"
+    },
+    "inspect.announced": {
+      "text": "Anunciado",
+      "en": "Announced"
+    },
+    "inspect.announcement": {
+      "text": "Anuncio",
+      "en": "Announcement"
+    },
+    "inspect.answer": {
+      "text": "Respuesta",
+      "en": "Answer"
+    },
+    "inspect.apex.failed": {
+      "text": "Apex falló.",
+      "en": "Apex failed."
+    },
+    "inspect.apex.kicker": {
+      "text": "Informe Apex",
+      "en": "Apex report"
+    },
+    "inspect.apex.label": {
+      "text": "Apex",
+      "en": "Apex"
+    },
+    "inspect.apex.loading": {
+      "text": "Ejecutando Apex…",
+      "en": "Running Apex…"
+    },
+    "inspect.as_transitions": {
+      "text": "Transiciones de AS",
+      "en": "AS transitions"
+    },
+    "inspect.authenticated": {
+      "text": "Autenticado",
+      "en": "Authenticated"
+    },
+    "inspect.authority": {
+      "text": "Autoridad",
+      "en": "Authority"
+    },
+    "inspect.banner": {
+      "text": "Banner",
+      "en": "Banner"
+    },
+    "inspect.bgp.label": {
+      "text": "BGP / RPKI",
+      "en": "BGP / RPKI"
+    },
+    "inspect.bgp.loading": {
+      "text": "Comprobando BGP…",
+      "en": "Checking BGP…"
+    },
+    "inspect.bytes": {
+      "text": "{n} bytes",
+      "en": "{n} bytes"
+    },
+    "inspect.chain": {
+      "text": "Cadena",
+      "en": "Chain"
+    },
+    "inspect.chain_holds": {
+      "text": "La cadena de confianza se mantiene",
+      "en": "Chain of trust holds"
+    },
+    "inspect.chain_secure": {
+      "text": "Cadena segura",
+      "en": "Chain secure"
+    },
+    "inspect.cipher": {
+      "text": "Cifrado",
+      "en": "Cipher"
+    },
+    "inspect.clean": {
+      "text": "limpio",
+      "en": "clean"
+    },
+    "inspect.country": {
+      "text": "País",
+      "en": "Country"
+    },
+    "inspect.dest_reached": {
+      "text": "Destino alcanzado",
+      "en": "Destination reached"
+    },
+    "inspect.detail": {
+      "text": "detalle",
+      "en": "detail"
+    },
+    "inspect.diff.added": {
+      "text": "{path} añadido: {to}",
+      "en": "{path} added: {to}"
+    },
+    "inspect.diff.cert_changed": {
+      "text": "certificado cambiado",
+      "en": "certificate changed"
+    },
+    "inspect.diff.changed_from": {
+      "text": "{path} cambiado de {from} a {to}",
+      "en": "{path} changed from {from} to {to}"
+    },
+    "inspect.diff.current": {
+      "text": "Actual",
+      "en": "Current"
+    },
+    "inspect.diff.no_previous": {
+      "text": "No hay instantánea anterior para comparar.",
+      "en": "No previous snapshot to compare."
+    },
+    "inspect.diff.ok_changed": {
+      "text": "estado cambiado",
+      "en": "status changed"
+    },
+    "inspect.diff.path_changed": {
+      "text": "ruta cambiada",
+      "en": "path changed"
+    },
+    "inspect.diff.peer_changed": {
+      "text": "peer cambiado",
+      "en": "peer changed"
+    },
+    "inspect.diff.previous": {
+      "text": "Anterior",
+      "en": "Previous"
+    },
+    "inspect.diff.removed": {
+      "text": "{path} eliminado: {from}",
+      "en": "{path} removed: {from}"
+    },
+    "inspect.diff.rtt_delta": {
+      "text": "RTT {n} ms",
+      "en": "RTT {n} ms"
+    },
+    "inspect.diff.truncated": {
+      "text": "Más campos modificados; lista truncada.",
+      "en": "More fields changed; list truncated."
+    },
+    "inspect.diff.vs_previous": {
+      "text": "vs anterior",
+      "en": "vs previous"
+    },
+    "inspect.dns.label": {
+      "text": "DNS",
+      "en": "DNS"
+    },
+    "inspect.dns.loading": {
+      "text": "Consultando DNS…",
+      "en": "Querying DNS…"
+    },
+    "inspect.dnssec.label": {
+      "text": "DNSSEC",
+      "en": "DNSSEC"
+    },
+    "inspect.dnssec.loading": {
+      "text": "Validando DNSSEC…",
+      "en": "Validating DNSSEC…"
+    },
+    "inspect.dnstrace.label": {
+      "text": "DNS trace",
+      "en": "DNS trace"
+    },
+    "inspect.dnstrace.loading": {
+      "text": "Trazando DNS…",
+      "en": "Tracing DNS…"
+    },
+    "inspect.end_to_end_loss": {
+      "text": "Pérdida de extremo a extremo",
+      "en": "End-to-end loss"
+    },
+    "inspect.expired": {
+      "text": "expirado",
+      "en": "expired"
+    },
+    "inspect.failed": {
+      "text": "Consulta fallida",
+      "en": "Lookup failed"
+    },
+    "inspect.forward_confirm": {
+      "text": "Confirmación directa",
+      "en": "Forward confirmation"
+    },
+    "inspect.forward_confirmed": {
+      "text": "Confirmado en sentido directo",
+      "en": "Forward-confirmed"
+    },
+    "inspect.handshake": {
+      "text": "Handshake",
+      "en": "Handshake"
+    },
+    "inspect.holder": {
+      "text": "Titular",
+      "en": "Holder"
+    },
+    "inspect.hops": {
+      "text": "saltos",
+      "en": "hops"
+    },
+    "inspect.hostname_match": {
+      "text": "Coincidencia de hostname",
+      "en": "Hostname match"
+    },
+    "inspect.how_to_fix": {
+      "text": "Cómo solucionarlo",
+      "en": "How to fix it"
+    },
+    "inspect.http.label": {
+      "text": "HTTP inspector",
+      "en": "HTTP inspector"
+    },
+    "inspect.http.loading": {
+      "text": "Inspeccionando HTTP…",
+      "en": "Inspecting HTTP…"
+    },
+    "inspect.http.protocol_error": {
+      "text": "http2_handshake_failed",
+      "en": "http2_handshake_failed"
+    },
+    "inspect.ip": {
+      "text": "IP",
+      "en": "IP"
+    },
+    "inspect.ip.label": {
+      "text": "IP lookup",
+      "en": "IP lookup"
+    },
+    "inspect.ip.loading": {
+      "text": "Consultando IP…",
+      "en": "Looking up IP…"
+    },
+    "inspect.issuer": {
+      "text": "Emisor",
+      "en": "Issuer"
+    },
+    "inspect.iterative_iana": {
+      "text": "iterativo desde la raíz IANA",
+      "en": "iterative from the IANA root"
+    },
+    "inspect.latency": {
+      "text": "Latencia",
+      "en": "Latency"
+    },
+    "inspect.leaf_cert": {
+      "text": "Certificado leaf",
+      "en": "Leaf certificate"
+    },
+    "inspect.list": {
+      "text": "lista",
+      "en": "list"
+    },
+    "inspect.listed": {
+      "text": "en lista",
+      "en": "listed"
+    },
+    "inspect.lists": {
+      "text": "Listas",
+      "en": "Lists"
+    },
+    "inspect.mail.label": {
+      "text": "Mail",
+      "en": "Mail"
+    },
+    "inspect.mail.loading": {
+      "text": "Comprobando correo…",
+      "en": "Checking mail…"
+    },
+    "inspect.mail.null_mx": {
+      "text": "Null MX (RFC 7505): este dominio no acepta correo, así que MX no necesita A/AAAA.",
+      "en": "Null MX (RFC 7505): this domain does not accept mail, so MX needs no A/AAAA."
+    },
+    "inspect.matches": {
+      "text": "coincide",
+      "en": "matches"
+    },
+    "inspect.mtr.label": {
+      "text": "MTR",
+      "en": "MTR"
+    },
+    "inspect.mtr.loading": {
+      "text": "Ejecutando MTR…",
+      "en": "Running MTR…"
+    },
+    "inspect.nameservers": {
+      "text": "Nameservers",
+      "en": "Nameservers"
+    },
+    "inspect.nameservers_disagree": {
+      "text": "Nameservers · las respuestas no coinciden",
+      "en": "Nameservers · answers disagree"
+    },
+    "inspect.network": {
+      "text": "Red",
+      "en": "Network"
+    },
+    "inspect.no": {
+      "text": "No",
+      "en": "No"
+    },
+    "inspect.no_additional": {
+      "text": "Sin registros adicionales",
+      "en": "No additional records"
+    },
+    "inspect.no_authority": {
+      "text": "Sin registros de autoridad",
+      "en": "No authority records"
+    },
+    "inspect.no_common_dkim": {
+      "text": "no se encontraron selectores comunes",
+      "en": "no common selectors found"
+    },
+    "inspect.no_icmp": {
+      "text": "Sin ICMP time-exceeded de este hop",
+      "en": "No ICMP time-exceeded from this hop"
+    },
+    "inspect.no_match": {
+      "text": "sin coincidencia",
+      "en": "no match"
+    },
+    "inspect.no_mx": {
+      "text": "sin MX",
+      "en": "no MX"
+    },
+    "inspect.no_public_hops": {
+      "text": "Sin hops públicos de GeoIP",
+      "en": "No public GeoIP hops"
+    },
+    "inspect.none": {
+      "text": "ninguno",
+      "en": "none"
+    },
+    "inspect.not_after": {
+      "text": "No después de",
+      "en": "Not after"
+    },
+    "inspect.not_before": {
+      "text": "No antes de",
+      "en": "Not before"
+    },
+    "inspect.not_confirmed": {
+      "text": "No confirmado",
+      "en": "Not confirmed"
+    },
+    "inspect.note": {
+      "text": "Nota",
+      "en": "Note"
+    },
+    "inspect.nxdomain": {
+      "text": "NXDOMAIN — este nombre no existe",
+      "en": "NXDOMAIN — this name does not exist"
+    },
+    "inspect.observed": {
+      "text": "probe",
+      "en": "probe"
+    },
+    "inspect.org": {
+      "text": "Organización",
+      "en": "Organisation"
+    },
+    "inspect.origin_asn": {
+      "text": "ASN de origen",
+      "en": "Origin ASN"
+    },
+    "inspect.origins": {
+      "text": "Orígenes",
+      "en": "Origins"
+    },
+    "inspect.path_geoip": {
+      "text": "Ruta (GeoIP)",
+      "en": "Path (GeoIP)"
+    },
+    "inspect.path_hostname": {
+      "text": "Ruta (hostname)",
+      "en": "Path (hostname)"
+    },
+    "inspect.payload": {
+      "text": "Payload",
+      "en": "Payload"
+    },
+    "inspect.peer": {
+      "text": "Peer",
+      "en": "Peer"
+    },
+    "inspect.pem": {
+      "text": "PEM",
+      "en": "PEM"
+    },
+    "inspect.ping.label": {
+      "text": "Ping",
+      "en": "Ping"
+    },
+    "inspect.ping.loading": {
+      "text": "Haciendo ping…",
+      "en": "Pinging…"
+    },
+    "inspect.pmtu.label": {
+      "text": "Path MTU",
+      "en": "Path MTU"
+    },
+    "inspect.pmtu.loading": {
+      "text": "Buscando el MTU de la ruta…",
+      "en": "Finding path MTU…"
+    },
+    "inspect.prefix": {
+      "text": "Prefijo",
+      "en": "Prefix"
+    },
+    "inspect.probe": {
+      "text": "Probe",
+      "en": "Probe"
+    },
+    "inspect.ptr.label": {
+      "text": "PTR / FCrDNS",
+      "en": "PTR / FCrDNS"
+    },
+    "inspect.ptr.loading": {
+      "text": "Comprobando PTR…",
+      "en": "Checking PTR…"
+    },
+    "inspect.rdap.label": {
+      "text": "WHOIS / RDAP",
+      "en": "WHOIS / RDAP"
+    },
+    "inspect.rdap.loading": {
+      "text": "Consultando WHOIS…",
+      "en": "Looking up WHOIS…"
+    },
+    "inspect.records": {
+      "text": "Registros",
+      "en": "Records"
+    },
+    "inspect.redirects": {
+      "text": "Redirecciones",
+      "en": "Redirects"
+    },
+    "inspect.register.label": {
+      "text": "Register",
+      "en": "Register"
+    },
+    "inspect.register.loading": {
+      "text": "Comprobando TLD…",
+      "en": "Checking TLDs…"
+    },
+    "inspect.reputation.label": {
+      "text": "Reputation",
+      "en": "Reputation"
+    },
+    "inspect.reputation.loading": {
+      "text": "Comprobando listas…",
+      "en": "Checking lists…"
+    },
+    "inspect.resolver": {
+      "text": "resolver {value}",
+      "en": "resolver {value}"
+    },
+    "inspect.response": {
+      "text": "Respuesta",
+      "en": "Response"
+    },
+    "inspect.reverse": {
+      "text": "Inverso",
+      "en": "Reverse"
+    },
+    "inspect.rfcs": {
+      "text": "RFC que usa este informe",
+      "en": "RFCs this report uses"
+    },
+    "inspect.rfcs.hint": {
+      "text": "Los mismos documentos que cita una auditoría DNS clásica, con números de sección en las filas que correspondan.",
+      "en": "The same documents a classic DNS audit cites, with section numbers on the rows that apply."
+    },
+    "inspect.route_summary": {
+      "text": "Resumen de ruta",
+      "en": "Route summary"
+    },
+    "inspect.san": {
+      "text": "SAN",
+      "en": "SAN"
+    },
+    "inspect.section": {
+      "text": "Sección",
+      "en": "Section"
+    },
+    "inspect.sender_score": {
+      "text": "puntuación del remitente",
+      "en": "sender score"
+    },
+    "inspect.serial": {
+      "text": "Serial",
+      "en": "Serial"
+    },
+    "inspect.session": {
+      "text": "Sesión",
+      "en": "Session"
+    },
+    "inspect.sha256": {
+      "text": "SHA-256",
+      "en": "SHA-256"
+    },
+    "inspect.smtp_host": {
+      "text": "host SMTP",
+      "en": "SMTP host"
+    },
+    "inspect.source": {
+      "text": "Origen",
+      "en": "Source"
+    },
+    "inspect.status": {
+      "text": "Estado",
+      "en": "Status"
+    },
+    "inspect.subject_cn": {
+      "text": "CN del sujeto",
+      "en": "Subject CN"
+    },
+    "inspect.system_resolver": {
+      "text": "resolver del sistema",
+      "en": "system resolver"
+    },
+    "inspect.tcp.label": {
+      "text": "TCP",
+      "en": "TCP"
+    },
+    "inspect.tcp.loading": {
+      "text": "Comprobando TCP…",
+      "en": "Checking TCP…"
+    },
+    "inspect.tcp.status.error": {
+      "text": "error",
+      "en": "error"
+    },
+    "inspect.tcp.status.ok": {
+      "text": "ok",
+      "en": "ok"
+    },
+    "inspect.tcp.status.refused": {
+      "text": "rechazado",
+      "en": "refused"
+    },
+    "inspect.tcp.status.reset": {
+      "text": "reset",
+      "en": "reset"
+    },
+    "inspect.tcp.status.resolve": {
+      "text": "resolución",
+      "en": "resolve"
+    },
+    "inspect.tcp.status.timeout": {
+      "text": "timeout",
+      "en": "timeout"
+    },
+    "inspect.tcp.status.unreach": {
+      "text": "inalcanzable",
+      "en": "unreachable"
+    },
+    "inspect.tcptraceroute.label": {
+      "text": "TCP traceroute",
+      "en": "TCP traceroute"
+    },
+    "inspect.tcptraceroute.loading": {
+      "text": "traceroute TCP…",
+      "en": "TCP traceroute…"
+    },
+    "inspect.timeouts": {
+      "text": "timeouts",
+      "en": "timeouts"
+    },
+    "inspect.tls.label": {
+      "text": "TLS",
+      "en": "TLS"
+    },
+    "inspect.tls.loading": {
+      "text": "Inspeccionando TLS…",
+      "en": "Inspecting TLS…"
+    },
+    "inspect.traceroute.label": {
+      "text": "Traceroute",
+      "en": "Traceroute"
+    },
+    "inspect.traceroute.loading": {
+      "text": "Trazando la ruta…",
+      "en": "Tracing route…"
+    },
+    "inspect.transit_warning": {
+      "text": "Advertencia de tránsito",
+      "en": "Transit warning"
+    },
+    "inspect.unsigned": {
+      "text": "Delegación sin firmar",
+      "en": "Unsigned delegation"
+    },
+    "inspect.unsigned_path": {
+      "text": "La ruta no está autenticada, pero no es una ruptura.",
+      "en": "The path is not authenticated, but it is not a break."
+    },
+    "inspect.verified": {
+      "text": "verificado",
+      "en": "verified"
+    },
+    "inspect.version": {
+      "text": "Versión",
+      "en": "Version"
+    },
+    "inspect.what_resolvers": {
+      "text": "Qué hacen los resolvers",
+      "en": "What resolvers do"
+    },
+    "inspect.whats_wrong": {
+      "text": "Qué está mal",
+      "en": "What's wrong"
+    },
+    "inspect.yes": {
+      "text": "Sí",
+      "en": "Yes"
+    },
+    "rdap.country": {
+      "text": "País",
+      "en": "Country"
+    },
+    "rdap.delegation_signed": {
+      "text": "Delegación firmada",
+      "en": "Delegation signed"
+    },
+    "rdap.end": {
+      "text": "Fin",
+      "en": "End"
+    },
+    "rdap.entities": {
+      "text": "Entidades",
+      "en": "Entities"
+    },
+    "rdap.events": {
+      "text": "Eventos",
+      "en": "Events"
+    },
+    "rdap.expires": {
+      "text": "Caduca",
+      "en": "Expires"
+    },
+    "rdap.handle": {
+      "text": "Handle",
+      "en": "Handle"
+    },
+    "rdap.kicker": {
+      "text": "WHOIS / RDAP",
+      "en": "WHOIS / RDAP"
+    },
+    "rdap.kicker_asn": {
+      "text": "ASN + RDAP",
+      "en": "ASN + RDAP"
+    },
+    "rdap.kicker_legacy": {
+      "text": "WHOIS legado",
+      "en": "Legacy WHOIS"
+    },
+    "rdap.kicker_rdap": {
+      "text": "RDAP",
+      "en": "RDAP"
+    },
+    "rdap.last_changed": {
+      "text": "Último cambio",
+      "en": "Last changed"
+    },
+    "rdap.no": {
+      "text": "no",
+      "en": "no"
+    },
+    "rdap.object": {
+      "text": "Objeto",
+      "en": "Object"
+    },
+    "rdap.origin_as": {
+      "text": "AS de origen",
+      "en": "Origin AS"
+    },
+    "rdap.parent": {
+      "text": "Padre",
+      "en": "Parent"
+    },
+    "rdap.port43": {
+      "text": "Puerto 43",
+      "en": "Port 43"
+    },
+    "rdap.port43_response": {
+      "text": "Respuesta del puerto 43",
+      "en": "Port 43 response"
+    },
+    "rdap.prefixes": {
+      "text": "Prefijos",
+      "en": "Prefixes"
+    },
+    "rdap.range": {
+      "text": "Rango",
+      "en": "Range"
+    },
+    "rdap.registered": {
+      "text": "Registrado",
+      "en": "Registered"
+    },
+    "rdap.registrar": {
+      "text": "Registrador",
+      "en": "Registrar"
+    },
+    "rdap.registration": {
+      "text": "Registro",
+      "en": "Registration"
+    },
+    "rdap.remarks": {
+      "text": "Observaciones",
+      "en": "Remarks"
+    },
+    "rdap.start": {
+      "text": "Inicio",
+      "en": "Start"
+    },
+    "rdap.status": {
+      "text": "Estado",
+      "en": "Status"
+    },
+    "rdap.type": {
+      "text": "Tipo",
+      "en": "Type"
+    },
+    "rdap.unknown": {
+      "text": "desconocido",
+      "en": "unknown"
+    },
+    "rdap.yes": {
+      "text": "sí",
+      "en": "yes"
+    },
+    "rdap.zone_signed": {
+      "text": "Zona firmada",
+      "en": "Zone signed"
+    },
+    "result.error": {
+      "text": "error",
+      "en": "error"
+    },
+    "result.kind": {
+      "text": "tipo",
+      "en": "kind"
+    },
+    "result.ok": {
+      "text": "ok",
+      "en": "ok"
+    },
+    "result.query": {
+      "text": "consulta",
+      "en": "query"
+    },
+    "result.status": {
+      "text": "estado",
+      "en": "status"
+    },
+    "result.visitor": {
+      "text": "visitante",
+      "en": "visitor"
+    },
+    "status.cache": {
+      "text": "caché",
+      "en": "cache"
+    },
+    "status.config": {
+      "text": "configuración",
+      "en": "config"
+    },
+    "status.docs": {
+      "text": "documentación",
+      "en": "docs"
+    },
+    "status.docs.regen": {
+      "text": "regenerar",
+      "en": "regenerate"
+    },
+    "status.exit": {
+      "text": "salir",
+      "en": "exit"
+    },
+    "status.history": {
+      "text": "historial",
+      "en": "history"
+    },
+    "status.https.down": {
+      "text": "tls inactivo",
+      "en": "tls down"
+    },
+    "status.https.up": {
+      "text": "tls activo",
+      "en": "tls up"
+    },
+    "status.load": {
+      "text": "carga {value}",
+      "en": "load {value}"
+    },
+    "status.locale": {
+      "text": "idioma de la interfaz",
+      "en": "ui locale"
+    },
+    "status.logs": {
+      "text": "registros",
+      "en": "logs"
+    },
+    "status.ms": {
+      "text": "{n} ms",
+      "en": "{n} ms"
+    },
+    "status.serve.building": {
+      "text": "construyendo intel",
+      "en": "intel building"
+    },
+    "status.serve.down": {
+      "text": "intel inactivo",
+      "en": "intel down"
+    },
+    "status.serve.start": {
+      "text": "iniciar",
+      "en": "start"
+    },
+    "status.serve.stop": {
+      "text": "detener",
+      "en": "stop"
+    },
+    "status.serve.up": {
+      "text": "intel activo",
+      "en": "intel up"
+    },
+    "status.up": {
+      "text": "activo {value}",
+      "en": "up {value}"
+    },
+    "status.wall": {
+      "text": "firewall",
+      "en": "firewall"
+    },
+    "status.windows.min": {
+      "text": "mín",
+      "en": "min"
+    },
+    "status.windows.restore": {
+      "text": "restaurar",
+      "en": "restore"
+    },
+    "term.copied": {
+      "text": " copiado",
+      "en": " copied"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+<section class="howto" style="margin-top: 1.5rem;" title="{{ t('gui.howto.copy') }}">
+  <div class="tabs term">
+    <input type="radio" name="howto" id="tab-curl" checked>
+    <input type="radio" name="howto" id="tab-httpie">
+    <input type="radio" name="howto" id="tab-cli">
+    <div class="term-bar">
+      <div class="tablist">
+        <label for="tab-curl">{{ t("gui.howto.curl") }}</label>
+        <label for="tab-httpie">{{ t("gui.howto.httpie") }}</label>
+        <label for="tab-cli">{{ t("gui.howto.cli") }}</label>
+      </div>
+    </div>
+    <div class="panel panel-curl"><pre>{{ curl_block }}</pre></div>
+    <div class="panel panel-httpie"><pre>{{ httpie_block }}</pre></div>
+    <div class="panel panel-cli"><pre>{{ url_block }}</pre></div>
+  </div>
+</section>

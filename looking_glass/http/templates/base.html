@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="{{ locale|default('en') }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site }}{% endblock %}</title>
+  <script src="/i18n/{{ locale|default('en') }}.js"></script>
+  <script>
+    window.t = function (id, vars) {
+      var text = (window.__i18n && window.__i18n[id]) || id;
+      if (vars) {
+        Object.keys(vars).forEach(function (key) {
+          text = String(text).split("{" + key + "}").join(String(vars[key]));
+        });
+      }
+      return text;
+    };
+  </script>
+  <link rel="stylesheet" href="{{ static_url('gui.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <main>
+    {% block body %}{% endblock %}
+  </main>
+  {% include "_status_bar.html" %}
+  <script src="{{ static_url('gui.js') }}"></script>
+  {% if user %}
+  <script src="{{ static_url('admin.js') }}"></script>
+  {% endif %}
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ payload.kind or "lookup" }} · {{ payload.query or site }}{% endblock %}
+{% block body_class %}gui{% endblock %}
+{% block body %}
+  {% include "_site_head.html" %}
+  <div class="result-layout">
+    <div id="report-body"></div>
+  </div>
+  <div class="result-history is-empty" id="result-history" hidden></div>
+  {% include "_howto_cli.html" %}
+  <script type="application/json" id="report-payload">{{ payload | tojson }}</script>
+{% endblock %}
+{% block extra_js %}
+  <script>
+    (function () {
+      const node = document.getElementById("report-payload");
+      const host = document.getElementById("report-body");
+      if (!node || !host || !window.paintInspect) return;
+      let payload;
+      try { payload = JSON.parse(node.textContent); }
+      catch { return; }
+      host.replaceChildren(window.paintInspect(payload));
+      if (window.paintHistoryBar) {
+        window.paintHistoryBar(document.getElementById("result-history"), payload);
+      }
+    })();
+  </script>
+{% endblock %}

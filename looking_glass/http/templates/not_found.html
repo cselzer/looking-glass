@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}404 · {{ site }}{% endblock %}
+{% block body_class %}gui{% endblock %}
+{% block body %}
+  <p class="lede">{{ payload.error or "not found" }}</p>
+{% endblock %}

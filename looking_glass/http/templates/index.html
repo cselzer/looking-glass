@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+{% block title %}{{ site }}{% endblock %}
+{% block body_class %}gui{% endblock %}
+{% block body %}
+  <header class="site-head">
+    <h1><a href="/">{{ site }}</a></h1>
+    <div class="chip" title="{{ t('gui.peer_title') }}">
+      <span>{{ t("gui.you") }}</span>
+      <strong id="visitor-ip">{{ visitor or "—" }}</strong>
+      <button type="button" class="ghost" id="lookup-self">{{ t("gui.lookup") }}</button>
+    </div>
+  </header>
+
+  <nav class="tool-nav" id="tool-nav" role="tablist" aria-label="{{ t('gui.tools_label') }}">
+    <div class="tool-group">
+      <p class="tool-group-label">{{ t("gui.group.lookup") }}</p>
+      <div class="tool-group-tabs">
+    <button type="button" role="tab" id="tab-ip" data-tool="ip" aria-controls="panel-ip" aria-selected="true">{{ t("gui.ip.tab") }}</button>
+    <button type="button" role="tab" id="tab-asn" data-tool="asn" aria-controls="panel-asn" aria-selected="false" tabindex="-1">{{ t("gui.asn.tab") }}</button>
+    <button type="button" role="tab" id="tab-bgp" data-tool="bgp" aria-controls="panel-bgp" aria-selected="false" tabindex="-1">{{ t("gui.bgp.tab") }}</button>
+    <button type="button" role="tab" id="tab-rdap" data-tool="rdap" aria-controls="panel-rdap" aria-selected="false" tabindex="-1">{{ t("gui.rdap.tab") }}</button>
+      </div>
+    </div>
+    <div class="tool-group">
+      <p class="tool-group-label">{{ t("gui.group.dns") }}</p>
+      <div class="tool-group-tabs">
+    <button type="button" role="tab" id="tab-dns" data-tool="dns" aria-controls="panel-dns" aria-selected="false" tabindex="-1">{{ t("gui.dns.tab") }}</button>
+    <button type="button" role="tab" id="tab-dnstrace" data-tool="dnstrace" aria-controls="panel-dnstrace" aria-selected="false" tabindex="-1">{{ t("gui.dnstrace.tab") }}</button>
+    <button type="button" role="tab" id="tab-dnssec" data-tool="dnssec" aria-controls="panel-dnssec" aria-selected="false" tabindex="-1">{{ t("gui.dnssec.tab") }}</button>
+    <button type="button" role="tab" id="tab-ptr" data-tool="ptr" aria-controls="panel-ptr" aria-selected="false" tabindex="-1">{{ t("gui.ptr.tab") }}</button>
+    <button type="button" role="tab" id="tab-register" data-tool="register" aria-controls="panel-register" aria-selected="false" tabindex="-1">{{ t("gui.register.tab") }}</button>
+      </div>
+    </div>
+    <div class="tool-group">
+      <p class="tool-group-label">{{ t("gui.group.web") }}</p>
+      <div class="tool-group-tabs">
+    <button type="button" role="tab" id="tab-tls" data-tool="tls" aria-controls="panel-tls" aria-selected="false" tabindex="-1">{{ t("gui.tls.tab") }}</button>
+    <button type="button" role="tab" id="tab-http" data-tool="http" aria-controls="panel-http" aria-selected="false" tabindex="-1">{{ t("gui.http.tab") }}</button>
+    <button type="button" role="tab" id="tab-apex" data-tool="apex" aria-controls="panel-apex" aria-selected="false" tabindex="-1">{{ t("gui.apex.tab") }}</button>
+      </div>
+    </div>
+    <div class="tool-group">
+      <p class="tool-group-label">{{ t("gui.group.mail") }}</p>
+      <div class="tool-group-tabs">
+    <button type="button" role="tab" id="tab-mail" data-tool="mail" aria-controls="panel-mail" aria-selected="false" tabindex="-1">{{ t("gui.mail.tab") }}</button>
+    <button type="button" role="tab" id="tab-reputation" data-tool="reputation" aria-controls="panel-reputation" aria-selected="false" tabindex="-1">{{ t("gui.reputation.tab") }}</button>
+      </div>
+    </div>
+    <div class="tool-group">
+      <p class="tool-group-label">{{ t("gui.group.path") }}</p>
+      <div class="tool-group-tabs">
+    <button type="button" role="tab" id="tab-ping" data-tool="ping" aria-controls="panel-ping" aria-selected="false" tabindex="-1">{{ t("gui.ping.tab") }}</button>
+    <button type="button" role="tab" id="tab-traceroute" data-tool="traceroute" aria-controls="panel-traceroute" aria-selected="false" tabindex="-1">{{ t("gui.traceroute.tab") }}</button>
+    <button type="button" role="tab" id="tab-mtr" data-tool="mtr" aria-controls="panel-mtr" aria-selected="false" tabindex="-1">{{ t("gui.mtr.tab") }}</button>
+    <button type="button" role="tab" id="tab-tcptraceroute" data-tool="tcptraceroute" aria-controls="panel-tcptraceroute" aria-selected="false" tabindex="-1">{{ t("gui.tcptraceroute.tab") }}</button>
+    <button type="button" role="tab" id="tab-tcp" data-tool="tcp" aria-controls="panel-tcp" aria-selected="false" tabindex="-1">{{ t("gui.tcp.tab") }}</button>
+    <button type="button" role="tab" id="tab-pmtu" data-tool="pmtu" aria-controls="panel-pmtu" aria-selected="false" tabindex="-1">{{ t("gui.pmtu.tab") }}</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <div class="tools">
+      <section class="card">
+        <div class="tool-panel" role="tabpanel" id="panel-ip" data-tool="ip" aria-labelledby="tab-ip">
+          <div class="tool-head">
+            <h2>{{ t("gui.ip.title") }}</h2>
+            <p class="route"><code>GET /&lt;ip&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.ip.hint") }}</p>
+          <form id="form-ip" class="form-bar" data-kind="ip">
+            <label class="field field-grow">{{ t("gui.ip.label") }}
+              <input name="q" autocomplete="off" placeholder="1.1.1.1 or 2001:db8::1" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.ip.submit") }}</button>
+          </form>
+        </div>
+
+        <div class="tool-panel" role="tabpanel" id="panel-asn" data-tool="asn" aria-labelledby="tab-asn" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.asn.title") }}</h2>
+            <p class="route"><code>GET /AS&lt;number&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.asn.hint") }}</p>
+          <form id="form-asn" class="form-bar" data-kind="asn">
+            <label class="field field-grow">{{ t("gui.asn.label") }}
+              <input name="q" autocomplete="off" placeholder="13335 or AS13335" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.asn.submit") }}</button>
+          </form>
+        </div>
+
+
+        <div class="tool-panel" role="tabpanel" id="panel-bgp" data-tool="bgp" aria-labelledby="tab-bgp" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.bgp.title") }}</h2>
+            <p class="route"><code>GET /bgp/&lt;ip or prefix&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.bgp.hint") }}</p>
+          <form id="form-bgp" class="form-bar" data-kind="bgp">
+            <label class="field field-grow">{{ t("gui.bgp.label") }}
+              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or 1.1.1.0/24" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.bgp.submit") }}</button>
+          </form>
+        </div>
+        <div class="tool-panel" role="tabpanel" id="panel-dns" data-tool="dns" aria-labelledby="tab-dns" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.dns.title") }}</h2>
+            <p class="route"><code>GET /dns/&lt;name&gt;</code> · <code>GET /dns/&lt;name&gt;/&lt;type&gt;</code> · <code>?server=&amp;port=</code></p>
+          </div>
+          <p class="hint">{{ t("gui.dns.hint") }}</p>
+          <form id="form-dns" class="form-bar" data-kind="dns">
+            <label class="field field-grow">{{ t("gui.dns.name") }}
+              <input name="name" autocomplete="off" placeholder="example.com" required>
+            </label>
+            <label class="field field-type">{{ t("gui.dns.type") }}
+              <input class="type-filter" id="type-filter" type="search" placeholder="{{ t('gui.dns.filter') }}" aria-label="{{ t('gui.dns.filter') }}">
+              <select name="type" id="dns-type" required></select>
+            </label>
+            <label class="field field-narrow">{{ t("gui.dns.nameserver") }}
+              <input name="server" autocomplete="off" placeholder="resolv.conf or 2001:db8::1">
+            </label>
+            <label class="field field-narrow">{{ t("gui.dns.port") }}
+              <input name="port" inputmode="numeric" placeholder="53">
+            </label>
+            <button class="go" type="submit">{{ t("gui.dns.submit") }}</button>
+          </form>
+        </div>
+
+
+        <div class="tool-panel" role="tabpanel" id="panel-dnstrace" data-tool="dnstrace" aria-labelledby="tab-dnstrace" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.dnstrace.title") }}</h2>
+            <p class="route"><code>GET /dnstrace/&lt;name&gt;/&lt;type&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.dnstrace.hint") }}</p>
+          <form id="form-dnstrace" class="form-bar" data-kind="dnstrace">
+            <label class="field field-grow">{{ t("gui.dns.name") }}
+              <input name="name" autocomplete="off" placeholder="example.com" required>
+            </label>
+            <label class="field field-narrow">{{ t("gui.dns.type") }}
+              <input name="type" autocomplete="off" placeholder="A">
+            </label>
+            <button class="go" type="submit">{{ t("gui.dnstrace.submit") }}</button>
+          </form>
+        </div>
+        <div class="tool-panel" role="tabpanel" id="panel-dnssec" data-tool="dnssec" aria-labelledby="tab-dnssec" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.dnssec.title") }}</h2>
+            <p class="route"><code>GET /dnssec/&lt;domain&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.dnssec.hint") }}</p>
+          <form id="form-dnssec" class="form-bar" data-kind="dnssec">
+            <label class="field field-grow">{{ t("gui.domain") }}
+              <input name="domain" autocomplete="off" placeholder="example.com" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.dnssec.submit") }}</button>
+          </form>
+        </div>
+
+
+        <div class="tool-panel" role="tabpanel" id="panel-ptr" data-tool="ptr" aria-labelledby="tab-ptr" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.ptr.title") }}</h2>
+            <p class="route"><code>GET /ptr/&lt;ip&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.ptr.hint") }}</p>
+          <form id="form-ptr" class="form-bar" data-kind="ptr">
+            <label class="field field-grow">{{ t("gui.ptr.label") }}
+              <input name="target" autocomplete="off" placeholder="1.1.1.1 or 2001:db8::1" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.ptr.submit") }}</button>
+          </form>
+        </div>
+        <div class="tool-panel" role="tabpanel" id="panel-register" data-tool="register" aria-labelledby="tab-register" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.register.title") }}</h2>
+            <p class="route"><code>GET /register/&lt;name&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.register.hint") }}</p>
+          <form id="form-register" class="form-bar" data-kind="register">
+            <label class="field field-grow">{{ t("gui.register.label") }}
+              <input name="name" autocomplete="off" placeholder="example" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.register.submit") }}</button>
+          </form>
+        </div>
+        <div class="tool-panel" role="tabpanel" id="panel-tls" data-tool="tls" aria-labelledby="tab-tls" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.tls.title") }}</h2>
+            <p class="route"><code>GET /tls/&lt;host&gt;</code> · <code>GET /tls/&lt;host&gt;/&lt;port&gt;</code> · <code>?sni=</code></p>
+          </div>
+          <p class="hint">{{ t("gui.tls.hint") }}</p>
+          <form id="form-tls" class="form-bar" data-kind="tls">
+            <label class="field field-grow">{{ t("gui.host_or_ip") }}
+              <input name="host" autocomplete="off" placeholder="example.com or 2001:db8::1" required>
+            </label>
+            <label class="field field-narrow">{{ t("gui.tls.port") }}
+              <input name="port" inputmode="numeric" placeholder="443">
+            </label>
+            <label class="field field-narrow">{{ t("gui.tls.sni") }}
+              <input name="sni" autocomplete="off" placeholder="optional hostname">
+            </label>
+            <button class="go" type="submit">{{ t("gui.tls.submit") }}</button>
+          </form>
+        </div>
+
+
+        <div class="tool-panel" role="tabpanel" id="panel-http" data-tool="http" aria-labelledby="tab-http" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.http.title") }}</h2>
+            <p class="route"><code>GET /http/&lt;host or URL&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.http.hint") }}</p>
+          <form id="form-http" class="form-bar" data-kind="http">
+            <label class="field field-grow">{{ t("gui.http.label") }}
+              <input name="target" autocomplete="off" placeholder="example.com, https://example.com/, or 2001:db8::1" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.http.submit") }}</button>
+          </form>
+        </div>
+        <div class="tool-panel" role="tabpanel" id="panel-apex" data-tool="apex" aria-labelledby="tab-apex" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.apex.title") }}</h2>
+            <p class="route"><code>GET /apex/&lt;domain&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.apex.hint") }}</p>
+          <form id="form-apex" class="form-bar" data-kind="apex">
+            <label class="field field-grow">{{ t("gui.domain") }}
+              <input name="domain" autocomplete="off" placeholder="example.com" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.apex.submit") }}</button>
+          </form>
+        </div>
+
+
+        <div class="tool-panel" role="tabpanel" id="panel-mail" data-tool="mail" aria-labelledby="tab-mail" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.mail.title") }}</h2>
+            <p class="route"><code>GET /mail/&lt;domain&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.mail.hint") }}</p>
+          <form id="form-mail" class="form-bar" data-kind="mail">
+            <label class="field field-grow">{{ t("gui.domain") }}
+              <input name="domain" autocomplete="off" placeholder="example.com" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.mail.submit") }}</button>
+          </form>
+        </div>
+        <div class="tool-panel" role="tabpanel" id="panel-ping" data-tool="ping" aria-labelledby="tab-ping" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.ping.title") }}</h2>
+            <p class="route"><code>GET /ping/&lt;host&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.ping.hint") }}</p>
+          <form id="form-ping" class="form-bar" data-kind="ping">
+            <label class="field field-grow">{{ t("gui.host_or_ip") }}
+              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.ping.submit") }}</button>
+          </form>
+        </div>
+
+        <div class="tool-panel" role="tabpanel" id="panel-traceroute" data-tool="traceroute" aria-labelledby="tab-traceroute" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.traceroute.title") }}</h2>
+            <p class="route"><code>GET /traceroute/&lt;host&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.traceroute.hint") }}</p>
+          <form id="form-traceroute" class="form-bar" data-kind="traceroute">
+            <label class="field field-grow">{{ t("gui.host_or_ip") }}
+              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.traceroute.submit") }}</button>
+          </form>
+        </div>
+
+        <div class="tool-panel" role="tabpanel" id="panel-mtr" data-tool="mtr" aria-labelledby="tab-mtr" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.mtr.title") }}</h2>
+            <p class="route"><code id="mtr-route">GET /mtr/&lt;host&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.mtr.hint") }}</p>
+          <form id="form-mtr" class="form-bar" data-kind="mtr">
+            <label class="field field-grow">{{ t("gui.host_or_ip") }}
+              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
+            </label>
+            <label class="field field-narrow">{{ t("gui.mtr.cycles") }}
+              <input name="cycles" inputmode="numeric" placeholder="10" min="1">
+            </label>
+            <button class="go" type="submit">{{ t("gui.mtr.submit") }}</button>
+          </form>
+        </div>
+
+        <div class="tool-panel" role="tabpanel" id="panel-tcptraceroute" data-tool="tcptraceroute" aria-labelledby="tab-tcptraceroute" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.tcptraceroute.title") }}</h2>
+            <p class="route"><code>GET /tcptraceroute/&lt;host&gt;/&lt;port&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.tcptraceroute.hint") }}</p>
+          <form id="form-tcptraceroute" class="form-bar" data-kind="tcptraceroute">
+            <label class="field field-grow">{{ t("gui.host_or_ip") }}
+              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
+            </label>
+            <label class="field field-narrow">{{ t("gui.tcptraceroute.port") }}
+              <input name="port" inputmode="numeric" placeholder="443">
+            </label>
+            <button class="go" type="submit">{{ t("gui.tcptraceroute.submit") }}</button>
+          </form>
+        </div>
+
+
+        <div class="tool-panel" role="tabpanel" id="panel-tcp" data-tool="tcp" aria-labelledby="tab-tcp" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.tcp.title") }}</h2>
+            <p class="route"><code>GET /tcp/&lt;host&gt;/&lt;port&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.tcp.hint") }}</p>
+          <form id="form-tcp" class="form-bar" data-kind="tcp">
+            <label class="field field-grow">{{ t("gui.tcp.host") }}
+              <input name="host" autocomplete="off" placeholder="example.com or 2001:db8::1" required>
+            </label>
+            <label class="field field-narrow">{{ t("gui.dns.port") }}
+              <input name="port" inputmode="numeric" placeholder="443">
+            </label>
+            <button class="go" type="submit">{{ t("gui.tcp.submit") }}</button>
+          </form>
+        </div>
+
+        <div class="tool-panel" role="tabpanel" id="panel-pmtu" data-tool="pmtu" aria-labelledby="tab-pmtu" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.pmtu.title") }}</h2>
+            <p class="route"><code>GET /pmtu/&lt;host&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.pmtu.hint") }}</p>
+          <form id="form-pmtu" class="form-bar" data-kind="pmtu">
+            <label class="field field-grow">{{ t("gui.host_or_ip") }}
+              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.pmtu.submit") }}</button>
+          </form>
+        </div>
+        <div class="tool-panel" role="tabpanel" id="panel-rdap" data-tool="rdap" aria-labelledby="tab-rdap" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.rdap.title") }}</h2>
+            <p class="route"><code id="rdap-route">GET /rdap/&lt;token&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.rdap.hint") }}</p>
+          <form id="form-rdap" class="form-bar" data-kind="rdap">
+            <label class="field field-grow">{{ t("gui.rdap.label") }}
+              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, example.com, AS13335" required>
+            </label>
+            <fieldset class="mode">
+              <legend>{{ t("gui.rdap.protocol") }}</legend>
+              <label><input type="radio" name="mode" value="rdap" checked> {{ t("gui.rdap.rdap") }}</label>
+              <label><input type="radio" name="mode" value="legacy"> {{ t("gui.rdap.legacy") }}</label>
+            </fieldset>
+            <button class="go" type="submit">{{ t("gui.rdap.submit") }}</button>
+          </form>
+        </div>
+
+        <div class="tool-panel" role="tabpanel" id="panel-reputation" data-tool="reputation" aria-labelledby="tab-reputation" hidden>
+          <div class="tool-head">
+            <h2>{{ t("gui.reputation.title") }}</h2>
+            <p class="route"><code>GET /reputation/&lt;name&gt;</code></p>
+          </div>
+          <p class="hint">{{ t("gui.reputation.hint") }}</p>
+          <form id="form-rep" class="form-bar" data-kind="reputation">
+            <label class="field field-grow">{{ t("gui.reputation.label") }}
+              <input name="target" autocomplete="off" placeholder="example.com, 1.1.1.1, or 2001:db8::1" required>
+            </label>
+            <button class="go" type="submit">{{ t("gui.reputation.submit") }}</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script type="application/json" id="boot">{{ {
+    "origin": origin,
+    "visitor": visitor or "",
+    "types": dns_types,
+    "user": user or "",
+    "mtr": mtr or {"cycles": 10, "max_cycles": 30}
+  } | tojson }}</script>
+{% endblock %}
+{% block extra_js %}
+  <script src="{{ static_url('index.js') }}"></script>
+{% endblock %}

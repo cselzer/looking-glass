@@ -1,0 +1,3219 @@
+{
+  "version": 1,
+  "provider": "grok",
+  "model": "grok-4.6",
+  "keys": {
+    "docs.col.http": {
+      "en_sha256": "56d6f32151ad8474f40d7b939c2161ee2bbf10023f4af1dbb3e13260ebdc6342",
+      "text": "HTTP"
+    },
+    "gui.apex.tab": {
+      "en_sha256": "bdf03daabe9cb8cf7b018f0747d8f05fbdfb45df43d798c5b3e96f551fc35a83",
+      "text": "Apex"
+    },
+    "gui.apex.title": {
+      "en_sha256": "bdf03daabe9cb8cf7b018f0747d8f05fbdfb45df43d798c5b3e96f551fc35a83",
+      "text": "Apex"
+    },
+    "gui.asn.label": {
+      "en_sha256": "23b08ce69b568d23b0a7a64b337973931aa85eef9afc46fe8fa0709d44494da3",
+      "text": "ASN"
+    },
+    "gui.asn.tab": {
+      "en_sha256": "23b08ce69b568d23b0a7a64b337973931aa85eef9afc46fe8fa0709d44494da3",
+      "text": "ASN"
+    },
+    "gui.asn.title": {
+      "en_sha256": "23b08ce69b568d23b0a7a64b337973931aa85eef9afc46fe8fa0709d44494da3",
+      "text": "ASN"
+    },
+    "gui.bgp.tab": {
+      "en_sha256": "c70144712bdef9fc00c2b89ef930c901687050b674eb88da7f3cc9c3187c5f52",
+      "text": "BGP / RPKI"
+    },
+    "gui.config.mtr": {
+      "en_sha256": "3df0297f48314c3f5f88e44847b9aa1bc25e16f4b49535a050122a1f8a92531c",
+      "text": "MTR"
+    },
+    "gui.config.refresh.asn": {
+      "en_sha256": "23b08ce69b568d23b0a7a64b337973931aa85eef9afc46fe8fa0709d44494da3",
+      "text": "ASN"
+    },
+    "gui.config.refresh.iana": {
+      "en_sha256": "6cc2f04ca32fc7a1089164b07554d13d42cb681dcd8c4692237eb7384a4143f4",
+      "text": "IANA"
+    },
+    "gui.config.refresh.rir": {
+      "en_sha256": "51a567f463af30ec5a1487433ebc7efe07b2c6655ce925874721bb8c34c6c2b5",
+      "text": "RIR"
+    },
+    "gui.dns.tab": {
+      "en_sha256": "020965a2f08f402892237071bfe446f66ead0f6d4eacdc6a12981a402439de58",
+      "text": "DNS"
+    },
+    "gui.dns.title": {
+      "en_sha256": "020965a2f08f402892237071bfe446f66ead0f6d4eacdc6a12981a402439de58",
+      "text": "DNS"
+    },
+    "gui.dnssec.tab": {
+      "en_sha256": "37eafaf79eac3e5ce066e72cc48dca16e6272d84be9146721a5be0915d8afaa1",
+      "text": "DNSSEC"
+    },
+    "gui.dnssec.title": {
+      "en_sha256": "37eafaf79eac3e5ce066e72cc48dca16e6272d84be9146721a5be0915d8afaa1",
+      "text": "DNSSEC"
+    },
+    "gui.dnstrace.tab": {
+      "en_sha256": "87b0db8b672730a83a96a52ac0d4d1efe4abdd33419982091a863548a54e429c",
+      "text": "DNS trace"
+    },
+    "gui.group.dns": {
+      "en_sha256": "020965a2f08f402892237071bfe446f66ead0f6d4eacdc6a12981a402439de58",
+      "text": "DNS"
+    },
+    "gui.howto.curl": {
+      "en_sha256": "427e4b79b1f0fc90306cbe064b1297b21dc6835bfa656d3bf46bc156e3f24bb0",
+      "text": "curl"
+    },
+    "gui.http.tab": {
+      "en_sha256": "56d6f32151ad8474f40d7b939c2161ee2bbf10023f4af1dbb3e13260ebdc6342",
+      "text": "HTTP"
+    },
+    "gui.ip.tab": {
+      "en_sha256": "bf5505174a73b2832a95fef91403b87f99df3b1d283ad26729e4cfd22e96f208",
+      "text": "IP"
+    },
+    "gui.mail.tab": {
+      "en_sha256": "07ed6ccf6bf6393d18684d1d4f774639d44c7d2d2895fd30491ccc50614ed4ea",
+      "text": "Mail"
+    },
+    "gui.mtr.tab": {
+      "en_sha256": "3df0297f48314c3f5f88e44847b9aa1bc25e16f4b49535a050122a1f8a92531c",
+      "text": "MTR"
+    },
+    "gui.mtr.title": {
+      "en_sha256": "3df0297f48314c3f5f88e44847b9aa1bc25e16f4b49535a050122a1f8a92531c",
+      "text": "MTR"
+    },
+    "gui.ping.tab": {
+      "en_sha256": "6a4c3a4483b0448883299321ec2677f99a20afbf6a60bc5447bf2243d23b7152",
+      "text": "Ping"
+    },
+    "gui.pmtu.tab": {
+      "en_sha256": "9f87126e154028f6b4c288e2e3ee97f1bd55b0212fe7dc5e073950846c38fa36",
+      "text": "Path MTU"
+    },
+    "gui.ptr.tab": {
+      "en_sha256": "5bec9f52928af0c6d953c416cd6baf0c349a8dc888a9e40448fe29b37498197c",
+      "text": "PTR"
+    },
+    "gui.rdap.tab": {
+      "en_sha256": "ceff4c73b708ba645e51d9078c3b60aa1e7c2748a39b7dd62709d2e2981cc175",
+      "text": "WHOIS"
+    },
+    "gui.rdap.title": {
+      "en_sha256": "ceff4c73b708ba645e51d9078c3b60aa1e7c2748a39b7dd62709d2e2981cc175",
+      "text": "WHOIS"
+    },
+    "gui.register.tab": {
+      "en_sha256": "bb7234ec12451361e6f35bcbe76de58e4350657fe60d1b96ace0947f59194083",
+      "text": "Register"
+    },
+    "gui.reputation.tab": {
+      "en_sha256": "d11e6e7899feb37dd572b3bd214066850068043c031965d14694993dd7d7364c",
+      "text": "Reputation"
+    },
+    "gui.tcp.tab": {
+      "en_sha256": "2e9430507b92dee11e1a03bc534f67001d8347f4e61294e45739515670af6467",
+      "text": "TCP"
+    },
+    "gui.tcptraceroute.tab": {
+      "en_sha256": "821a77c118ea6ad689cea0a37460180f4903eff89083f6bd7851014c7d82705f",
+      "text": "TCP traceroute"
+    },
+    "gui.tls.sni": {
+      "en_sha256": "db544c564b28ece6838260990d1dff973b544f60f2f25afd6f2d267533cde097",
+      "text": "SNI"
+    },
+    "gui.tls.tab": {
+      "en_sha256": "d1c18ec0b109268324269c2da5f0c0dfafbe1058ea4af5653284d714064904a1",
+      "text": "TLS"
+    },
+    "gui.tls.title": {
+      "en_sha256": "d1c18ec0b109268324269c2da5f0c0dfafbe1058ea4af5653284d714064904a1",
+      "text": "TLS"
+    },
+    "gui.traceroute.tab": {
+      "en_sha256": "5e472e4e9f3637790f5ddb9fc1cb702e5990d1e07f07621ca5f0af5a219c9f0e",
+      "text": "Traceroute"
+    },
+    "gui.wall.asn": {
+      "en_sha256": "23b08ce69b568d23b0a7a64b337973931aa85eef9afc46fe8fa0709d44494da3",
+      "text": "ASN"
+    },
+    "gui.wall.cidr": {
+      "en_sha256": "10c65d82f009949d16660230a90d047cea50fa47bc83178d2a534ea5bd70e56c",
+      "text": "CIDR"
+    },
+    "gui.wall.ipv4": {
+      "en_sha256": "b12b510bd0933587ac66f42ad276369d91e3bbcb1be2ec0f1555d986b0ba3b5c",
+      "text": "IPv4"
+    },
+    "gui.wall.ipv6": {
+      "en_sha256": "0b0f0a267e77991baf744de41e938a1359a38fd138a8939dd8a3ec8fb17f961d",
+      "text": "IPv6"
+    },
+    "inspect.apex.label": {
+      "en_sha256": "bdf03daabe9cb8cf7b018f0747d8f05fbdfb45df43d798c5b3e96f551fc35a83",
+      "text": "Apex"
+    },
+    "inspect.bgp.label": {
+      "en_sha256": "c70144712bdef9fc00c2b89ef930c901687050b674eb88da7f3cc9c3187c5f52",
+      "text": "BGP / RPKI"
+    },
+    "inspect.dns.label": {
+      "en_sha256": "020965a2f08f402892237071bfe446f66ead0f6d4eacdc6a12981a402439de58",
+      "text": "DNS"
+    },
+    "inspect.dnssec.label": {
+      "en_sha256": "37eafaf79eac3e5ce066e72cc48dca16e6272d84be9146721a5be0915d8afaa1",
+      "text": "DNSSEC"
+    },
+    "inspect.dnstrace.label": {
+      "en_sha256": "87b0db8b672730a83a96a52ac0d4d1efe4abdd33419982091a863548a54e429c",
+      "text": "DNS trace"
+    },
+    "inspect.http.label": {
+      "en_sha256": "243965bf5ababb99e714f1aeb1e50934aeeedd3a8b2d7fc876688439357600ae",
+      "text": "HTTP inspector"
+    },
+    "inspect.ip.label": {
+      "en_sha256": "1e7daed18712b7e214a9692c8fcdfbe9bd67de1f72075e38b58004ee018e4ae2",
+      "text": "IP lookup"
+    },
+    "inspect.mail.label": {
+      "en_sha256": "07ed6ccf6bf6393d18684d1d4f774639d44c7d2d2895fd30491ccc50614ed4ea",
+      "text": "Mail"
+    },
+    "inspect.mtr.label": {
+      "en_sha256": "3df0297f48314c3f5f88e44847b9aa1bc25e16f4b49535a050122a1f8a92531c",
+      "text": "MTR"
+    },
+    "inspect.ping.label": {
+      "en_sha256": "6a4c3a4483b0448883299321ec2677f99a20afbf6a60bc5447bf2243d23b7152",
+      "text": "Ping"
+    },
+    "inspect.pmtu.label": {
+      "en_sha256": "9f87126e154028f6b4c288e2e3ee97f1bd55b0212fe7dc5e073950846c38fa36",
+      "text": "Path MTU"
+    },
+    "inspect.ptr.label": {
+      "en_sha256": "064edff0d43cd24e8e491d20a214c20bfc78b5f1c8e5daa606d8d0ca7c381c00",
+      "text": "PTR / FCrDNS"
+    },
+    "inspect.rdap.label": {
+      "en_sha256": "88f5e787280820e8e9c052e4842a4a2943e3c1976ef90dc065b3e85f55beae72",
+      "text": "WHOIS / RDAP"
+    },
+    "inspect.register.label": {
+      "en_sha256": "bb7234ec12451361e6f35bcbe76de58e4350657fe60d1b96ace0947f59194083",
+      "text": "Register"
+    },
+    "inspect.reputation.label": {
+      "en_sha256": "d11e6e7899feb37dd572b3bd214066850068043c031965d14694993dd7d7364c",
+      "text": "Reputation"
+    },
+    "inspect.tcp.label": {
+      "en_sha256": "2e9430507b92dee11e1a03bc534f67001d8347f4e61294e45739515670af6467",
+      "text": "TCP"
+    },
+    "inspect.tcptraceroute.label": {
+      "en_sha256": "821a77c118ea6ad689cea0a37460180f4903eff89083f6bd7851014c7d82705f",
+      "text": "TCP traceroute"
+    },
+    "inspect.tls.label": {
+      "en_sha256": "d1c18ec0b109268324269c2da5f0c0dfafbe1058ea4af5653284d714064904a1",
+      "text": "TLS"
+    },
+    "inspect.traceroute.label": {
+      "en_sha256": "5e472e4e9f3637790f5ddb9fc1cb702e5990d1e07f07621ca5f0af5a219c9f0e",
+      "text": "Traceroute"
+    },
+    "rdap.kicker_rdap": {
+      "en_sha256": "aea4223f20a0cb3ba5cd4aa1497dee1390126e033c313ecffecb657a202ddfb7",
+      "text": "RDAP"
+    },
+    "cli.apex.help": {
+      "en_sha256": "7a9324afc749f8ce9e12dcdf11acc1be91615c114c11cf926a943f320da8aada",
+      "text": "Salud de zona y correo (igual que GET /apex/<domain>)."
+    },
+    "cli.asn.help": {
+      "en_sha256": "e6800579b22471311f09be348bc4bee3563b6eb91910512793f4e30461cab61f",
+      "text": "Consultar un sistema autónomo (igual que GET /AS<number>)."
+    },
+    "cli.auth.help": {
+      "en_sha256": "9ce1d11262fcde63c8c1acecef227301353824b3a59685606116b861caba2620",
+      "text": "Gestionar usuarios administradores de la GUI y sesiones en archivo.\n\nEl primer inicio de sesión PAM correcto (nunca root) se añade automáticamente.\nLos inicios de sesión posteriores deben estar en la lista de permitidos. Las contraseñas permanecen en PAM.\n\n\b\nlooking-glass auth users\nlooking-glass auth users add alice\nlooking-glass auth users remove alice\nlooking-glass auth sessions clear"
+    },
+    "cli.auth.sessions.clear.help": {
+      "en_sha256": "9a02370550f23f336eccd431db90e38e6fac5be362ba5600df78205e419c25a3",
+      "text": "Eliminar todas las sesiones GUI en disco."
+    },
+    "cli.auth.sessions.help": {
+      "en_sha256": "35d07fc6a7afef0945c8af1c243b73055891ac1b994c48b57cb3ce4bbfa7b6cf",
+      "text": "Sesiones en archivo en ~/.looking-glass/data/sessions."
+    },
+    "cli.auth.users.add.help": {
+      "en_sha256": "6bab31305f6d98fb9b7fae921112fe2618080e4bfa817cc3d9ed074f787e1c29",
+      "text": "Permitir que NAME inicie sesión tras un PAM correcto."
+    },
+    "cli.auth.users.help": {
+      "en_sha256": "85f4e51945685074a74a4437e09e6f07be6154b4f5b017255ba512c4acb469c3",
+      "text": "Listar o editar la lista de administradores permitidos en ~/.looking-glass/config.json."
+    },
+    "cli.auth.users.remove.help": {
+      "en_sha256": "ec98c84bbf275aca6eaf3061409a3d33b418a2c374ac37512c49c5210db6ad32",
+      "text": "Quitar NAME de la lista de administradores permitidos."
+    },
+    "cli.bgp.help": {
+      "en_sha256": "5a8b0d844daa2b31a316bd20811f1dc7acf574f2a7c88baa529f3733a948e404",
+      "text": "ASN de origen del prefijo y estado de RPKI ROA (igual que GET /bgp/<ip>)."
+    },
+    "cli.boot.check.help": {
+      "en_sha256": "1753c1e693ebb8c7de59710870889445987163366130d669316568cbf48b513f",
+      "text": "Mostrar linger y si las unidades de usuario de looking-glass están instaladas."
+    },
+    "cli.boot.enable.help": {
+      "en_sha256": "b123ee891f2ce00d21b3477e57414454ce3d84c1cd044ebc24a0dfe8b0a9ec12",
+      "text": "Escribir las unidades de usuario intel/HTTPS y habilitar looking-glass.target."
+    },
+    "cli.boot.help": {
+      "en_sha256": "a621eb5afdf62824339c189b9fd8349c7411a9d518c6a60f2d90842af118216f",
+      "text": "Instalar unidades systemd --user para que intel y HTTPS arranquen al reiniciar.\n\nRequiere linger (un comando como root): loginctl enable-linger $USER.\nDespués, `looking-glass boot enable`. Las unidades se ejecutan en primer plano con\nRestart=on-failure. Tras habilitar, `looking-glass restart` y\n`looking-glass status` se comunican con systemd --user.\n\n\b\nlooking-glass boot check\nlooking-glass boot enable"
+    },
+    "cli.build.help": {
+      "en_sha256": "3ef460337ab09bf3554e104578ae72073275f1854d9009737ccbc6dce7422950",
+      "text": "Descargar conjuntos de datos de consulta en ~/.looking-glass/data.\n\nCada conjunto de datos se actualiza según su propio calendario desde ~/.looking-glass/config.json\n(se crea con valores predeterminados si no existe). Pase --force para descargarlo todo ahora.\nEl paso de origen ASN puede tardar varios minutos. Las barras de progreso van a stderr;\nel resultado es una vista compacta de terminal (o JSON con `--json`)."
+    },
+    "cli.build.opt.all_flag": {
+      "en_sha256": "94f1d104f4b7b29723bbcc8867bb127f74977b2df218c2943c216309a2856451",
+      "text": "Construir todos los conjuntos de datos (este es el valor predeterminado)."
+    },
+    "cli.build.opt.do_asn": {
+      "en_sha256": "25d91bf353d349173beaa59a9d2b057a39801550021f745d0d924de3db92a38d",
+      "text": "Solo prefijos de origen ASN (lento; RIB de RouteViews)."
+    },
+    "cli.build.opt.do_asn_org": {
+      "en_sha256": "94f406b1d405831496c41234e34c704defdafcc9744c8da85da9c63859da569d",
+      "text": "Solo nombres de organizaciones ASN (RIPE)."
+    },
+    "cli.build.opt.do_dns_types": {
+      "en_sha256": "b34af802eca82e9dcec181a123096772191660c995dfdf56a8754f2ba981b1e3",
+      "text": "Solo tipos RR de DNS de IANA."
+    },
+    "cli.build.opt.do_iana": {
+      "en_sha256": "64e1dcb556edf05a3d25ade5730bcbd1c1e4dfda1d22703966d0ad780a78f97e",
+      "text": "Solo rangos de uso especial de IANA."
+    },
+    "cli.build.opt.do_rir": {
+      "en_sha256": "9732c6699b1c7c0cd1d90848fa0c1cc82058fd0a07a343a537de5e132adc35f6",
+      "text": "Solo asignaciones por país de RIR."
+    },
+    "cli.build.opt.do_tlds": {
+      "en_sha256": "c899dbb114ba77223b463d43d3270a433ec7345a5cfca5c391b81e30eefbda39",
+      "text": "Solo la lista de TLD de IANA."
+    },
+    "cli.build.opt.force": {
+      "en_sha256": "993bcfb0ee536f86ee2917bd08a0d9a71055976cb2aeb6d28940cafd19221ac6",
+      "text": "Volver a descargar aunque ya existan cachés."
+    },
+    "cli.build.opt.verbose": {
+      "en_sha256": "a818532f101123cff8daba9c53fb2c53ec2050fe61069f2b43a41b2108bae3fa",
+      "text": "Mostrar cada paso de descarga/análisis."
+    },
+    "cli.cache.clear.help": {
+      "en_sha256": "5a329d8c559335390b957ad560e39d8f9bef1d023563394d41704afbab52d192",
+      "text": "Eliminar archivos en caché. Sin argumentos borra todos los espacios de nombres."
+    },
+    "cli.cache.help": {
+      "en_sha256": "59ba831b97088d8fe0a5e1249533a599d8956276d0ea8847e4f8e26e4563d228",
+      "text": "Inspeccionar y borrar la caché de consultas en disco.\n\nLas respuestas RDAP y BGP están en ~/.looking-glass/data/cache. El TTL y el interruptor de la GUI\nweb están en ~/.looking-glass/config.json (`looking-glass config`).\n\n\b\nlooking-glass cache stats\nlooking-glass cache stats rdap\nlooking-glass cache clear\nlooking-glass cache clear bgp\nlooking-glass cache clear rdap ip_1.1.1.1.json"
+    },
+    "cli.cache.stats.help": {
+      "en_sha256": "b46928bbbc860ec3e259f31c1f4b192b1758d2933f33e802c4686f1204cdd8ff",
+      "text": "Mostrar archivos en caché. NAMESPACE es rdap o bgp."
+    },
+    "cli.config.get.help": {
+      "en_sha256": "967cf95f9932681209b75456fae5fd2ff7f5e5e3a075bc9d07692e823a4f979c",
+      "text": "Imprime una clave con puntos (locale, cache.gui, refresh.rir, …)."
+    },
+    "cli.config.help": {
+      "en_sha256": "4d596b96a4e26885798c8a6611197e39025a650a048389d77c00162ad54e0d86",
+      "text": "Muestra y edita ~/.looking-glass/config.json (locale, cache TTL/GUI, actualización de datasets).\n\nLos catálogos de locale se guardan en ~/.looking-glass/locales. Los datasets se guardan en ~/.looking-glass/data.\nLas cachés de lookup se guardan en ~/.looking-glass/data/cache. Usuarios admin: `looking-glass auth users`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com"
+    },
+    "cli.config.hostname.help": {
+      "en_sha256": "21e163d5087660aeb5e28333600e88618295bede625c50278e9dd2076eaf4bf0",
+      "text": "Define http.hostname a partir del FQDN del nodo (Python getfqdn) o NAME."
+    },
+    "cli.config.set.help": {
+      "en_sha256": "cf77e19f74c491f365dc75eb9f9eacd2cafef68dfb549c61093ae8e6a02c5c70",
+      "text": "Define una clave con puntos y escribe ~/.looking-glass/config.json."
+    },
+    "cli.config.show.help": {
+      "en_sha256": "b7fea0ad5e77757c1b9d83f4f1c5afdcf7d2fea58c7583eae0c0a40f69aa0bb6",
+      "text": "Imprime el archivo de configuración del operador."
+    },
+    "cli.dns.err.need_name": {
+      "en_sha256": "d3654dd8182bfcf69f1c89e5fddf37d403174625e60ba1cbf1e26bb82ac12dcf",
+      "text": "Pase un nombre, p. ej. looking-glass dns example.com DS"
+    },
+    "cli.dns.err.need_server": {
+      "en_sha256": "f466def5dabce1a7b067c7a28eb7164ae4f3da7a6bb64810166af4affc7702c6",
+      "text": "@ necesita un nameserver, p. ej. @1.1.1.1"
+    },
+    "cli.dns.err.one_server": {
+      "en_sha256": "9a1204f8cffbf8a17bce8970740169653f4898e36b82f7ebb9c46f585292296e",
+      "text": "solo se permite un @server"
+    },
+    "cli.dns.err.too_many": {
+      "en_sha256": "5275787403e6f620ba118a3b6fbe35ec405158957234ab3db2e56d11b48c2ef4",
+      "text": "Demasiados argumentos; se esperaba [@server] name [type]"
+    },
+    "cli.dns.opt.port": {
+      "en_sha256": "3d75eee08a38c80cd871e0904c42119c72bdc40b4ddefc308158aead6ec63423",
+      "text": "Puerto del nameserver (por defecto 53)."
+    },
+    "cli.dns.opt.rrtype": {
+      "en_sha256": "88431fe4654e16be31505895d61e3c70aadb12034096d8e8f8b74ab7c2d7ad46",
+      "text": "Tipo RR (A, AAAA, MX, DS, …). El tipo posicional tiene prioridad si se indican ambos."
+    },
+    "cli.dns.opt.server_opt": {
+      "en_sha256": "52621725c1cfe07e4aeb618984495490a05f814c0bd4e6d550ac6d67ce08e1e6",
+      "text": "IP del nameserver (o IP:port)."
+    },
+    "cli.dnssec.help": {
+      "en_sha256": "5a0c40f93cfb3a110761907548aedaba43b8a451068ff4c354f50f1964093b47",
+      "text": "Recorre la cadena de confianza DNSSEC (igual que GET /dnssec/<domain>)."
+    },
+    "cli.dnstrace.help": {
+      "en_sha256": "c861a9d19e69a210945a839feafa9a2e3c5418fe61942f357b21d9b4cf928115",
+      "text": "Recorrido DNS iterativo desde la raíz, como dig +trace."
+    },
+    "cli.docs.help": {
+      "en_sha256": "c924c9e19f34255e1c010bb45a542c1a6ba26a7cda339e31a01912521cfff7c1",
+      "text": "Escribe documentación HTML para la API HTTP, la CLI de Click y la GUI web.\n\nLa ruta por defecto es ~/.looking-glass/data/docs.html (lo que sirve GET /docs). Pase una\nruta para escribir una copia en cualquier lugar."
+    },
+    "cli.help": {
+      "en_sha256": "b9ccc374ab50fc358a55d48170bb0b7fd4980e5b1166e2556947467ea9dc9d7f",
+      "text": "Inteligencia IP local: país, ASN y organización.\n\nLos comandos imprimen una vista compacta en la terminal. Pase `--json` (o defina LOOKING_GLASS_JSON=1)\npara el volcado JSON para máquinas. Una sola consulta es un objeto; `--file` o `-`\nescribe un objeto JSON por línea (JSONL) cuando `--json` está definido.\n\n\b\nPara empezar:\n  looking-glass build\n  looking-glass validate\n  looking-glass lookup 1.1.1.1\n  looking-glass dns example.com DS\n  looking-glass lookup --file ips.txt\n  looking-glass lookup bench 1.1.1.1\n  looking-glass docs\n  looking-glass lookup-server start\n  looking-glass wall block ip 203.0.113.0/24\n  looking-glass wall list ip\n  looking-glass --json wall list\n\nLos datasets se guardan en ~/.looking-glass/data. Construya una vez y luego consulte tantas IP como quiera.\nEl servidor de intel (lookup-server) usa un socket Unix en ese mismo directorio."
+    },
+    "cli.http.help": {
+      "en_sha256": "cc0196fc9bedd76b35d8ed7085ec5ba6aa911f52810fc0a9e06329c4d0f9f7e6",
+      "text": "Inspecciona la cadena de estado HTTP, redirecciones, encabezados y TTFB."
+    },
+    "cli.https.help": {
+      "en_sha256": "67445fc46c4ae85259c163138f56d1a77bbb9a0f8c6ad9e53d899087f1939b26",
+      "text": "Inicia, detiene, inspecciona o renueva el supervisor HTTPS de looking-glass.\n\nTLS escucha en http.port (por defecto 5555) para IPv4 e IPv6 (http.bind por defecto *).\nFije una familia con `looking-glass config set http.bind 0.0.0.0` o `::`.\nLet's Encrypt HTTP-01 usa http.acme_port (por defecto 80). Habilítelo con\n`looking-glass config set http.enabled true` después de definir hostname y email.\nEl servidor de intel es un socket Unix aparte."
+    },
+    "cli.https.logs.help": {
+      "en_sha256": "c2f039f2150523bc34233eac31c082908b50894c57fdd01edc9c01fe4234695d",
+      "text": "Muestra las últimas líneas de stdout y stderr del supervisor HTTPS."
+    },
+    "cli.https.logs.opt.lines": {
+      "en_sha256": "907bc9bf4396e9a9f97a533f2415bfb240acea27e7364be1dd43ef7e1242add0",
+      "text": "Últimas N líneas de cada log."
+    },
+    "cli.https.renew.help": {
+      "en_sha256": "a655fa41b515fc6871def3ababa3e2bfc788177209b1042eaab1143966c88ed0",
+      "text": "Emite o renueva un certificado Let's Encrypt sin iniciar el supervisor."
+    },
+    "cli.https.renew.opt.force": {
+      "en_sha256": "3c229be60df53c43b1e6500c94dc7262c38e851719f88246bed19bde0e89be3c",
+      "text": "Emite aunque el certificado siga siendo válido."
+    },
+    "cli.https.start.help": {
+      "en_sha256": "ef434b2a11fd49ffba780b953c8572dc26bdc1765020bb276806b2d348f01cc2",
+      "text": "Emite o renueva un certificado y sirve la GUI a través de TLS."
+    },
+    "cli.https.start.opt.foreground": {
+      "en_sha256": "361b51741773355b888a2d420b339a7906aba5e0ba6694c936ca94c8a318e01f",
+      "text": "Ejecuta en esta terminal en lugar de desprenderse."
+    },
+    "cli.lookup-server.start.opt.foreground": {
+      "en_sha256": "361b51741773355b888a2d420b339a7906aba5e0ba6694c936ca94c8a318e01f",
+      "text": "Ejecuta en esta terminal en lugar de desprenderse."
+    },
+    "cli.https.start.opt.timeout": {
+      "en_sha256": "2af454effebc72e4167df144b2f5000f943dd24d0a5929bcd626339ac772fb85",
+      "text": "Segundos de espera para el puerto TLS."
+    },
+    "cli.https.status.help": {
+      "en_sha256": "45ae122b6c3b5ac6bf277dddcaabb51502d1c80e9e3ca9e321963c59fd18ac87",
+      "text": "Mostrar el estado del supervisor, las rutas de certificados y la caducidad de Let's Encrypt."
+    },
+    "cli.https.stop.help": {
+      "en_sha256": "c20c9f86db2e2fe67f6619c9a7889009e3276e77d6170911a96cd00d3449618a",
+      "text": "Detener el supervisor HTTPS."
+    },
+    "cli.https.stop.opt.timeout": {
+      "en_sha256": "f910ab7bd0d3c40eb2833487075dbd92ab0cc0aa1a538bb8af99be84b418cfe7",
+      "text": "Segundos de espera para el apagado."
+    },
+    "cli.lookup-server.stop.opt.timeout": {
+      "en_sha256": "f910ab7bd0d3c40eb2833487075dbd92ab0cc0aa1a538bb8af99be84b418cfe7",
+      "text": "Segundos de espera para el apagado."
+    },
+    "cli.ip.help": {
+      "en_sha256": "fddf58436f3ad1a7a866edd890c30d837f54602c0c95506de5a7dd8b767e22ef",
+      "text": "Consultar una dirección IPv4 o IPv6 (igual que GET /<ip>). También acepta ASN o país."
+    },
+    "cli.locale.add.help": {
+      "en_sha256": "ab228e004a1fa9259706cfcdb9753540397d8d9a4e4fc9caec5c8ee2023574a2",
+      "text": "Instalar LANG desde FILE, o clonar los marcadores de posición en inglés."
+    },
+    "cli.locale.delete.help": {
+      "en_sha256": "ff8b70df6c8ab293c90d65a30c73651ac2f3e966e9d03a76c055b724536e51f3",
+      "text": "Eliminar un archivo de locale del operador. El inglés no se puede eliminar."
+    },
+    "cli.locale.edit.help": {
+      "en_sha256": "dd906ed6ed8dfa7b27767cf3eea6bbb6b424bf9fa505798d2722d3b084d2abe1",
+      "text": "Mostrar LANG, o establecer KEY con --text."
+    },
+    "cli.locale.edit.opt.text_value": {
+      "en_sha256": "bbd0d0dca6baa1b5a8b6de949993bb7019e25206e776b9c85683a08371e3fe17",
+      "text": "Establecer el texto traducido de esta clave."
+    },
+    "cli.locale.err.delete_en": {
+      "en_sha256": "cb590e5556e9f631cd670edb37091d54648d8b1e677460ad84f0c9cce3078dec",
+      "text": "El inglés es el locale de origen y no se puede eliminar"
+    },
+    "cli.locale.err.no_file": {
+      "en_sha256": "ffe1d9b87e3fcf37c1a6822f8a40e1308488f8fef98f514f18049bb7ab0b048a",
+      "text": "no hay locale de operador en {path}"
+    },
+    "cli.locale.help": {
+      "en_sha256": "249f92a5f560f44eec66aa8afe60d3c7ef5ee9f137a6c6cf54a22862049c0753",
+      "text": "Listar y gestionar archivos de locale de la UI del operador (las API JSON permanecen en inglés)."
+    },
+    "cli.locale.list.help": {
+      "en_sha256": "bdf35fa6b962f10cc2ac5dca85e2f38a05b870d4d5adede996b6d5ef44c9e635",
+      "text": "Listar los locales incluidos y los del operador."
+    },
+    "cli.logs.help": {
+      "en_sha256": "f6ff662f2e0403a2d7972d2f647f3d70359d14700bf03a653dc0da1546a4edd6",
+      "text": "Volcados de solo lectura del almacén de estadísticas de logs de la GUI.\n\nEl mismo payload que carga la recarga de la ventana de logs desde GET /logs/stats\n(~/.looking-glass/data/logs/stats.json). No reconstruye a partir del JSONL de acceso.\n\n\b\nlooking-glass logs stats"
+    },
+    "cli.logs.stats.help": {
+      "en_sha256": "3ba8aa0f8f3f26212404d11bc763b13ef01984d7d48bcce57d9a2aa95471a7ef",
+      "text": "Mostrar las series de hits y errores por día/semana (unix t más ISO)."
+    },
+    "cli.lookup-server.help": {
+      "en_sha256": "83d31d3e328af6000e481e284f0593719768d21e90694e3faa4ea8e79dc3727e",
+      "text": "Iniciar, detener o inspeccionar el servidor intel local.\n\nEl proceso escucha en un socket Unix en ~/.looking-glass/data (las cachés de lookup están en data/cache).\n`looking-glass wall wsgi` / `wall asgi` y el cliente de socket usan ese socket."
+    },
+    "cli.lookup-server.start.help": {
+      "en_sha256": "abdfeac2c752771cf5fba6f84bd1ad7ab9681f831e48646872af327a881e9579",
+      "text": "Iniciar el servidor intel si aún no está en ejecución."
+    },
+    "cli.lookup-server.start.opt.timeout": {
+      "en_sha256": "bebad43d01000e63b98c2dba11bbd70b8e559c2a58e592e30e4b26d1a7e8b9d4",
+      "text": "Segundos de espera hasta que esté listo (por defecto 5, o 1800 cuando corresponde construir un dataset)."
+    },
+    "cli.lookup-server.start.opt.workers": {
+      "en_sha256": "a0ae625f070abadc1979904bf125a44f83d5fce3f8035435e608331482163db7",
+      "text": "workers de uvicorn (por defecto 1)."
+    },
+    "cli.lookup-server.status.help": {
+      "en_sha256": "82bd9b85a6cc088d98a73c6141ff5df502bc1807ea5e7c058a6503ed90321bce",
+      "text": "Mostrar si el servidor intel está en ejecución."
+    },
+    "cli.lookup-server.stop.help": {
+      "en_sha256": "ddb386ce269c64fdd729fc3cd4db1aa9608ebf000151f801bea2194127a06eb2",
+      "text": "Detener el servidor intel."
+    },
+    "cli.lookup.bench.help": {
+      "en_sha256": "5330bf908c37c45954926acb42767a14cda94d1dcf3cb037d51a0cb999c7bde9",
+      "text": "Saturar GET /{ip} en el servidor intel (IPv4 e IPv6).\n\nRequiere `looking-glass lookup-server start`. No carga RIR en este proceso.\nEl progreso va a stderr; el informe es una vista compacta de terminal (o JSON con `--json`)."
+    },
+    "cli.lookup.bench.opt.concurrency": {
+      "en_sha256": "fa533a14a25611d6336637711940ad299af62435341f5b67282c708f07d5aa0c",
+      "text": "Workers concurrentes por hilo (por defecto 200)."
+    },
+    "cli.lookup.bench.opt.connections": {
+      "en_sha256": "c51f78ea94e3176a87082cb91e9f1d4cec77486d0fcb056406b043c081e07518",
+      "text": "Tamaño del pool de conexiones UDS (por defecto: min(concurrency, process fd limit))."
+    },
+    "cli.lookup.bench.opt.duration": {
+      "en_sha256": "fe1f0a6b094c476b0b21f78ec5f7c61f105135831aa3487f414644c2effcf017",
+      "text": "Segundos de ejecución (por defecto 30)."
+    },
+    "cli.lookup.bench.opt.socket": {
+      "en_sha256": "a5740adb91a6cbf451d2a0b86716c58996c764e69dfaa1f312357a5482e9e476",
+      "text": "Sobrescribir ~/.looking-glass/data/lookup.sock."
+    },
+    "cli.lookup.bench.opt.threads": {
+      "en_sha256": "18a675db1daf68069f7438c301580d5826fe56365e77f3aa3c205cf0741e6a18",
+      "text": "Bucles de eventos (cada uno con su propia sesión UDS)."
+    },
+    "cli.lookup.bench.opt.timeout": {
+      "en_sha256": "fdc786f43a056ecddbb8bce4ceca65d036c9fed00aa1b0f74e9727273fb64c70",
+      "text": "Tiempo de espera por solicitud en segundos (predeterminado 0.5)."
+    },
+    "cli.lookup.err.both": {
+      "en_sha256": "0073e787a18529a44b1ff2d4ba24a96919104ba42fbd5a7ab95c3fc60a2c0ad6",
+      "text": "Pase una consulta o --file, no ambos"
+    },
+    "cli.lookup.err.need_query": {
+      "en_sha256": "6ac526e00a67d62c6858f5a09112d1b102067788bca99d720fe53ac1a223b68d",
+      "text": "Pase una IP, ASN o país, '-' para stdin, o --file"
+    },
+    "cli.lookup.err.port_dns": {
+      "en_sha256": "5a84a6d413ff8c8ada57f4663f01bc6406099434e258c2fed84a21d6f6e3e21a",
+      "text": "--port solo se aplica a nombres DNS"
+    },
+    "cli.lookup.err.rbl_ip": {
+      "en_sha256": "58bb6ec789a9ad18081d8654d164ead27c2e05006f2f285db950e9a003f75ba5",
+      "text": "--rbl solo se aplica a direcciones IP"
+    },
+    "cli.lookup.err.server_dns": {
+      "en_sha256": "4b0ee5d5d06023d3b326638660154279bc95074212d4286efa31389f0666b72d",
+      "text": "--server solo se aplica a nombres DNS"
+    },
+    "cli.lookup.err.type_dns": {
+      "en_sha256": "3e20e3c8d0050bc680a8106c746d6ef87caae9f7c5f1d5fe07a2598565ac8a4f",
+      "text": "--type solo se aplica a nombres DNS"
+    },
+    "cli.lookup.help": {
+      "en_sha256": "e56a2a7c85adf1eb9884111007f710866666bc2eec86f9f1d4fd6c25ff6b3b16",
+      "text": "Consultar una IP, ASN, país o nombre DNS, o hacer un benchmark del servidor intel.\n\n\b\n  looking-glass lookup 1.1.1.1\n  looking-glass lookup 2001:db8::1\n  looking-glass lookup example.com\n  looking-glass lookup example.com --type AAAA\n  looking-glass lookup --file ips.txt\n  looking-glass lookup bench 1.1.1.1"
+    },
+    "cli.lookup.query.help": {
+      "en_sha256": "2b791acc853e78ef380586eb044b7a35bbac98eb887f8db6ba0d89fff8100337",
+      "text": "Consultar una IP, ASN, código de país o nombre DNS.\n\nUna consulta imprime una vista compacta de terminal (JSON con `--json`). `--file` o\n`-` (stdin) imprime una línea breve por consulta, o JSONL con `--json`.\nEl tipo se detecta a partir del token. Las IP y los códigos de país usan el\nservidor intel cuando está en ejecución; un volcado de país incluye todos los CIDR de RIR.\nLos nombres que no son una IP, ASN o país son consultas DNS (`--type`, predeterminado A).\nLos resultados RBL se almacenan en caché 24 horas."
+    },
+    "cli.lookup.query.opt.concurrency": {
+      "en_sha256": "155950a8cddfc7904bfb985bef553df2a370b8b3ab2fcfdf5b02c2d74d724bc0",
+      "text": "Consultas concurrentes (predeterminado 128, o 16 con --rbl)."
+    },
+    "cli.lookup.query.opt.do_rbl": {
+      "en_sha256": "af931a27edda4665da378a45e0481b797134444ff07d5b1ee9de0db11bcce2cc",
+      "text": "Comprobar DNSBLs (Spamhaus ZEN, Barracuda, SpamCop, DroneBL). Usa TXT+A."
+    },
+    "cli.lookup.query.opt.force": {
+      "en_sha256": "767765d96afa09402e4c6cb87da2ce56acab18726831fc0088e8968d198a99c6",
+      "text": "Omitir la caché RBL de 24 horas."
+    },
+    "cli.lookup.query.opt.ip_file": {
+      "en_sha256": "d9cbc70cb3cf0691c95f99e769abfe54008c6b76b6b0fc3f7ef0260b74a29613",
+      "text": "Archivo de IP, ASN, códigos de país o nombres DNS, uno por línea. Con --json, escribe un objeto JSON por línea."
+    },
+    "cli.lookup.query.opt.nameserver": {
+      "en_sha256": "964c9eef84e0a2c9447bbd493a1b35dabff629bfe4a62f1ca0239baffd1dcb0f",
+      "text": "IP del nameserver (o IP:puerto) para consultas DNS. Predeterminado: resolver del sistema (resolv.conf)."
+    },
+    "cli.lookup.query.opt.ns_port": {
+      "en_sha256": "f9b66d50f18895e571c65d00e810785a2c26b1371b19f93794eba3b1ab33025e",
+      "text": "Puerto del nameserver para consultas DNS (predeterminado 53). Sobrescribe un puerto en --server."
+    },
+    "cli.lookup.query.opt.rbls": {
+      "en_sha256": "9acf178233e8a5a41721c7273d772423c862138f664ba31b1b92d67c5b3b73ff",
+      "text": "RBL como name=domain o domain. Repetible. Implica --rbl."
+    },
+    "cli.lookup.query.opt.rrtype": {
+      "en_sha256": "4f9d2a442d1f37b193b050f64e9722ad671aa5eebfe2f0c6e535e78893149786",
+      "text": "Tipo RR de DNS para una consulta de nombre (A, AAAA, MX, TXT, …). Predeterminado A."
+    },
+    "cli.lookup.query.opt.timeout": {
+      "en_sha256": "135290b99ceb57fdbd387e38006d8a0becdf1158da956bc31c5a5b1b8af95212",
+      "text": "Tiempo de espera DNS por RBL o consulta DNS."
+    },
+    "cli.mail.help": {
+      "en_sha256": "1da047cca40e15d7fbeb0c6772c0f42eb4c5434b188d4775e1263249483f3906",
+      "text": "MX, SPF, DMARC, selectores DKIM, banner SMTP y STARTTLS."
+    },
+    "cli.mtr.help": {
+      "en_sha256": "6f7e31a503fb7d7c9c1c79c2c544e8846aa2b4a653b03790d5f3f4787d4f9bff",
+      "text": "Informe de ruta al estilo MTR (igual que GET /mtr/<host>)."
+    },
+    "cli.opt.as_json": {
+      "en_sha256": "372708d4097ddf78ce894703da43f53f8d6b2080c0ea26bed4ab4ce0786bd681",
+      "text": "Imprimir JSON en stdout en lugar de una vista compacta de terminal."
+    },
+    "cli.opt.lang": {
+      "en_sha256": "26aa6937aea6929eaaa0377d17eab72c1d1d78e0bf5eab675811f15fb7f946ba",
+      "text": "Idioma de la UI para la ayuda y el HTML. Las consultas JSON siguen en inglés."
+    },
+    "cli.opt.version": {
+      "en_sha256": "c379c5744b331329facde7a6cddfad84b548dc3e4e7d27b249118cfef5ded32f",
+      "text": "Mostrar la versión y salir."
+    },
+    "cli.ping.help": {
+      "en_sha256": "8d65e7f99e9512a3b7bc70cf8845877836bd7b43051520f86d6dca290c53bc48",
+      "text": "ICMP ping (igual que GET /ping/<host>)."
+    },
+    "cli.pmtu.help": {
+      "en_sha256": "42fac34ee342b75ce0154a00e7d97fce2e9e5c2f0335288ae30a94a9b36c79f7",
+      "text": "Descubrimiento de Path MTU con sondas ping don't-fragment."
+    },
+    "cli.ptr.help": {
+      "en_sha256": "fdb97a2d1f0f94085b207918a7466eb0306e91c89c662c7d84e5cfe071cefa90",
+      "text": "PTR más forward-confirmed reverse DNS."
+    },
+    "docs.http.ptr.summary": {
+      "en_sha256": "fdb97a2d1f0f94085b207918a7466eb0306e91c89c662c7d84e5cfe071cefa90",
+      "text": "PTR más forward-confirmed reverse DNS."
+    },
+    "cli.rdap.help": {
+      "en_sha256": "3b7b4aa22e3f91e0abc1a5d0b9f8912eb575d3a5091e5f32f88b3c149afc68cc",
+      "text": "Consulta RDAP (igual que GET /rdap/<token>)."
+    },
+    "cli.register.help": {
+      "en_sha256": "b5d233eb681465db82443864f03c265143e86961f76aca859f5f6ef660f01fec",
+      "text": "Comprueba una etiqueta frente a cada TLD de IANA (igual que GET /register/<name>)."
+    },
+    "cli.register.opt.tlds_opt": {
+      "en_sha256": "b2df6bd78534606580e4a8e0835dd372d4677dfe6e67e4ece304e06fc26888ba",
+      "text": "Lista de TLD separados por comas (igual que ?tlds=)."
+    },
+    "cli.reputation.help": {
+      "en_sha256": "c25fc3015241fb8d40e1fa033396d8cbf8ee01277366d8da2267d98f267d94a4",
+      "text": "Listas de bloqueo de dominio o IP (igual que GET /reputation/<name>)."
+    },
+    "cli.restart.help": {
+      "en_sha256": "796fbcca22145b8d82d2216a7cb4a29016bd33603d47c775a6516d2cd777995e",
+      "text": "Detiene y luego inicia el servidor intel y el supervisor HTTPS.\n\nCuando las unidades systemd --user están habilitadas, reinicia esas unidades.\nDe lo contrario, stop es un no-op si un daemon ya está detenido, así que esto\ntambién inicia ambos desde un estado en frío."
+    },
+    "cli.status.help": {
+      "en_sha256": "b34b787ec0702c3b7383140cc5dac8c3d4b2656be91f34bbf6c073273bfc678d",
+      "text": "Muestra la salud de los daemons intel y HTTPS.\n\nUsa systemd --user cuando looking-glass-intel y looking-glass-https\nestán habilitados; de lo contrario, pidfiles."
+    },
+    "cli.tcp.help": {
+      "en_sha256": "adb79529f0f540b3d71908301babdc24518f32dd4a29efb6eedf7abfecba9f22",
+      "text": "Comprobación de conexión TCP: RTT y una inspección opcional del banner."
+    },
+    "cli.tcptraceroute.help": {
+      "en_sha256": "533b0bf60ca58ccc00165549d8086339878176de9329325392678618f08235ca",
+      "text": "TCP traceroute (igual que GET /tcptraceroute/<host>/<port>)."
+    },
+    "cli.tls.help": {
+      "en_sha256": "80f7eadc96eef63bd3f7dbb3b2e80435404ff9af979aae07f60a3785f043608c",
+      "text": "Inspecciona un handshake TLS y el certificado (igual que GET /tls/<host> con /<port> opcional)."
+    },
+    "cli.tls.opt.sni": {
+      "en_sha256": "4ce32de9ddd5dea49171b0a27bd6ee6a48c7dfa501991e85b695f2bebb2f9133",
+      "text": "Sobrescribe el hostname SNI."
+    },
+    "cli.traceroute.help": {
+      "en_sha256": "262bb4fae87563fddfcd0b4927fe0330fcc23a1acdeb8d9ccc3b1ad561f0dd81",
+      "text": "UDP traceroute (igual que GET /traceroute/<host>)."
+    },
+    "cli.validate.help": {
+      "en_sha256": "2fe071b57b3934ad9d14c6ea1bd5bf6ade177608fb8e51d41e92e01cfc5f3675",
+      "text": "Comprueba que los datasets locales se carguen y que se consulten IPs conocidas correctamente.\n\nUsa ~/.looking-glass/data (los mismos archivos que `looking-glass lookup`). No vuelve a descargar.\nLas consultas son muestras aleatorias de esos datasets, no una lista fija de IP.\nLas cachés obsoletas emiten advertencias; --strict las trata como fallos. Código de salida 2 si falla una comprobación requerida."
+    },
+    "cli.validate.opt.seed": {
+      "en_sha256": "79316fc2e2dcc64705844735194712e5490f8ad5df2535758463546083269bf8",
+      "text": "Reproduce las mismas muestras aleatorias."
+    },
+    "cli.validate.opt.strict": {
+      "en_sha256": "96ea63ac169caefbaa3df46a0d2c69498d2d963ed6518b71d587a8f6913f7027",
+      "text": "Trata las advertencias de dataset obsoleto como fallos."
+    },
+    "cli.wall.allow.help": {
+      "en_sha256": "6cdf449b88ecacce6a37b4470e5a80bf43481a6bab89b216eb076489206c0102",
+      "text": "Permite una IP o CIDR. Ese visitante omite el challenge."
+    },
+    "cli.wall.allow.opt.note": {
+      "en_sha256": "a5c50a1a9c6fae82ae8418a8edd85d14229db72c7b0dc265515a3ba708870164",
+      "text": "Se guarda con la entrada de la lista y la línea de wall.log."
+    },
+    "cli.wall.block.opt.note": {
+      "en_sha256": "a5c50a1a9c6fae82ae8418a8edd85d14229db72c7b0dc265515a3ba708870164",
+      "text": "Se guarda con la entrada de la lista y la línea de wall.log."
+    },
+    "cli.wall.challenge.opt.note": {
+      "en_sha256": "a5c50a1a9c6fae82ae8418a8edd85d14229db72c7b0dc265515a3ba708870164",
+      "text": "Se guarda con la entrada de la lista y la línea de wall.log."
+    },
+    "cli.wall.asgi.help": {
+      "en_sha256": "40f80110c94d4b874de43b66b9ac2fa27693d6eabb3465e322b2f909b80ce228",
+      "text": "Aplicación de prueba HTTP (ASGI) que consulta la IP del cliente a través del wall."
+    },
+    "cli.wall.asgi.opt.host": {
+      "en_sha256": "fcebc13201165f341f685d099734a504ffc81aed1d4b79e9eff1cdb26cf003d5",
+      "text": "Dirección de enlace."
+    },
+    "cli.wall.wsgi.opt.host": {
+      "en_sha256": "fcebc13201165f341f685d099734a504ffc81aed1d4b79e9eff1cdb26cf003d5",
+      "text": "Dirección de enlace."
+    },
+    "cli.wall.asgi.opt.port": {
+      "en_sha256": "d6d83b9acede456aa6cbddb856152f004947715b744acf19a327a5cc6197a837",
+      "text": "Puerto de enlace."
+    },
+    "cli.wall.wsgi.opt.port": {
+      "en_sha256": "d6d83b9acede456aa6cbddb856152f004947715b744acf19a327a5cc6197a837",
+      "text": "Puerto de enlace."
+    },
+    "cli.wall.block.help": {
+      "en_sha256": "db419cb2adba99f03f14af1015f840c769f56d66ca733e110bb0ebabed969710",
+      "text": "Bloquea una IP/CIDR, ASN o código de país."
+    },
+    "cli.wall.challenge.help": {
+      "en_sha256": "8962a3c86fa04ff57edec99cb38dd9449508592f244ede04dc11f494399eabfd",
+      "text": "Aplica un challenge a una IP/CIDR o ASN. El visitante resuelve un puzzle para obtener un pase temporal."
+    },
+    "cli.wall.help": {
+      "en_sha256": "eec8893c85bba1c6a5114a578d7ea9f1bbcf8227a8f3aad2399c01d7c4c7d755",
+      "text": "Listas de allow y block usadas por el request wall.\n\nLas listas están en ~/.looking-glass/data/wall.json. Los CIDR IPv4 e IPv6 son válidos.\nLos visitantes desconocidos están permitidos. Challenge sirve un puzzle first-party;\nuna cookie de pase dura wall.challenge_ttl_days (5 por defecto).\n\n\b\nlooking-glass wall block ip 203.0.113.0/24\nlooking-glass wall block asn 13335\nlooking-glass wall block country CN\nlooking-glass wall allow ip 2001:db8::1\nlooking-glass wall challenge ip 198.51.100.0/24\nlooking-glass wall list ip\nlooking-glass wall log\nlooking-glass wall reset --force\nlooking-glass wall remove ip 203.0.113.0/24\nlooking-glass wall wsgi\nlooking-glass wall asgi"
+    },
+    "cli.wall.list.help": {
+      "en_sha256": "7aececc83d873e88b98f581871a761eef4a67aee54786bdee9672188116a6bd7",
+      "text": "Muestra las listas de block (y allow). KIND es ip, asn o country."
+    },
+    "cli.wall.log.help": {
+      "en_sha256": "653f8df92f994f466f95b3306dafb3469186d9e969756c63ffb9b9c04fc1835c",
+      "text": "Muestra el registro de acciones de wall (bloqueos, desafíos, permisos, eliminaciones)."
+    },
+    "cli.wall.log.opt.limit": {
+      "en_sha256": "e434ded0bf73ef7503271c2a7af9696d21f7a5b372aff254e21b27aa8dff6323",
+      "text": "Eventos más recientes que se devolverán. 0 significa todos."
+    },
+    "cli.wall.remove.help": {
+      "en_sha256": "03aa0efab87d9723502964db02f345c2737cdf75241e83dfb13bc8afc95310c5",
+      "text": "Elimina una IP/CIDR, un ASN o un código de país de las listas."
+    },
+    "cli.wall.remove.opt.note": {
+      "en_sha256": "395e3a47430b587bab8ca63a383897ed483c929d64b437402b8a3fb129f79d95",
+      "text": "Se guarda en la línea remove de wall.log."
+    },
+    "cli.wall.reset.help": {
+      "en_sha256": "0666ba2c2c8250a1b35a0d0b9169da0c8d3697f8fefbf4d21f184966548f4299",
+      "text": "Vacía todas las listas de allow, block y challenge.\n\nEscribe un wall.json vacío y añade una línea reset a wall.log.\nLas cookies de superación de challenge existentes caducan según su propio TTL."
+    },
+    "cli.wall.reset.opt.force": {
+      "en_sha256": "e499700712d0ed31ac38853f962960700d3b5942ee2684c9e623e9a7b3e9fb9b",
+      "text": "No pedir confirmación."
+    },
+    "cli.wall.reset.opt.note": {
+      "en_sha256": "8540b0cd0e07830f4d4cf23801bf6130c2753ca6b85aec88f8ef719d2e456e58",
+      "text": "Se guarda en la línea reset de wall.log."
+    },
+    "cli.wall.wsgi.help": {
+      "en_sha256": "a6a09437d88ef1ceab27b8a65cbc38bf602c81505ff09a0dfcb39a599f133aa2",
+      "text": "Aplicación HTTP de prueba (WSGI) que consulta la IP del cliente a través de wall."
+    },
+    "cli.whois.help": {
+      "en_sha256": "d13fc0eeaacdce8f275e806863bc0150eb954a4ebb79cd31cbae8394d071d3e3",
+      "text": "Datos de registro. RDAP por defecto; --legacy para WHOIS clásico."
+    },
+    "cli.whois.opt.legacy": {
+      "en_sha256": "7bd698aa6fe562c4f9f72ee912ae4014ca3b854d2e9d3773f47dcac716f2b898",
+      "text": "Usa WHOIS del puerto 43 en lugar de RDAP."
+    },
+    "docs.cli_intro": {
+      "en_sha256": "52d90f5ba193bdf4849dd08396da0e5143f729b374d10d36903cbe126a4538c6",
+      "text": "Cada comando imprime JSON en stdout. La GUI no es necesaria. looking-glass ip se comunica con el servidor de inteligencia (looking-glass lookup-server start), no con el sitio web. Seleccione un bloque para copiar."
+    },
+    "docs.col.cli": {
+      "en_sha256": "e759793341ff3757eaa76e814db0170ec13b6b0a988a742d9a81240c505f48ec",
+      "text": "CLI"
+    },
+    "gui.howto.cli": {
+      "en_sha256": "e759793341ff3757eaa76e814db0170ec13b6b0a988a742d9a81240c505f48ec",
+      "text": "CLI"
+    },
+    "docs.col.form": {
+      "en_sha256": "2e0e960ab3204127b1dce399c9984c81f52a79f4d85cb0c3afddcfcfe8a2b48c",
+      "text": "Formulario"
+    },
+    "docs.col.tab": {
+      "en_sha256": "90ddf1963abb36c9921ce7f1ac9cbd94c9176d13e57c418d3d3c20ce44291c1c",
+      "text": "Pestaña"
+    },
+    "docs.gui_intro": {
+      "en_sha256": "0d5ccb22930e68909ab4240e24ec12e3e64b161d1a162a5c24cccc93f70760c2",
+      "text": "El índice es una superficie de formularios con pestañas. Cada formulario construye una ruta HTTP (toolPath) y muestra howto de curl / HTTPie / looking-glass mientras escribe. Los informes HTML a página completa usan el mismo renderizador paintInspect. Las tarjetas Inspect en IPs/dominios abren herramientas adicionales; los clics en ASN van a RDAP."
+    },
+    "docs.http.apex.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.bgp.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.dns.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.dnssec.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.dnstrace.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.http.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.mail.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.mtr.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.ping.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.pmtu.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.ptr.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.rdap.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.register.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.reputation.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.tcp.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.tcptraceroute.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.tls.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.token.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.traceroute.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.whois.accept": {
+      "en_sha256": "a3bdde4dcc1b8fa2347a7ca674f76f55cac9b6ab1e1fe67ee9aba37ae26117c7",
+      "text": "Informe JSON o HTML."
+    },
+    "docs.http.apex.notes": {
+      "en_sha256": "437317bd93f2f3aa8f35e99cd087caa35735dcc115797ea2e46dd07d3f346921",
+      "text": "Rechaza una IP suelta; normalize_qname."
+    },
+    "docs.http.dnssec.notes": {
+      "en_sha256": "437317bd93f2f3aa8f35e99cd087caa35735dcc115797ea2e46dd07d3f346921",
+      "text": "Rechaza una IP suelta; normalize_qname."
+    },
+    "docs.http.apex.summary": {
+      "en_sha256": "055502705081ac1ad38c713a4a673fe4cbc2dff680f6e56839a4191dda1a44ca",
+      "text": "Salud de zona y correo (informe Apex)."
+    },
+    "docs.http.bgp.notes": {
+      "en_sha256": "f5c6ec9a3456b7b562ace365c23b91173fb4d5a1b257054e9743a9119ef7fa69",
+      "text": "ipaddress.ip_network / ip_address."
+    },
+    "docs.http.bgp.summary": {
+      "en_sha256": "505b6f383b492adad01a95bf6218de33f5b4905ce9e9e016c43d20592bb74637",
+      "text": "ASN de origen de RIPEstat y RPKI."
+    },
+    "docs.http.cache-clear.accept": {
+      "en_sha256": "a402b2c5cd10b3e5e1c5459f80b03b81b329314d060c16c4d7261e0b083503e9",
+      "text": "JSON."
+    },
+    "docs.http.cache.accept": {
+      "en_sha256": "a402b2c5cd10b3e5e1c5459f80b03b81b329314d060c16c4d7261e0b083503e9",
+      "text": "JSON."
+    },
+    "docs.http.config.accept": {
+      "en_sha256": "a402b2c5cd10b3e5e1c5459f80b03b81b329314d060c16c4d7261e0b083503e9",
+      "text": "JSON."
+    },
+    "docs.http.docs-regen.accept": {
+      "en_sha256": "a402b2c5cd10b3e5e1c5459f80b03b81b329314d060c16c4d7261e0b083503e9",
+      "text": "JSON."
+    },
+    "docs.http.logout.accept": {
+      "en_sha256": "a402b2c5cd10b3e5e1c5459f80b03b81b329314d060c16c4d7261e0b083503e9",
+      "text": "JSON."
+    },
+    "docs.http.logs-stats.accept": {
+      "en_sha256": "a402b2c5cd10b3e5e1c5459f80b03b81b329314d060c16c4d7261e0b083503e9",
+      "text": "JSON."
+    },
+    "docs.http.logs.accept": {
+      "en_sha256": "a402b2c5cd10b3e5e1c5459f80b03b81b329314d060c16c4d7261e0b083503e9",
+      "text": "JSON."
+    },
+    "docs.http.serve-start.accept": {
+      "en_sha256": "a402b2c5cd10b3e5e1c5459f80b03b81b329314d060c16c4d7261e0b083503e9",
+      "text": "JSON."
+    },
+    "docs.http.session.accept": {
+      "en_sha256": "a402b2c5cd10b3e5e1c5459f80b03b81b329314d060c16c4d7261e0b083503e9",
+      "text": "JSON."
+    },
+    "docs.http.cache-clear.notes": {
+      "en_sha256": "61adb2f5b67599393e8a44c423dba1933112411941e9fbc258e5904b6c61edb9",
+      "text": "401 sin sesión. Los nombres de archivo usan basename; ns en {rdap,bgp}."
+    },
+    "docs.http.cache-clear.summary": {
+      "en_sha256": "6355078a2e41019542583d130402608ddcf9580d189a3590c38d1658c0ca24c3",
+      "text": "Vacía la caché. También POST. /cache/<ns> o /cache/<ns>/<file>."
+    },
+    "docs.http.cache.notes": {
+      "en_sha256": "091b97850c431e7d5f000b3d1aa3933d8618685342ced27dbe5e1061585a4fec",
+      "text": "401 a menos que haya una sesión de administrador PAM."
+    },
+    "docs.http.cache.summary": {
+      "en_sha256": "5d95c9573743ceee09293cc58962d881cee1882597047bd963222054c507c4a6",
+      "text": "Estadísticas de caché en disco de RDAP/BGP. También /cache/<ns>."
+    },
+    "docs.http.config.notes": {
+      "en_sha256": "c504004f3767734af99e17f0d8743667be29a47db0d8c08357b6bb1b5e29e5e8",
+      "text": "401 sin sesión. auth.users no se puede establecer aquí; utilice looking-glass auth users."
+    },
+    "docs.http.config.summary": {
+      "en_sha256": "41eb90f604d7e9cbd501460533949f9ddebcb6968ceb369d306af762cc0e6da9",
+      "text": "config.json del operador. POST establece claves con puntos (docs.enabled, locale, cache, refresh, wall, history)."
+    },
+    "docs.http.dns.notes": {
+      "en_sha256": "8b8991e659d03eb37504ea1b9c208d3c6002bce2826357686a362530deb14302",
+      "text": "normalize_qname + canonicalize_qtype. ?server= es solo una IP. El --timeout de CLI no es un parámetro de consulta HTTP."
+    },
+    "docs.http.dns.summary": {
+      "en_sha256": "69b84eb2bff00785e93798bd3d2eec0a8ec184ecc0c109586edaee81a6a7f2c9",
+      "text": "Consulta DNS. /<type> opcional (A, AAAA, MX, DS, …)."
+    },
+    "docs.http.dnssec.summary": {
+      "en_sha256": "68fc0e5ebe74ef748e379be31ef5c13980ce8426b17fe07499bd581107443884",
+      "text": "Recorre DS/DNSKEY desde las anclas de confianza de la raíz IANA."
+    },
+    "docs.http.dnstrace.notes": {
+      "en_sha256": "147cf253e9cc449a00defd33606f42dcc2b7f161b400e02928c1eac8c9377f8d",
+      "text": "_plan no ejecuta normalize_qname / canonicalize_qtype."
+    },
+    "docs.http.dnstrace.summary": {
+      "en_sha256": "71efc65ee556e3321a87c2abd34965fbd0cb2c166adb3a68fc59a7f939be4722",
+      "text": "Recorrido iterativo desde la raíz IANA. /<type> opcional."
+    },
+    "docs.http.docs-regen.notes": {
+      "en_sha256": "099f6472c3b3f92befede84a5c619ba3c29f38f217bd2a54ed50fe18c47f6202",
+      "text": "401 sin sesión. Reescribe ~/.looking-glass/data/docs.html."
+    },
+    "docs.http.docs-regen.summary": {
+      "en_sha256": "13c2e08ae542e5446319d592ebf5291225249be7c407b48d1b5d91e3475d4648",
+      "text": "Reconstruye el archivo de documentación a partir del catálogo."
+    },
+    "docs.http.docs.accept": {
+      "en_sha256": "3b2dec8fb1801294b888cb4af8e108a2cfd78b227f9e7d17b91a9c4874c2b3eb",
+      "text": "text/html. 404 hasta que se genere."
+    },
+    "docs.http.docs.notes": {
+      "en_sha256": "b4f63e256d9bfb2f2a4dee6d90fae43a49341fa5df4d8457bbfe2399764a5c2d",
+      "text": "Desactivado de forma predeterminada (docs.enabled). Cuando está desactivado, GET /docs es 404. Lee ~/.looking-glass/data/docs.html e inyecta el chrome de sesión en vivo. No se regenera en GET."
+    },
+    "docs.http.docs.summary": {
+      "en_sha256": "2f5d97792ed9816d28db715e615cf5545f69c08b06b50b3e3912c98ad2f283fc",
+      "text": "Esta documentación (archivo escrito por looking-glass docs)."
+    },
+    "docs.http.history.accept": {
+      "en_sha256": "791d8ae8d76f8c538310868cc638357a9d782bc20327a11c24e52e68d5b26f23",
+      "text": "JSON, o HTML para /history/<id>."
+    },
+    "docs.http.history.notes": {
+      "en_sha256": "ee09520942a29d30ed76be2bd5e18dcbc45b35a65ec8a7d751ae0465e8cc4fe0",
+      "text": "GET /history enumera cada consulta exitosa y necesita una sesión. GET /history/<id> es un permalink compartible (JSON o HTML) y no la necesita."
+    },
+    "docs.http.history.summary": {
+      "en_sha256": "ca844d8d3bacd69da41a5a51e897c6bf341abc60e5b1938bb3fabb33a8e05f3d",
+      "text": "Lista global de acciones con sesión iniciada. También /history/<id> para JSON o HTML de reproducción."
+    },
+    "docs.http.http.notes": {
+      "en_sha256": "e474ec6db5919c71a69758253a3535245c47d6c76ab403e7e2a978e1d2dd16dd",
+      "text": "Se conecta al host indicado (consulta abierta / SSRF si el servidor puede alcanzar redes privadas)."
+    },
+    "docs.http.http.summary": {
+      "en_sha256": "a8fc6a84fc4d192e6fb7ba475a7a108ad61111dddb7e41b67d791e520d12b922",
+      "text": "Sigue redirecciones; cabeceras, versión HTTP, TTFB."
+    },
+    "docs.http.login.accept": {
+      "en_sha256": "545ffc7b916bd3813a0e0a0eee2d686944f82d887e9374ca255d448e90a67906",
+      "text": "JSON. Establece una cookie HttpOnly looking_glass_session (sesión de archivo opaca, no un JWT)."
+    },
+    "docs.http.login.notes": {
+      "en_sha256": "1f4e25da7285bf1ec6577cfd76c09c90fd129296a4c37f11c92d345ac0d68d03",
+      "text": "Root nunca está permitido. El cuerpo es JSON o un formulario username/password."
+    },
+    "docs.http.login.summary": {
+      "en_sha256": "5ecd78cc10185940e18f93c71457bd9bbf1be14d9279170694098b1f1fab4aac",
+      "text": "Inicio de sesión PAM. El primer usuario no root inicializa la allowlist."
+    },
+    "docs.http.logout.notes": {
+      "en_sha256": "0584677a9163d5238fa1e977706e4ccba94cd10aca4901a5e8a88f775c1190a3",
+      "text": "Elimina el archivo de sesión en disco."
+    },
+    "docs.http.logout.summary": {
+      "en_sha256": "2520f12484916eba0968b6dd28cedd83e1c77642748f820f0dc7f5e271c0ddd8",
+      "text": "Finaliza la sesión GUI y borra la cookie."
+    },
+    "docs.http.logs-stats.notes": {
+      "en_sha256": "ada677b6b62ff65c00dc90c799512ec4a1190e7759c10413e2137b0bedd1a9bd",
+      "text": "401 sin sesión. Instantáneas de 15 minutos de las últimas 24h (día) y 7d (semana); solo buckets almacenados, sin relleno de ceros."
+    },
+    "docs.http.logs-stats.summary": {
+      "en_sha256": "93e52cd425e64ae7b2fcadf606b1663c536c2dfcf65a60d4cb9d42d6679e06c7",
+      "text": "Series temporales de aciertos/errores por página para los gráficos del visor de logs."
+    },
+    "docs.http.logs.notes": {
+      "en_sha256": "315ede8edd3f459a43b20b6657b03654880e00ca36781c9c2b78b27eca049eb2",
+      "text": "401 sin sesión. kind=access|error|login|lookup|serve-err|wall|build (serve-out es un alias de lookup). ok=true|false filtra login."
+    },
+    "docs.http.logs.summary": {
+      "en_sha256": "ed8f1153c8c90051df98b9fc681e73292ceddad15f089b3b46af7016e125aba6",
+      "text": "Hacer tail de los registros de GUI, servidor intel, wall y build como líneas JSON."
+    },
+    "docs.http.mail.notes": {
+      "en_sha256": "43c6410eb69ef75909510d5b31bae803a65c0d706b452d0f255242754391ce42",
+      "text": "normalize_qname dentro del comprobador de correo."
+    },
+    "docs.http.mail.summary": {
+      "en_sha256": "dc6b828a4b8d716ca742e2a6a23ee2d15dd797614ff07b1885709060d23c411a",
+      "text": "MX/SPF/DMARC/DKIM, banner SMTP y STARTTLS."
+    },
+    "docs.http.mtr.notes": {
+      "en_sha256": "0ad9db323071aab6c3dcaccf3530b2a01b217326be5942b99e55b9ee61013bc0",
+      "text": "IP o normalize_qname. ?cycles= es mtr -c, por defecto 10, acotado por mtr.max_cycles."
+    },
+    "docs.http.mtr.summary": {
+      "en_sha256": "1eb77c39e84f2f6701444bf581c4f5d80aa36d76c14603bfbe5e8f516ed2500f",
+      "text": "Ruta repetida, pérdida y RTT como mtr --report."
+    },
+    "docs.http.ping.notes": {
+      "en_sha256": "89026eb919b117568bc1dbe7475ef2279514309f355fee488a9c79378a10d8ac",
+      "text": "IP o normalize_qname. Sockets de Python, sin shell."
+    },
+    "docs.http.ping.summary": {
+      "en_sha256": "c54730718e7e911913cb0e6486f320d8d30dee5eedf71069cb60511beb1ecb3b",
+      "text": "ICMP echo (fallback TCP 443 si ICMP está filtrado)."
+    },
+    "docs.http.pmtu.notes": {
+      "en_sha256": "1b049ff36d067204b8345dcc31a9d04a2513e55b722f748e8264fcd9a824335e",
+      "text": "lista argv de subprocess (sin shell); el destino sigue controlado por el usuario."
+    },
+    "docs.http.pmtu.summary": {
+      "en_sha256": "2a63285336b9c3314e3c13321181289ecc22672a7632a8889d8f360bd3f42539",
+      "text": "Path MTU mediante payloads de ping don't-fragment."
+    },
+    "docs.http.ptr.notes": {
+      "en_sha256": "62b098a09176344691a85b12b5177ac7c4a178f13f026bbf1f1bda7044188c1e",
+      "text": "Requiere una IP válida."
+    },
+    "docs.http.rdap.notes": {
+      "en_sha256": "aa5274aca8f148283100926c112f4ae0acbf27ce557fc5ab32d87c31b4fe1afd",
+      "text": "El resto del path es principalmente pass-through (entrecomillado hacia rdap.org)."
+    },
+    "docs.http.rdap.summary": {
+      "en_sha256": "34ae293e4d080e9042595c94fb54075194c267f1e83d724b263362da1dc48002",
+      "text": "RDAP para una IP, un dominio o un ASN."
+    },
+    "docs.http.register.notes": {
+      "en_sha256": "38e082a79a4dd266ed7e972a0f678e25c3a2cc85affb976f7a469abada71d55d",
+      "text": "example.com conserva la primera etiqueta. NXDOMAIN es no-dns; NS es has-ns; NODATA/wildcard/RDAP-registered es unknown. No es un carrito de registrador. Rechaza una IP suelta."
+    },
+    "docs.http.register.summary": {
+      "en_sha256": "1dd329ea216d7954d92dda83949f0254d11c7cc11a2e1835ee0586324a383b50",
+      "text": "Tablero de ajedrez de delegación DNS de una etiqueta en cada TLD de IANA."
+    },
+    "docs.http.reputation.notes": {
+      "en_sha256": "a56681fc4dd930cb2fcc0725fd96f81579199added0b56782f2f6ab02e294542",
+      "text": "IP mediante ipaddress; de lo contrario, normalize_qname."
+    },
+    "docs.http.reputation.summary": {
+      "en_sha256": "a195e81a720f80982c6a33df48ea65d8e6023a4388f1451bae4538ccc5292e44",
+      "text": "DNSBL / listas de dominios, más Sender Score."
+    },
+    "docs.http.root.accept": {
+      "en_sha256": "ab0bae33e788647dfbf854e04f5e1c16d9f7e4eb3a6a3f9a9db5ff4e0a846772",
+      "text": "HTML si Accept prefiere text/html; JSON en caso contrario."
+    },
+    "docs.http.root.notes": {
+      "en_sha256": "fa2e36a5a57c43754f706a4981278d6b8060b3bee9f03d5f1add91441b54e6f8",
+      "text": "JSON usa classify_query en la dirección del visitante."
+    },
+    "docs.http.root.summary": {
+      "en_sha256": "33cf2a302d2f95d67f21d3c5fd20fd6bd4e8507c9d2c04c85a96765648419ed8",
+      "text": "Índice HTML de la GUI, o consulta JSON del peer TCP."
+    },
+    "docs.http.serve-start.notes": {
+      "en_sha256": "56ef02ed0fff88f7c566aee426e1128e7b070e58bf55e0a41caeb3c64073a495",
+      "text": "401 sin una sesión. La barra de estado muestra ready frente a building y el uptime de intel."
+    },
+    "docs.http.serve-start.summary": {
+      "en_sha256": "037988d480362d3b40e753c18e7f742abc7b3c67a45de6d7f3dac02932fe6175",
+      "text": "Iniciar el servidor intel. También POST /serve/stop."
+    },
+    "docs.http.session.notes": {
+      "en_sha256": "05eb4c39e7f89f7a2f244192291336d11373fb3813682a729b911a84ed714607",
+      "text": "Público. No filtra la allowlist. Las sesiones son secretos de 256 bits en disco; la cookie es solo el id."
+    },
+    "docs.http.session.summary": {
+      "en_sha256": "117eabd4550b4dbf247043e8f33f8153d6278d2397b77b911a2ab7c27603845b",
+      "text": "Usuario admin actual, o user: null."
+    },
+    "docs.http.status.accept": {
+      "en_sha256": "c60a7620c699e3c468724a5266bf58433cb72b6ae24f5aeaf3e2aee518754578",
+      "text": "Siempre JSON (Cache-Control: no-store)."
+    },
+    "docs.http.status.notes": {
+      "en_sha256": "b0adc9cc66378cc6f3245dc20012625ec3e9f85fb654e0adbce762707ad3e2df",
+      "text": "No está restringido por GUI. Lo usa la barra de estado. `ip` es ipv4 o ipv6; ambas familias también están en ipv4 / ipv6. Las respuestas autenticadas añaden user y serve.running / serve.uptime."
+    },
+    "docs.http.status.summary": {
+      "en_sha256": "24a4565fe21ca4fe65cf5de9ebe74bff9da33ebcf0077479e02915da1d5286e5",
+      "text": "Hostname, IPv4 y/o IPv6, reloj, uptime, carga, WSGI/ASGI."
+    },
+    "docs.http.tcp.notes": {
+      "en_sha256": "009523be616f6b21b4a31f69045a7b11ec575bd35c1f59cb9800a43bf79f00d7",
+      "text": "Rango de puertos comprobado; el host no se normaliza en _plan."
+    },
+    "docs.http.tcp.summary": {
+      "en_sha256": "991082a9f9b41d9917fefe45b22fef7423babb584dc68c7c3a0bfab136f75697",
+      "text": "Conexión TCP y un banner breve."
+    },
+    "docs.http.tcptraceroute.notes": {
+      "en_sha256": "886ff70020fbd7051d988700b984f257f9ad1b9ec6dc03e02d022cb6180d7c50",
+      "text": "Puerto 1–65535; IP o normalize_qname."
+    },
+    "docs.http.tcptraceroute.summary": {
+      "en_sha256": "ff66ea6fd002fae25ed2713d580bd8b74a3f3cbc8ca07c4d98fe74c431848051",
+      "text": "Recorrido TCP de TTL. Opcional /<port> (por defecto 443)."
+    },
+    "docs.http.tls.notes": {
+      "en_sha256": "220eb5b7393361069afdc1686733dda090f6b32b110a572c6171f2e11f6f47db",
+      "text": "Puerto 1–65535. Solo se elimina ?sni=."
+    },
+    "docs.http.tls.summary": {
+      "en_sha256": "a4a3d17c628d5e05227dff5e757e13ac65989e07517cbb459e3d75f8e4c43d7e",
+      "text": "Handshake TLS y certificado. Opcional /<port> (por defecto 443)."
+    },
+    "docs.http.token.notes": {
+      "en_sha256": "00aecb22a221ae465d8d06d59574a6ea6272404e60dd078749751978d07cd8ac",
+      "text": "classify_query: ipaddress, luego dígitos de ASN, luego canonical_country."
+    },
+    "docs.http.token.summary": {
+      "en_sha256": "0dc814fddce182ab79bbcda330c56bcde28c2fef98abd74e27e252c7b5dbd2a9",
+      "text": "Detecta automáticamente IP, ASN (AS13335) o país ISO (AU)."
+    },
+    "docs.http.traceroute.notes": {
+      "en_sha256": "9f5a283b16c706dcd02065c03d97c8747a90f9fdadb35dac18fe7b7bcd5b3424",
+      "text": "IP o normalize_qname."
+    },
+    "docs.http.traceroute.summary": {
+      "en_sha256": "74eafa3031cbf58c35e62385f170e57d94d9fd7c71fdb82f42633f045673bfa6",
+      "text": "Traceroute UDP, tres sondas por salto."
+    },
+    "docs.http.whois.notes": {
+      "en_sha256": "62775cc52bcf61c5989ae0410f575ecd5f8175c8b1d68288c210f01717e53b78",
+      "text": "Los tokens de dominio/IP no se normalizan en _plan."
+    },
+    "docs.http.whois.summary": {
+      "en_sha256": "773537de6688101cc885573003225c342f8c0cfe7580a448717dae29fb187124",
+      "text": "RDAP por defecto; WHOIS legado del puerto 43 con ?legacy=1."
+    },
+    "docs.http_intro": {
+      "en_sha256": "70563f87929126ab8e7a5ac9147bcf0253385bdb2bd04bc468f48b43f7c81504",
+      "text": "Todas las consultas pasan por respond / respond_async. Envíe Accept: application/json (o el valor por defecto de curl) para JSON. Los navegadores reciben HTML pintado por paintInspect."
+    },
+    "docs.lede": {
+      "en_sha256": "1dcc78e092ce5fa1f7e58c641b401fd7fe68d18e997b262220635109883729b0",
+      "text": "API HTTP, CLI de Click y GUI web. Se regenera con {cmd} o POST /docs. GET /docs sirve el archivo en disco con el chrome de la sesión en vivo y no lo reconstruye."
+    },
+    "docs.missing": {
+      "en_sha256": "11c36c12c593c595429429bfdec6100c6357b27c39bc272f0e4e366ef67c83bc",
+      "text": "La documentación no se ha generado. Ejecute {cmd}."
+    },
+    "docs.missing_exit": {
+      "en_sha256": "f0a37f3357398aeb83f64f340e48391fe43d04f865dad2ce65706603fdec0a8f",
+      "text": "salir al sitio principal."
+    },
+    "docs.nav_cli": {
+      "en_sha256": "eb11614563fecdb7137622e23b6b5a70dd06a1286975ee4569065326618763e0",
+      "text": "CLI de Click"
+    },
+    "docs.nav_gui": {
+      "en_sha256": "e2f4b4a34c0a833ea7e1d7bf25a43c7df31f282d07115752e9f3627b9c25c096",
+      "text": "GUI web"
+    },
+    "docs.nav_http": {
+      "en_sha256": "78b0126bdfefcdb376167e85f77cdf5e5a8aab1681e841654589063f28098917",
+      "text": "API HTTP"
+    },
+    "docs.notes": {
+      "en_sha256": "8a7525b1492fb84833f5c4a69b30f4bfbb134f9b666b61a2c1872d63d234c085",
+      "text": "Notas"
+    },
+    "docs.on_this_page": {
+      "en_sha256": "b5658fc8edda24f9c94eabac9e536e0a18e3055a8ca255f9d1b8f256ea02a6cc",
+      "text": "En esta página"
+    },
+    "docs.open_lookup": {
+      "en_sha256": "fe2ed0db05e4c3001122a4388bc57fb2dd4a67ff4f792eb09c0730b7942787b7",
+      "text": "Este es un servicio de consulta abierto: las herramientas se conectan a los nombres que se indican. Las consultas no tienen autenticación. Los enlaces compartidos /history/<id> son públicos. La barra de historial, la caché, los registros y los controles de serve requieren una sesión de administrador PAM. XSS y la inyección de shell no son el modelo de amenaza; el egreso a direcciones privadas o de metadatos sí lo es, si este host puede enrutar hacia allí."
+    },
+    "docs.query": {
+      "en_sha256": "b80a37564fbb3c0753202a1f92d5da8ccfb906b244f2842bba2232cea9883abd",
+      "text": "Consulta"
+    },
+    "docs.response": {
+      "en_sha256": "9061383b8e228ef3ac36ddc06d128d0fc5c93edf924cefb5a65392f6104798bd",
+      "text": "Respuesta"
+    },
+    "inspect.response": {
+      "en_sha256": "9061383b8e228ef3ac36ddc06d128d0fc5c93edf924cefb5a65392f6104798bd",
+      "text": "Respuesta"
+    },
+    "docs.title": {
+      "en_sha256": "093427b77df3bd27fc544a9c71aa688b7a87b2b262333dd7a01e8c7a73f97a00",
+      "text": "Documentación de looking-glass"
+    },
+    "gui.all_lookup_types": {
+      "en_sha256": "806982622b13a8e798d03e26bb809d78566fce3bf471cab2b3819bf564a7332e",
+      "text": "Todos los tipos de consulta"
+    },
+    "gui.apex.domain": {
+      "en_sha256": "79fa33618d8eaa1fc55f6f8a2d34c65ececc4c5961ac2b1433802c2629d55ca1",
+      "text": "Dominio"
+    },
+    "gui.dnssec.domain": {
+      "en_sha256": "79fa33618d8eaa1fc55f6f8a2d34c65ececc4c5961ac2b1433802c2629d55ca1",
+      "text": "Dominio"
+    },
+    "gui.domain": {
+      "en_sha256": "79fa33618d8eaa1fc55f6f8a2d34c65ececc4c5961ac2b1433802c2629d55ca1",
+      "text": "Dominio"
+    },
+    "gui.mail.domain": {
+      "en_sha256": "79fa33618d8eaa1fc55f6f8a2d34c65ececc4c5961ac2b1433802c2629d55ca1",
+      "text": "Dominio"
+    },
+    "gui.apex.hint": {
+      "en_sha256": "7fe71539fdf437f18b390bd1f95d39e4be331ff27a502437713852bc4ba77f36",
+      "text": "Comprobar la salud de la zona y del correo: glue del padre, NS, SOA, MX, WWW y SMTP, citando los mismos RFC que usa una auditoría DNS clásica."
+    },
+    "gui.apex.submit": {
+      "en_sha256": "f0fbe1d10e36bb82cb2be8414e7305845d7454b06cbe592f58f9588362e48eb3",
+      "text": "Ejecutar Apex"
+    },
+    "gui.asn.hint": {
+      "en_sha256": "2c4a3d3d8dc149696113ed912c462219104cc55875c4710b1f1a47240d988bbb",
+      "text": "Consultar un sistema autónomo: el nombre de la organización y los contactos RDAP cuando el registro los tenga."
+    },
+    "gui.asn.submit": {
+      "en_sha256": "653d50c626c792453342e8161b9c1b1c59a15d1c190f7e4d8f3494babf0c1e51",
+      "text": "Consultar ASN"
+    },
+    "gui.bgp.hint": {
+      "en_sha256": "4e1584798d0aec2b096aa2c8a7e6e0a515581108face89377eaaaeb54b6a55b3",
+      "text": "Asociar un prefijo a su ASN de origen y comprobar el ROA: válido, inválido o no encontrado."
+    },
+    "gui.bgp.label": {
+      "en_sha256": "93a5aafd70383733facdd72eeb942b4ff89352697c19cc48d366f7fdd4992f40",
+      "text": "IP o prefijo"
+    },
+    "gui.bgp.submit": {
+      "en_sha256": "7fa68aecf4e86b00674cd2d10162133ab82f44e450cd02bd24717155dc2a9086",
+      "text": "Comprobar BGP"
+    },
+    "gui.bgp.title": {
+      "en_sha256": "c70144712bdef9fc00c2b89ef930c901687050b674eb88da7f3cc9c3187c5f52",
+      "text": "BGP / RPKI"
+    },
+    "gui.cache": {
+      "en_sha256": "a76ce82a974999d815b24e30286466c727c9bdbe92c88e676362ce22878ad12d",
+      "text": "Caché"
+    },
+    "gui.cache.title": {
+      "en_sha256": "a76ce82a974999d815b24e30286466c727c9bdbe92c88e676362ce22878ad12d",
+      "text": "Caché"
+    },
+    "gui.config.cache": {
+      "en_sha256": "a76ce82a974999d815b24e30286466c727c9bdbe92c88e676362ce22878ad12d",
+      "text": "Caché"
+    },
+    "gui.cache.age": {
+      "en_sha256": "013f54400c82da08037759ada907a8b864e97de81c088a182062c4b5622fd2ab",
+      "text": "edad"
+    },
+    "gui.cache.all": {
+      "en_sha256": "5ef5ef0364b6939c4ca61f34b393f7b368d1be8619647aaf83d5b395919ab629",
+      "text": "todos"
+    },
+    "gui.history.all": {
+      "en_sha256": "5ef5ef0364b6939c4ca61f34b393f7b368d1be8619647aaf83d5b395919ab629",
+      "text": "todos"
+    },
+    "gui.logs.all": {
+      "en_sha256": "5ef5ef0364b6939c4ca61f34b393f7b368d1be8619647aaf83d5b395919ab629",
+      "text": "todos"
+    },
+    "gui.wall.all": {
+      "en_sha256": "5ef5ef0364b6939c4ca61f34b393f7b368d1be8619647aaf83d5b395919ab629",
+      "text": "todos"
+    },
+    "gui.cache.clear": {
+      "en_sha256": "83b12c2216efb4fdc924e1deb5182e905e4926ed0c1c324d467107f46d5a26a9",
+      "text": "Vaciar"
+    },
+    "gui.cache.clear_all": {
+      "en_sha256": "29a390f9237e3c84e5641785eca25199620e53f7b6f4b9d843b23dcb5c12904f",
+      "text": "Vaciar todo"
+    },
+    "gui.cache.close": {
+      "en_sha256": "7d9eb7acb13e24625c404401d8e88b2350e32162455885f18276cf802f7701ed",
+      "text": "Cerrar"
+    },
+    "gui.close": {
+      "en_sha256": "7d9eb7acb13e24625c404401d8e88b2350e32162455885f18276cf802f7701ed",
+      "text": "Cerrar"
+    },
+    "gui.cache.empty": {
+      "en_sha256": "4b983389174c110ff502c43f0b7083e63216acffd0bf80c4996b2dd576da83bb",
+      "text": "La caché está vacía."
+    },
+    "gui.cache.kind": {
+      "en_sha256": "0b27c158feb36ab18a10ff687909ec730ece6280581dd407e2672359be7725dd",
+      "text": "tipo"
+    },
+    "gui.history.kind": {
+      "en_sha256": "0b27c158feb36ab18a10ff687909ec730ece6280581dd407e2672359be7725dd",
+      "text": "tipo"
+    },
+    "result.kind": {
+      "en_sha256": "0b27c158feb36ab18a10ff687909ec730ece6280581dd407e2672359be7725dd",
+      "text": "tipo"
+    },
+    "gui.cache.loading": {
+      "en_sha256": "ba3bbbe10d8bef66441c88536ce7b8e724e2829b59a3da658654f4961cd61ae5",
+      "text": "Cargando…"
+    },
+    "gui.config.loading": {
+      "en_sha256": "ba3bbbe10d8bef66441c88536ce7b8e724e2829b59a3da658654f4961cd61ae5",
+      "text": "Cargando…"
+    },
+    "gui.cache.namespace": {
+      "en_sha256": "9359f3bb2efa7aabd0264fb67fb1d99f91871778e9b887179d6b2debaa251ec6",
+      "text": "namespace"
+    },
+    "gui.cache.none": {
+      "en_sha256": "d6572bd2e77380cece5ea9e23f3dcb01e208b8e872f46b4bb0a9f06e38b7a148",
+      "text": "No hay coincidencias."
+    },
+    "gui.history.none": {
+      "en_sha256": "d6572bd2e77380cece5ea9e23f3dcb01e208b8e872f46b4bb0a9f06e38b7a148",
+      "text": "No hay coincidencias."
+    },
+    "gui.cache.query": {
+      "en_sha256": "a8b771920b8319e47251d1360f5e880bc18e8d329b0f0d003ea3c7e615558947",
+      "text": "consulta"
+    },
+    "gui.history.query": {
+      "en_sha256": "a8b771920b8319e47251d1360f5e880bc18e8d329b0f0d003ea3c7e615558947",
+      "text": "consulta"
+    },
+    "result.query": {
+      "en_sha256": "a8b771920b8319e47251d1360f5e880bc18e8d329b0f0d003ea3c7e615558947",
+      "text": "consulta"
+    },
+    "gui.cache.search": {
+      "en_sha256": "9a6e07b1d23458475968fa1a11966ec63216ce7ff382b92a757b8c244e62afc6",
+      "text": "Buscar consulta, namespace o tipo"
+    },
+    "gui.cache.size": {
+      "en_sha256": "ccdcbe846f3da4eb044fbdf64bf6b57902388ab72fb0c852ba72280f8d478b40",
+      "text": "tamaño"
+    },
+    "gui.cache.when": {
+      "en_sha256": "15eaa75240aed625be3e142205df3adbbb7051802b32f450e40276be8582b6d8",
+      "text": "cuándo"
+    },
+    "gui.history.when": {
+      "en_sha256": "15eaa75240aed625be3e142205df3adbbb7051802b32f450e40276be8582b6d8",
+      "text": "cuándo"
+    },
+    "gui.cancel": {
+      "en_sha256": "19766ed6ccb2f4a32778eed80d1928d2c87a18d7c275ccb163ec6709d3eb2e27",
+      "text": "Cancelar"
+    },
+    "gui.choose_tool": {
+      "en_sha256": "8c09cf2192a0e2cd1e465b1833297fbc74637609e50e22159cf780e8c09d07f0",
+      "text": "Elija una herramienta…"
+    },
+    "gui.clear_result": {
+      "en_sha256": "f7d6c6570e8566c6aa331b6b338b22e8cc46273c279ba264a08a41e7bbb07ff3",
+      "text": "Borrar resultado"
+    },
+    "gui.common": {
+      "en_sha256": "309955e00850b8afeb148450c7208585a85f8b652d5c625c777726f44837f69c",
+      "text": "Común"
+    },
+    "gui.config": {
+      "en_sha256": "87e89abb4c1c551fe08d355d097f18b8de78edca5f556997085681662fce8eed",
+      "text": "Configuración"
+    },
+    "gui.config.title": {
+      "en_sha256": "87e89abb4c1c551fe08d355d097f18b8de78edca5f556997085681662fce8eed",
+      "text": "Configuración"
+    },
+    "gui.config.cache.gui": {
+      "en_sha256": "7b0bf84202e1000e39bfb82b2381fb7ad66452d744515bf60b5181cae2946a7a",
+      "text": "Caché de la GUI"
+    },
+    "gui.config.cache.ttl_days": {
+      "en_sha256": "a030a8ed79222241819614cf1f27fc5a0f227d63401df362cf1f67c1f539d427",
+      "text": "TTL de caché (días)"
+    },
+    "gui.config.docs": {
+      "en_sha256": "c205924de0fe636ccdde4ed616fef66f75b78e98b03620637965c033fd161141",
+      "text": "Documentación"
+    },
+    "gui.config.docs.enabled": {
+      "en_sha256": "8e0de6a8a849e98a9917bd292191597021731b3900a295c0cd54414643f4b69d",
+      "text": "Activar documentación"
+    },
+    "gui.config.history": {
+      "en_sha256": "0e769600933790607b2a13b33ddfade0fa17810eb62c3b28ee23e59516516491",
+      "text": "Historial"
+    },
+    "gui.history": {
+      "en_sha256": "0e769600933790607b2a13b33ddfade0fa17810eb62c3b28ee23e59516516491",
+      "text": "Historial"
+    },
+    "gui.config.history.snapshots": {
+      "en_sha256": "f187f78e07efb26eacf88e2d361f91f4abf37d025e744f36446b62d22abd1460",
+      "text": "Instantáneas"
+    },
+    "gui.config.http": {
+      "en_sha256": "205ecf3f81bf7ebb338e0bc2860f9415f65552de7f438d4374c0ed2bba9c37fc",
+      "text": "HTTPS"
+    },
+    "gui.config.http.email": {
+      "en_sha256": "035689fe84a46d9070ebb09f019fe2a66bb3eceea6a73a72b3a8965d9b881982",
+      "text": "Correo de Let's Encrypt"
+    },
+    "gui.config.http.enabled": {
+      "en_sha256": "a27f177e719ce4f21559c38722df8762377165accb4af494b15a21d5eb1f6177",
+      "text": "Servir la GUI por TLS"
+    },
+    "gui.config.http.hostname": {
+      "en_sha256": "dcb601a55675caa31406b0017bbcdf603632e9e56abb0a3960a00589f4344ce9",
+      "text": "Hostname (FQDN)"
+    },
+    "gui.config.http.port": {
+      "en_sha256": "71c72fb1098bc80828e1038d9bc262e3fe71128da9c9ba3812aa8c377ffe562a",
+      "text": "Puerto TLS"
+    },
+    "gui.config.http.staging": {
+      "en_sha256": "f4cd04c660c464157375b8bf53a1c56e8adb82b564de31b36c08bd2815ae4510",
+      "text": "Usar Let's Encrypt staging"
+    },
+    "gui.config.http.workers": {
+      "en_sha256": "9c60664fec3c430b1c31ed046b205066c416d001a2f68127efb715176ff7e497",
+      "text": "Workers de Uvicorn"
+    },
+    "gui.config.locale": {
+      "en_sha256": "ca3dc612f47e3913b79f68eac655d590812439eec5865189c38a0d7623efa0aa",
+      "text": "Configuración regional"
+    },
+    "gui.config.mtr.cycles": {
+      "en_sha256": "6dd22063b19f84fefc118050b1b9d1b20b3907078c4ff54954678db6de91b190",
+      "text": "Pases predeterminados"
+    },
+    "gui.config.mtr.max_cycles": {
+      "en_sha256": "398a53694faa36e2af24071a414ad78c60c850b6145a796ce4d98e5cbbf9f5b1",
+      "text": "Pases máximos"
+    },
+    "gui.config.path": {
+      "en_sha256": "50009ce1da4d15e1c4a04024df691eed5f0d598e2c4c67092f205366d0adf99e",
+      "text": "Archivo"
+    },
+    "gui.config.refresh": {
+      "en_sha256": "561a89e0abe472ae8520ab5e433923915532600f6495fb838e24b19a3346bdf0",
+      "text": "Actualización del conjunto de datos (días)"
+    },
+    "gui.config.refresh.asn_org": {
+      "en_sha256": "2e442caa4f58c0839ff3685e11a513a879643077c793bd41b7f558ed3134368e",
+      "text": "Org. ASN"
+    },
+    "gui.config.refresh.dns_types": {
+      "en_sha256": "e19736d5aa8a5ff205853f97c0095cc2899579c01513e96615c4e265ea6f9497",
+      "text": "Tipos DNS"
+    },
+    "gui.config.refresh.tlds": {
+      "en_sha256": "9fb9dd63959eb3c171d690eeb78eb22fabf02ce6468fcde359bd87d86845a8f9",
+      "text": "TLDs"
+    },
+    "gui.config.save": {
+      "en_sha256": "1509f561f2416598629b886ad7d3c05a7e221e4e0675c84bbff4ee6d9e03913d",
+      "text": "Guardar"
+    },
+    "gui.config.saved": {
+      "en_sha256": "b5c120b316c237a0deab3140267aebedba61947d3ae268d708a53d5be119e9fb",
+      "text": "Guardado"
+    },
+    "gui.config.users": {
+      "en_sha256": "857bdab6c95983c59d0070b823b99e3ac1de25f1a29ca9319ea8f76aac8993fc",
+      "text": "Usuarios administradores"
+    },
+    "gui.config.users.hint": {
+      "en_sha256": "c5918a426fe8cfac25aa030d6b071be669a96c42786e1578a5a8a50639320c0b",
+      "text": "Utilice looking-glass auth users para añadir o quitar nombres."
+    },
+    "gui.config.wall": {
+      "en_sha256": "ab724c3f3bd8732efcb4faf1c62ac37c165bf13e447e2361cbe44348153fbfb5",
+      "text": "Desafío de firewall"
+    },
+    "gui.config.wall.challenge_bits": {
+      "en_sha256": "cf510cfdbae24fea0f033f151bdab17ef47ea31258872b5b1a20d7aed254d896",
+      "text": "Bits del puzzle (8–24)"
+    },
+    "gui.config.wall.challenge_ttl_days": {
+      "en_sha256": "563aed5f9dfa3115ac9dfd05bee1dc54d0d8aaae46bcaa6c3ac6a6ce9d73648a",
+      "text": "TTL de la cookie de paso (días)"
+    },
+    "gui.dns.filter": {
+      "en_sha256": "cfedc4b0cb22f0ae4d997256e8735afa95c977d4c02020dbfeb2667e19812e2d",
+      "text": "Filtrar tipos"
+    },
+    "gui.dns.hint": {
+      "en_sha256": "e6e5e98532782ddcdb9e0712473818811ded5a98a4e27fb355a804f35e5e33f5",
+      "text": "Pida un tipo de registro del catálogo IANA, como dig. Deje el nameserver vacío para usar el resolver del sistema operativo (resolv.conf). Rellénelo solo para anularlo, como dig @. Los metatipos como ANY, AXFR y OPT se omiten. DS y DNSKEY viven en el apex de la zona (example.com), no en www."
+    },
+    "gui.dns.name": {
+      "en_sha256": "dcd1d5223f73b3a965c07e3ff5dbee3eedcfedb806686a05b9b3868a2c3d6d50",
+      "text": "Nombre"
+    },
+    "gui.name": {
+      "en_sha256": "dcd1d5223f73b3a965c07e3ff5dbee3eedcfedb806686a05b9b3868a2c3d6d50",
+      "text": "Nombre"
+    },
+    "gui.register.label": {
+      "en_sha256": "dcd1d5223f73b3a965c07e3ff5dbee3eedcfedb806686a05b9b3868a2c3d6d50",
+      "text": "Nombre"
+    },
+    "gui.dns.nameserver": {
+      "en_sha256": "02eca782c1a0d5786baf4bfd596f3a83a6fa902bfcc535725336ac81141c37cc",
+      "text": "Nameserver"
+    },
+    "gui.dns.port": {
+      "en_sha256": "72e9a59f5a1d6289dbacb35df897d6c007c55a27e77018455c37e7b372668475",
+      "text": "Puerto"
+    },
+    "gui.tcp.port": {
+      "en_sha256": "72e9a59f5a1d6289dbacb35df897d6c007c55a27e77018455c37e7b372668475",
+      "text": "Puerto"
+    },
+    "gui.tls.port": {
+      "en_sha256": "72e9a59f5a1d6289dbacb35df897d6c007c55a27e77018455c37e7b372668475",
+      "text": "Puerto"
+    },
+    "gui.dns.submit": {
+      "en_sha256": "7608a0af07cd72867f1dfb4369e2e5d6fa63950a85631ace397ee7f26c2a8455",
+      "text": "Consultar DNS"
+    },
+    "gui.dns.type": {
+      "en_sha256": "baaddf70fb5d432b8bd948ef91d6f910124a6d138edae4d5f000c4610ddc8eae",
+      "text": "Tipo"
+    },
+    "gui.type": {
+      "en_sha256": "baaddf70fb5d432b8bd948ef91d6f910124a6d138edae4d5f000c4610ddc8eae",
+      "text": "Tipo"
+    },
+    "rdap.type": {
+      "en_sha256": "baaddf70fb5d432b8bd948ef91d6f910124a6d138edae4d5f000c4610ddc8eae",
+      "text": "Tipo"
+    },
+    "gui.dnssec.hint": {
+      "en_sha256": "3bdfdc78898cd83ec9967aae9ebab10f42b8825e8c856c0bc22c12f223efddcf",
+      "text": "Recorra la cadena de confianza desde las anclas raíz de IANA hasta este dominio. Los nombres sin firmar (google.com) son delegaciones inseguras, no una ruptura. Una ruptura es bogus: una discrepancia DS/DNSKEY o un RRSIG incorrecto."
+    },
+    "gui.dnssec.submit": {
+      "en_sha256": "356c4c31e9c520a4f4804a8e6f49448c9dd03023423bb3fcbb1d239de70fd6f8",
+      "text": "Validar DNSSEC"
+    },
+    "gui.dnstrace.hint": {
+      "en_sha256": "db39a64a06e2744b06188c314b16f4307e0a49b363843c7d9dbfe8eb80a0c008",
+      "text": "Recorra de forma iterativa desde la raíz IANA a través del TLD hasta los servidores autoritativos, como dig +trace. Esto no es una consulta recursiva."
+    },
+    "gui.dnstrace.submit": {
+      "en_sha256": "c77961d2dc519e5fb26cfdf9b2394dbc6adadff44809125b2480fec566f8d682",
+      "text": "Trazar DNS"
+    },
+    "gui.dnstrace.title": {
+      "en_sha256": "87b0db8b672730a83a96a52ac0d4d1efe4abdd33419982091a863548a54e429c",
+      "text": "Traza DNS"
+    },
+    "gui.elapsed": {
+      "en_sha256": "ba09f7e45109781bdbf29e94c5f5c7fa4060a644a943410b71c4538b3860ded5",
+      "text": "{n}s transcurridos"
+    },
+    "gui.group.lookup": {
+      "en_sha256": "504101bcda9ef600213365b1202275ff3bd90def90eb55dab2debb097b94c3e6",
+      "text": "Consultar"
+    },
+    "gui.rdap.submit": {
+      "en_sha256": "504101bcda9ef600213365b1202275ff3bd90def90eb55dab2debb097b94c3e6",
+      "text": "Consultar"
+    },
+    "gui.group.mail": {
+      "en_sha256": "07ed6ccf6bf6393d18684d1d4f774639d44c7d2d2895fd30491ccc50614ed4ea",
+      "text": "Correo"
+    },
+    "gui.group.path": {
+      "en_sha256": "62fa5a5b0d3c318835a213e22a4b335c42515443d598741d0413e8c47f9ecf67",
+      "text": "Ruta"
+    },
+    "gui.group.web": {
+      "en_sha256": "2975104784a401e3880e2215550e9490eda7e67db5fc2b35e1a244acb092ced3",
+      "text": "Web"
+    },
+    "gui.history.copy": {
+      "en_sha256": "6f5a6034e770acbfb3f797e6a7eb7948d470d45f9928f92b7d72dc7c45e6d0cd",
+      "text": "copiar"
+    },
+    "gui.history.details": {
+      "en_sha256": "45989de49fb7f66dfe17a8fc26f3a02c7abcd74f7e8e6cf9f39fa0e3775780df",
+      "text": "Detalles"
+    },
+    "gui.history.empty": {
+      "en_sha256": "03f020cbb71754cca693ca7636c5041a9af882cca1c805d644eaeaa71428c8ec",
+      "text": "Aún no hay acciones."
+    },
+    "gui.history.guest": {
+      "en_sha256": "84983c60f7daadc1cb8698621f802c0d9f9a3c3c295c810748fb048115c186ec",
+      "text": "invitado"
+    },
+    "gui.history.intel": {
+      "en_sha256": "96eebba49dbbf422d245f02290f9d4ed0eb02da9daa6bbceefb162800ff42481",
+      "text": "intel"
+    },
+    "gui.history.link": {
+      "en_sha256": "b1b1bdb480c61d075300d9bff7d9cb69cf31695ea048e478facadf426e8d0fb0",
+      "text": "enlace"
+    },
+    "gui.history.looked_up": {
+      "en_sha256": "e27188a4113a78f5a14d82b34ca8d504a5ceea047dbc1d0d1d554d0fe4142cc3",
+      "text": "consultado"
+    },
+    "gui.history.open": {
+      "en_sha256": "2348f998744212575d85959674f9607ab26f67708a917157472832386337c904",
+      "text": "abrir"
+    },
+    "gui.history.path": {
+      "en_sha256": "a0af9f865bf637e6736817f4ce552e4cdf7b8c36ea75bc254c1d1f0af744b5bf",
+      "text": "ruta"
+    },
+    "gui.wall.path": {
+      "en_sha256": "a0af9f865bf637e6736817f4ce552e4cdf7b8c36ea75bc254c1d1f0af744b5bf",
+      "text": "ruta"
+    },
+    "gui.history.permalink": {
+      "en_sha256": "d976b1bc6edd59ef45178daff7b244042e030a5d5d70f169d2e15b180ddd0d52",
+      "text": "Enlace del historial"
+    },
+    "gui.history.search": {
+      "en_sha256": "1147de1b8c9f5337f182fe0cc908f702fe9e44aea38b0f72f073d70f64676b69",
+      "text": "Consulta, usuario o fecha"
+    },
+    "gui.history.visitor": {
+      "en_sha256": "5f14f9e6d80f802a65269804f2552ef9889f2c7ccec5067214e58a1e48e0b3ff",
+      "text": "visitante"
+    },
+    "result.visitor": {
+      "en_sha256": "5f14f9e6d80f802a65269804f2552ef9889f2c7ccec5067214e58a1e48e0b3ff",
+      "text": "visitante"
+    },
+    "gui.history.who": {
+      "en_sha256": "6ed0337140bd32b4adc5000f76333bd8ca6b2b2c9e0bc354335cf341456290e8",
+      "text": "quién"
+    },
+    "gui.host_or_ip": {
+      "en_sha256": "d875ae12e5c6066c601446f49dbc205ac4aebc0e623b3e8bb3e2f57775083f57",
+      "text": "Host o IP"
+    },
+    "gui.ping.label": {
+      "en_sha256": "d875ae12e5c6066c601446f49dbc205ac4aebc0e623b3e8bb3e2f57775083f57",
+      "text": "Host o IP"
+    },
+    "gui.tls.host": {
+      "en_sha256": "d875ae12e5c6066c601446f49dbc205ac4aebc0e623b3e8bb3e2f57775083f57",
+      "text": "Host o IP"
+    },
+    "gui.howto.copy": {
+      "en_sha256": "79cfda86d65103e9a3c63fbe389102b37ff72db25ff9d436d428be0d3ebaf7e4",
+      "text": "Haga doble clic en un comando para copiarlo"
+    },
+    "gui.howto.httpie": {
+      "en_sha256": "ad122c9b4925f0d2541a5e2332a97d36d3cc2f397f40f4905e7c6194617c108b",
+      "text": "HTTPie"
+    },
+    "gui.http.hint": {
+      "en_sha256": "1ce73be5dbb73c08e12f54127f0c83e8c9c935d2f3c24e08a92969c15323ee79",
+      "text": "Siga la cadena de estado: redirecciones, encabezados de respuesta, versión HTTP / ALPN, TTFB, HSTS y tiempos."
+    },
+    "gui.http.label": {
+      "en_sha256": "66b0053ea2e29b3a843d314d40e79f0759d24b44ac79a470dc419b51d8f316de",
+      "text": "Host o URL"
+    },
+    "gui.http.submit": {
+      "en_sha256": "954fdfe946d51b57a64a0f5a7feb325c0c1e45c64f50d60d35c530441b5e9c0a",
+      "text": "Inspeccionar HTTP"
+    },
+    "gui.http.title": {
+      "en_sha256": "243965bf5ababb99e714f1aeb1e50934aeeedd3a8b2d7fc876688439357600ae",
+      "text": "Inspector HTTP"
+    },
+    "gui.ip.hint": {
+      "en_sha256": "cc833b106edc05f2ba68f533a3ac13145855dd41951b0ed04fede0a862b5ad83",
+      "text": "Vea quién anuncia esta dirección, en qué red se encuentra y el país GeoIP."
+    },
+    "gui.ip.label": {
+      "en_sha256": "91071ed1a6755995a44fd13b1a335e3f2d4d7e7eeb5788eb5571ae3984c0c1d3",
+      "text": "IPv4 o IPv6"
+    },
+    "gui.ip.submit": {
+      "en_sha256": "e30c62bfdc11090ba9fa12b53e1e0deae3998c181eb4498be0f6cf67bd4a29cd",
+      "text": "Consultar IP"
+    },
+    "gui.ip.title": {
+      "en_sha256": "bf5505174a73b2832a95fef91403b87f99df3b1d283ad26729e4cfd22e96f208",
+      "text": "IP"
+    },
+    "gui.ptr.label": {
+      "en_sha256": "bf5505174a73b2832a95fef91403b87f99df3b1d283ad26729e4cfd22e96f208",
+      "text": "IP"
+    },
+    "inspect.ip": {
+      "en_sha256": "bf5505174a73b2832a95fef91403b87f99df3b1d283ad26729e4cfd22e96f208",
+      "text": "IP"
+    },
+    "gui.login": {
+      "en_sha256": "428821350e9691491f616b754cd8315fb86d797ab35d843479e732ef90665324",
+      "text": "iniciar sesión"
+    },
+    "gui.logs.login": {
+      "en_sha256": "428821350e9691491f616b754cd8315fb86d797ab35d843479e732ef90665324",
+      "text": "iniciar sesión"
+    },
+    "gui.login.error": {
+      "en_sha256": "bb8655822004ca8b0fc0ad0fff1bd984baa97688c7d31730bfdd34982dfcfb84",
+      "text": "error al iniciar sesión"
+    },
+    "gui.login.password": {
+      "en_sha256": "e7cf3ef4f17c3999a94f2c6f612e8a888e5b1026878e4e19398b23bd38ec221a",
+      "text": "Contraseña"
+    },
+    "gui.login.submit": {
+      "en_sha256": "9d6322c1f4d9d3f38aed8bfbe0b2bcadf66ad82c008476fa62541fa069138e94",
+      "text": "Iniciar sesión"
+    },
+    "gui.login.title": {
+      "en_sha256": "9d6322c1f4d9d3f38aed8bfbe0b2bcadf66ad82c008476fa62541fa069138e94",
+      "text": "Iniciar sesión"
+    },
+    "gui.login.username": {
+      "en_sha256": "e3b89e9d33f88e523083d8b4436adcc3726c89e97fd3179a2e102d765d1b16ed",
+      "text": "Usuario"
+    },
+    "gui.logout": {
+      "en_sha256": "00270cf63f93c307e7e9d2cc7e639fa50aca58eeb64be3266a798c9c19535219",
+      "text": "cerrar sesión"
+    },
+    "gui.logs.access": {
+      "en_sha256": "a0561fd649cdb6baa784055f051bad796ea0afef17fca38219549deeba4e8c1a",
+      "text": "acceso"
+    },
+    "gui.logs.avg_ms": {
+      "en_sha256": "28f82b8cf5e97b7a0211077093c6531b463a1a0b760193d6efb8721d192b5515",
+      "text": "ms prom."
+    },
+    "gui.logs.build": {
+      "en_sha256": "44575cf5b28512d75644bf54a517dcef304ff809fd511747621b4d64f19aac66",
+      "text": "compilación"
+    },
+    "gui.logs.challenge": {
+      "en_sha256": "2dd00bd77e0222ced882665481a9c1d9f907309d16e05ed007a1ea63928477a9",
+      "text": "desafío"
+    },
+    "gui.wall.challenge": {
+      "en_sha256": "2dd00bd77e0222ced882665481a9c1d9f907309d16e05ed007a1ea63928477a9",
+      "text": "desafío"
+    },
+    "gui.logs.datasets": {
+      "en_sha256": "714284abfa95a1447d7c34554c2d65b16fcfb1af22a44fc15489d13b76e951e5",
+      "text": "conjuntos de datos"
+    },
+    "gui.logs.day": {
+      "en_sha256": "944c27e5b97ab7793e4b6e9ff29384890ece0c7c04d2e2bf81c5f763469cc66b",
+      "text": "día"
+    },
+    "gui.logs.empty": {
+      "en_sha256": "492b95abbcff8a283406537a2fe137bb485d03a4d950a04e4b344b2f8b896e65",
+      "text": "sin datos"
+    },
+    "gui.logs.error": {
+      "en_sha256": "ca00fccfb408989eddc401062c4d1219a6aceb6b9b55412357f1790862e8f178",
+      "text": "error"
+    },
+    "gui.pill.error": {
+      "en_sha256": "ca00fccfb408989eddc401062c4d1219a6aceb6b9b55412357f1790862e8f178",
+      "text": "error"
+    },
+    "inspect.tcp.status.error": {
+      "en_sha256": "ca00fccfb408989eddc401062c4d1219a6aceb6b9b55412357f1790862e8f178",
+      "text": "error"
+    },
+    "result.error": {
+      "en_sha256": "ca00fccfb408989eddc401062c4d1219a6aceb6b9b55412357f1790862e8f178",
+      "text": "error"
+    },
+    "gui.logs.errors": {
+      "en_sha256": "be4bd56772770471b639574d919a92de16c0e522ea5601e2892461691bdf9545",
+      "text": "errores"
+    },
+    "gui.logs.events": {
+      "en_sha256": "862417b9e7c3720bcb3263cd873b09892d787823b6f9a0f453e42824c5a4d4b6",
+      "text": "eventos"
+    },
+    "gui.logs.fail": {
+      "en_sha256": "b882b8782825cc1cd1a7d01bd7f110cf3309b2f07e3410fbc7e642f46ca1b482",
+      "text": "fallido"
+    },
+    "gui.logs.hits": {
+      "en_sha256": "62f51d296d3429d8f502e2a1cf5fd430a118615b9c4b97d7fbac538e9966fe26",
+      "text": "aciertos"
+    },
+    "gui.logs.kinds": {
+      "en_sha256": "f6b1a520a9e0d54c9dc8eadc9a9840ef10717313cfbc5e13d1491fefb5074d3c",
+      "text": "tipos"
+    },
+    "gui.logs.last": {
+      "en_sha256": "3547cb112ac4489af2310c0626cdba6f3097a2ad5a3b42ddd3b59c76c7a079a3",
+      "text": "último"
+    },
+    "gui.logs.loggers": {
+      "en_sha256": "f39fe748ee1c4dbe8455bdf7ed67a9b6e7e1cabb9c438a5b5f9da4f2dfbad769",
+      "text": "registradores"
+    },
+    "gui.logs.lookup": {
+      "en_sha256": "29a1af58c138274076260b2d9c83b8378cc951a68d9b4de13794b853d695e431",
+      "text": "consulta"
+    },
+    "gui.lookup": {
+      "en_sha256": "29a1af58c138274076260b2d9c83b8378cc951a68d9b4de13794b853d695e431",
+      "text": "consulta"
+    },
+    "gui.wall.lookup": {
+      "en_sha256": "29a1af58c138274076260b2d9c83b8378cc951a68d9b4de13794b853d695e431",
+      "text": "consulta"
+    },
+    "gui.logs.ok": {
+      "en_sha256": "2430e09ec2ec28450fe586b06238732d5823a522adc519423004a1a8f651573b",
+      "text": "exitoso"
+    },
+    "gui.logs.overview": {
+      "en_sha256": "bd445c462b7eebbc242e27f08c7d981e97fb28faf17ea73862bf95119b60e0f7",
+      "text": "resumen"
+    },
+    "gui.logs.pages": {
+      "en_sha256": "bfa062de040f55a15ce910800757061ec3d2fc31d6b7c72d9fa02b75a9ad1133",
+      "text": "páginas"
+    },
+    "gui.logs.paths": {
+      "en_sha256": "504dbd7ea99e812ff1ef64c6a162e32890b928a3df1f9e3450aadb7037889be5",
+      "text": "rutas"
+    },
+    "gui.logs.peak": {
+      "en_sha256": "9ee9e606474e322872c8766aca7f48b49fd42911f2fa121c82b43b4dcbac8980",
+      "text": "pico"
+    },
+    "gui.logs.queries": {
+      "en_sha256": "07193df400d460d8dea9e7bcd261e9e48cc82036e86003135c4db6f0e22b48fd",
+      "text": "consultas"
+    },
+    "gui.logs.rows": {
+      "en_sha256": "bc51e9e65d79e1c90ba544ab2eae1044ccdf8c1af7a559ba375cba4276f7d99e",
+      "text": "filas"
+    },
+    "gui.logs.serve_err": {
+      "en_sha256": "70f06df956072cfd464531298a2e85b1807535c57d656b0a050b7332fac8fb53",
+      "text": "error serv."
+    },
+    "gui.logs.sort": {
+      "en_sha256": "646964943fd2271187dbe29287f57e0238491c029cc6d8ce76f25ae240474294",
+      "text": "orden"
+    },
+    "gui.logs.users": {
+      "en_sha256": "7dfb4cf67742cb0660305e56ef816c53fcec892cae7f6ee39b75f34e659d672c",
+      "text": "usuarios"
+    },
+    "gui.logs.values": {
+      "en_sha256": "89445ea08b55421faa49919a5fd272e9a520f701b479d6084847e161ca5b7711",
+      "text": "valores"
+    },
+    "gui.logs.visitors": {
+      "en_sha256": "fe9919df44cbe9afdb66ec355bd2dfd671dc43b730bb763463d625a715f4ad39",
+      "text": "visitantes"
+    },
+    "gui.logs.wall": {
+      "en_sha256": "4d8aaa64f68587b18e27604cd3d3b67aaa66342ef33df2ae755b5524e84cb3d5",
+      "text": "reloj"
+    },
+    "gui.logs.week": {
+      "en_sha256": "6df37daaa46ce714fa410768b63f415dfad094df33eb34ac1af332074fd15a1c",
+      "text": "semana"
+    },
+    "gui.looking_up": {
+      "en_sha256": "a84f1079ee0ed68d80ab0b698302a95a80cf992052d5e327a818ed788b472b94",
+      "text": "Consultando…"
+    },
+    "gui.lookup_cancelled": {
+      "en_sha256": "39ec1c03636fe267cd06fdb629d155a9e21d2b969989ce160fda6a11c6c570bc",
+      "text": "Consulta cancelada."
+    },
+    "gui.mail.hint": {
+      "en_sha256": "17fbbe078693b7f635442c533c2201804c74eef336d3453c10b40ceeb781adf4",
+      "text": "MX, SPF, DMARC, selectores DKIM comunes, luego conexión SMTP, banner y STARTTLS."
+    },
+    "gui.mail.submit": {
+      "en_sha256": "f8de53de4b10ef1b1f4c1fda747c82348d16f7a5f782478ca6a3e527e2bfc13a",
+      "text": "Comprobar correo"
+    },
+    "gui.mail.title": {
+      "en_sha256": "48e6a916829c541cb96e1861087e2096fb8b77553c2bb02633a75a45b59ec293",
+      "text": "Diagnóstico de correo"
+    },
+    "gui.maximize": {
+      "en_sha256": "fba6c2c5d9468e741725c7dfa1ac14fb59523c74fa86744027ec0a175e6cae3f",
+      "text": "Maximizar"
+    },
+    "gui.minimize": {
+      "en_sha256": "d72e311c4ddaf4ac6f39136038420b3b01a9eefc09790efa74616ad8a65478d5",
+      "text": "Minimizar"
+    },
+    "gui.mtr.cycles": {
+      "en_sha256": "d9720c0030b1d3942edbed6468c8949cfaf24ca87cc5bc797748f51f1348f66e",
+      "text": "Pasadas"
+    },
+    "gui.mtr.hint": {
+      "en_sha256": "581942d04d94716d7f2b2e69041919eb7f3465cf98c7c7b92e7737a9655141cb",
+      "text": "Repita la ruta y resuma la pérdida y el tiempo de ida y vuelta en cada salto. Establezca las pasadas (mtr -c); el valor predeterminado es 10."
+    },
+    "gui.mtr.submit": {
+      "en_sha256": "6fe8881f381d4c229299554c02a2d0eb8a55d5e13412052188232afd84e346d6",
+      "text": "Ejecutar MTR"
+    },
+    "gui.new_lookup": {
+      "en_sha256": "7d266162df45894b2983d4e70a7f28c2d9afe219877742dd4b6b8ecb215e738e",
+      "text": "Nueva consulta"
+    },
+    "gui.peer_title": {
+      "en_sha256": "fb9fc70eb977d985cb27cd7874f2edab647035763b90784e008decd319b7e838",
+      "text": "Par TCP de esta solicitud"
+    },
+    "gui.pill.cancelled": {
+      "en_sha256": "8b47045eb7b8ca42aa967f33ee1d014ba89f8d1ac207426b482d34b5c0d90935",
+      "text": "cancelado"
+    },
+    "gui.pill.idle": {
+      "en_sha256": "4fb62348858c2f6fbd6db27fa4c11edd8559119869d1034e2bd3390fd92b1a04",
+      "text": "inactivo"
+    },
+    "gui.pill.loading": {
+      "en_sha256": "b4a070a2d341940c4562c87640fe7a6147c2edcd1ee9bf562c8523164fe760fb",
+      "text": "cargando"
+    },
+    "gui.pill.ok": {
+      "en_sha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+      "text": "ok"
+    },
+    "inspect.tcp.status.ok": {
+      "en_sha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+      "text": "ok"
+    },
+    "result.ok": {
+      "en_sha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+      "text": "ok"
+    },
+    "gui.pill.running": {
+      "en_sha256": "c071cf5f5ed6f884cc70155b6f05f755fd46a302d05e4261b7e92ce878bbfed8",
+      "text": "en ejecución"
+    },
+    "gui.ping.hint": {
+      "en_sha256": "1f1fbfb1dc7a68f276ae69b05a27eadeefd821015768452bbdc5162805292878",
+      "text": "Enviar solicitudes de eco ICMP (RFC 792 / 4443). Si ICMP está filtrado, recurrir a TCP."
+    },
+    "gui.ping.submit": {
+      "en_sha256": "6a4c3a4483b0448883299321ec2677f99a20afbf6a60bc5447bf2243d23b7152",
+      "text": "Ping"
+    },
+    "gui.ping.title": {
+      "en_sha256": "6a4c3a4483b0448883299321ec2677f99a20afbf6a60bc5447bf2243d23b7152",
+      "text": "Ping"
+    },
+    "gui.pmtu.hint": {
+      "en_sha256": "6344800e58f5aa1a9135d58c5dfe7acaf2779be4a957f51bec123a452c565b35",
+      "text": "Encontrar el ping don't-fragment más grande que aún responde, para detectar agujeros negros de PMTUD."
+    },
+    "gui.pmtu.submit": {
+      "en_sha256": "5515e6947b3ecb6b86991402b24f246844cdfaaf5a8038fa739ca4a92d9c464f",
+      "text": "Encontrar Path MTU"
+    },
+    "gui.pmtu.title": {
+      "en_sha256": "9f87126e154028f6b4c288e2e3ee97f1bd55b0212fe7dc5e073950846c38fa36",
+      "text": "Path MTU"
+    },
+    "gui.ptr.hint": {
+      "en_sha256": "0ef95ebbcb4de8c8799035859fc70bbe5d717eb815fc8895462b53fadd232220",
+      "text": "DNS inverso y luego confirmar que el hostname PTR resuelve de nuevo a la IP original."
+    },
+    "gui.ptr.submit": {
+      "en_sha256": "4bbff0a63e006c35f223e2855826ac77ac1833507c1b93f7b728772a4a564a20",
+      "text": "Comprobar PTR"
+    },
+    "gui.ptr.title": {
+      "en_sha256": "064edff0d43cd24e8e491d20a214c20bfc78b5f1c8e5daa606d8d0ca7c381c00",
+      "text": "PTR / FCrDNS"
+    },
+    "gui.rdap.hint": {
+      "en_sha256": "761248565f247c16ecdd1628815c2d58942a9ed7e02e4b11788d7e332f0b7242",
+      "text": "RDAP (HTTPS JSON) es el predeterminado. El WHOIS heredado sigue las referencias de IANA hasta el volcado de texto del registro o del registrador en el puerto 43."
+    },
+    "gui.rdap.label": {
+      "en_sha256": "878bc894ff2a3c453c7b1689ae05d2672ee895351ee59a6127d1720022070442",
+      "text": "IP, dominio o ASN"
+    },
+    "gui.rdap.legacy": {
+      "en_sha256": "34efac999c2fad2cf8e7815289ee6c259233d8eae9a19d136aba404bf37cb5b0",
+      "text": "WHOIS heredado (puerto 43)"
+    },
+    "gui.rdap.protocol": {
+      "en_sha256": "cf0883343f4abef779b777c35764f86c9f1f4324e8b5490840245d02ad2f7c6f",
+      "text": "Protocolo"
+    },
+    "gui.rdap.rdap": {
+      "en_sha256": "0da07a1c04e22c49f11bb58e16ffa23b2555829d8234d1df5bab997efa4fcc31",
+      "text": "RDAP (HTTPS JSON)"
+    },
+    "gui.refresh": {
+      "en_sha256": "0e91610117029a62a478b7fa7df0b8598bebe3ab1e192d4b1882e310719c9671",
+      "text": "Actualizar"
+    },
+    "gui.register.filter.all": {
+      "en_sha256": "a52ace420f2175d08b1577a1bea5445e36801229c074ef9ed6c55a73401fd9c2",
+      "text": "Todos"
+    },
+    "gui.register.filter.has-ns": {
+      "en_sha256": "b17a166717cd9e1661109028c3cb036d43cfecdccb70593811285705965d3dc9",
+      "text": "Tiene NS"
+    },
+    "gui.register.filter.no-dns": {
+      "en_sha256": "f1804ff7e700e09792da41974c2dcd2df21b487ae14d953895a08d0c8fbf3d43",
+      "text": "Sin DNS"
+    },
+    "gui.register.filter.unknown": {
+      "en_sha256": "b764cdc0eab7137467211272fa539f1260d1bf2e71bcf6ff3bdc960f5c16aa14",
+      "text": "Desconocido"
+    },
+    "gui.register.has-ns": {
+      "en_sha256": "951b19878167d734b0eb27d831caded1c7d0611903075b87381167d3f1c9dae0",
+      "text": "tiene NS"
+    },
+    "gui.register.hint": {
+      "en_sha256": "df2c6cc594b13515d1e3192d5e2affae7ddce027e6c7269c8330252e5ee10555",
+      "text": "Comprobar una etiqueta frente a cada TLD de IANA mediante DNS. NXDOMAIN significa que no hay DNS; los nameservers indican que el nombre está delegado. Esto no es un carrito de registrador — los nombres reservados y premium pueden seguir bloqueados."
+    },
+    "gui.register.kicker": {
+      "en_sha256": "79e567e30d4009d80b1c34ea699eb71147d5fe6be688bf77acf8dcfd9d99f60b",
+      "text": "Tablero de TLD de IANA"
+    },
+    "gui.register.legend": {
+      "en_sha256": "a0dd7ebfeb733f992f58f71aa0267ba332caf0ffae867679a60538cffc6e37c1",
+      "text": "Verde no está en el DNS. Rojo tiene nameservers. Amarillo agotó el tiempo de espera, es un wildcard o RDAP indica que está registrado."
+    },
+    "gui.register.no-dns": {
+      "en_sha256": "25a5d0bfdf640a581fa9701a5d4406944e1d2817ca99fb8c49dad36eb9421456",
+      "text": "sin DNS"
+    },
+    "gui.register.search": {
+      "en_sha256": "1420927dd2de610a3d15f3112027f63b634ebefe30f6e856bdc3136c31629d35",
+      "text": "Filtrar TLD"
+    },
+    "gui.register.sub": {
+      "en_sha256": "3a696ef86811ee0a709731507ae60dc3559397490edfa1f43e649fca44eee2ca",
+      "text": "TLD de IANA · Delegación DNS"
+    },
+    "gui.register.submit": {
+      "en_sha256": "ff6c9aa764fb8e8bffd6e6a6ebec70c8c2448e014918e3973b2eae3a6513b24d",
+      "text": "Comprobar TLD"
+    },
+    "gui.register.title": {
+      "en_sha256": "bb7234ec12451361e6f35bcbe76de58e4350657fe60d1b96ace0947f59194083",
+      "text": "Registro"
+    },
+    "gui.register.unknown": {
+      "en_sha256": "b23a6a8439c0dde5515893e7c90c1e3233b8616e634470f20dc4928bcf3609bc",
+      "text": "desconocido"
+    },
+    "rdap.unknown": {
+      "en_sha256": "b23a6a8439c0dde5515893e7c90c1e3233b8616e634470f20dc4928bcf3609bc",
+      "text": "desconocido"
+    },
+    "gui.reputation.hint": {
+      "en_sha256": "b0ebad793688569facda8df9d96d9b63c1d7c211819e70085ba6be771ea9c995",
+      "text": "DNSBL al estilo SpamAssassin mediante el resolvedor del sistema (resolv.conf), más Validity Sender Score para IPv4. Los rechazos de resolvedores públicos de Spamhaus son errores de consulta, no listados."
+    },
+    "gui.reputation.label": {
+      "en_sha256": "df3b5afaf2778138b9e8389a2e3d319aaafa0661ff20de67989a63378c54d37f",
+      "text": "Dominio o IP"
+    },
+    "gui.reputation.submit": {
+      "en_sha256": "6d9c6ab02a3a70a1bb555e6fe4dee4c57bbbce47383aa88a48003e77bf7ed6e9",
+      "text": "Comprobar listas"
+    },
+    "gui.reputation.title": {
+      "en_sha256": "d11e6e7899feb37dd572b3bd214066850068043c031965d14694993dd7d7364c",
+      "text": "Reputación"
+    },
+    "gui.result": {
+      "en_sha256": "6e7d50e84f4731ef74187cf8cfa2672184eed8866b0b0074a772f4a64e0f4ba2",
+      "text": "Resultado"
+    },
+    "gui.result.empty": {
+      "en_sha256": "0eadf9ca53eefef14e5b4fdf9faed85487d7fe0474e8c940a198ef38755dc1c9",
+      "text": "Ejecuten una consulta. Los informes se muestran aquí."
+    },
+    "gui.tcp.hint": {
+      "en_sha256": "d79dea9b293025468e5cbc0e9933143afd6377dd1b2447c061965b82dc4cd66d",
+      "text": "Conectar a un host y un puerto, mostrar el RTT y examinar el banner del protocolo si se ofrece."
+    },
+    "gui.tcp.host": {
+      "en_sha256": "4a823118b9ba8baa2f47489c0716f52755368e3e3c2c26d60736ccfa1bb21b5e",
+      "text": "Host"
+    },
+    "gui.tcp.submit": {
+      "en_sha256": "dc79d8d767e7abbd90b8cfb7b8c268b07d006ecd01133f5237d8d0e79f0420c2",
+      "text": "Comprobar TCP"
+    },
+    "gui.tcp.title": {
+      "en_sha256": "3faf93237a2e6099090381076d4a58d932777f94320a96a7c4b86762d94fc889",
+      "text": "Servicio TCP"
+    },
+    "gui.tcptraceroute.hint": {
+      "en_sha256": "861560896ba7327b84343e9193538fdda621b2cbcc11fd9836eee5ff9fddb6ce",
+      "text": "Recorrer TTL 1–30 con SYN TCP hacia un puerto que elijan. Útil cuando el traceroute UDP está filtrado."
+    },
+    "gui.tcptraceroute.port": {
+      "en_sha256": "08f669e4598ba6f8c4ea6e4716b0c67d70e69a6cb108feeea42e03ce622b7455",
+      "text": "Puerto TCP"
+    },
+    "gui.tcptraceroute.submit": {
+      "en_sha256": "821a77c118ea6ad689cea0a37460180f4903eff89083f6bd7851014c7d82705f",
+      "text": "Traceroute TCP"
+    },
+    "gui.tcptraceroute.title": {
+      "en_sha256": "821a77c118ea6ad689cea0a37460180f4903eff89083f6bd7851014c7d82705f",
+      "text": "Traceroute TCP"
+    },
+    "gui.tls.hint": {
+      "en_sha256": "f1d1018ca958adb888bee2ac058ddfe32a8c67e39764be3ac7809e2d76d752a7",
+      "text": "Abrir una sesión TLS y mostrar el handshake, el certificado leaf, las fingerprints de la cadena y el ASN de la IP del peer. El puerto predeterminado es 443."
+    },
+    "gui.tls.submit": {
+      "en_sha256": "73abc68b7f0941268e6e6d4cda3b7d249c1fddb139d140e0f52f3d67dd6a686f",
+      "text": "Inspeccionar TLS"
+    },
+    "gui.tool.against_host": {
+      "en_sha256": "0a8733ee547928ae0727d37523588e883f8e07dbe10b73f54afcfd53a27e440c",
+      "text": "Ejecuten una herramienta contra este hostname."
+    },
+    "gui.tool.against_ip": {
+      "en_sha256": "738245122dbcab5d931747b8437e667577b269d595176b05e92d54997db13fab",
+      "text": "Ejecuten una herramienta contra esta dirección."
+    },
+    "gui.tools_label": {
+      "en_sha256": "23691329a0b8782a9467ae95848b1d4e3e6d31f65c0f31b1c9e9c02d71179d08",
+      "text": "Herramientas de consulta"
+    },
+    "gui.traceroute.hint": {
+      "en_sha256": "7ee3bd242f293a539c26b44b7cac46226474705a1c7979a4c7264f7c6562b57d",
+      "text": "Traceroute UDP como traceroute(8): tres sondas por salto, varios saltos en vuelo. Los timeouts se muestran como *."
+    },
+    "gui.wait.traceroute": {
+      "en_sha256": "7ee3bd242f293a539c26b44b7cac46226474705a1c7979a4c7264f7c6562b57d",
+      "text": "Traceroute UDP como traceroute(8): tres sondas por salto, varios saltos en vuelo. Los timeouts se muestran como *."
+    },
+    "gui.traceroute.submit": {
+      "en_sha256": "7e14c3d7dd12bbd0947aa8cb491dff154a1644a85848fc28bd1997ef9ef54a2a",
+      "text": "Trazar"
+    },
+    "gui.traceroute.title": {
+      "en_sha256": "5e472e4e9f3637790f5ddb9fc1cb702e5990d1e07f07621ca5f0af5a219c9f0e",
+      "text": "Traceroute"
+    },
+    "gui.wait.bgp": {
+      "en_sha256": "e6764bee072f5ebb7a83781fe4eeb1d547c8b57f1847a2cd723d4a158f1e88d2",
+      "text": "Consultando a RIPEstat el origen del prefijo y el estado de RPKI ROA."
+    },
+    "gui.wait.dnssec": {
+      "en_sha256": "cd44c4da6e8ecff9e491ecdf318ed4b9ec5c70a4d4bd61487b8fe6da29b31eb6",
+      "text": "Recorriendo DS y DNSKEY desde las anclas de confianza de la raíz hasta el Apex."
+    },
+    "gui.wait.dnstrace": {
+      "en_sha256": "f8ff7929741bb06ad00971b8ee26888db239f359935d7508991cc57cdc543f0a",
+      "text": "Recorriendo desde la raíz de IANA, el TLD y luego los servidores autoritativos. No es recursivo."
+    },
+    "gui.wait.http": {
+      "en_sha256": "f20b86483594f01af0020272938a0289097438e1c5d224395dc8eaf28f17b4a2",
+      "text": "Obteniendo la URL, siguiendo las redirecciones y midiendo el TTFB."
+    },
+    "gui.wait.mail": {
+      "en_sha256": "ed98f2897c5e1d94183182d3a83367a47ab5c4f7d4d487bb2538c338459d4a1c",
+      "text": "MX/SPF/DMARC/DKIM, luego el banner SMTP y STARTTLS."
+    },
+    "gui.wait.mtr": {
+      "en_sha256": "0de59c7360a8dc6fdb1950f1ea1884344084331f29ef8f0310c4f3615f5c775e",
+      "text": "Repitiendo la ruta durante {n} ciclos y agregando pérdida y RTT, como mtr --report."
+    },
+    "gui.wait.ping": {
+      "en_sha256": "fecc9cb77cea20984c40e0a7ccfcbeb20c7a3e82504e363eefeb60407ddfd34d",
+      "text": "Enviando solicitudes de eco. TCP en 443 si ICMP está filtrado."
+    },
+    "gui.wait.pmtu": {
+      "en_sha256": "3e66f0c55f090f3bc32973cc2b430ff4a407d0106d7936a90a1d18ceb63314ca",
+      "text": "Realizando una búsqueda binaria de payloads de ping con don't-fragment. Esto puede tardar un rato."
+    },
+    "gui.wait.ptr": {
+      "en_sha256": "1b5851abeb52d5c1b973ac2cdb8851faeb068b75ed845dc8a62eb79dffdd9e59",
+      "text": "Búsqueda PTR más DNS inverso confirmado hacia adelante."
+    },
+    "gui.wait.rdap": {
+      "en_sha256": "5defe421021c1c4eb38b7e0a7be4e01accdb38ebdc85743e9f398731f48a26d6",
+      "text": "Consultando el bootstrap de RDAP para esta IP, dominio o ASN."
+    },
+    "gui.wait.register": {
+      "en_sha256": "3f39223ddf4a2c75ddf4cedb3dca44a27fa1f4120ccf8c6e78c081c815bda9d6",
+      "text": "Consultando al resolver del sistema por NS en cada TLD de IANA. Esto tarda un poco."
+    },
+    "gui.wait.reputation": {
+      "en_sha256": "c4a533e7139926df6d0ee7fbb8a4f5eed3620ec993134159cc9d72e484de2c7a",
+      "text": "Consultando DNSBLs a través de resolv.conf, más Sender Score."
+    },
+    "gui.wait.tcp": {
+      "en_sha256": "29e674be17c94058d747806dbfe09f8e0b4a28df74e8e4e98a3bada6c2611a99",
+      "text": "Conectando al puerto y leyendo un banner breve."
+    },
+    "gui.wait.tcptraceroute": {
+      "en_sha256": "fd375db15ba26eb792a36a77b232c550f450790e947610a6109687d7eb3ecde5",
+      "text": "Recorriendo TTL 1–30 con SYN TCP al puerto elegido."
+    },
+    "gui.wait.tls": {
+      "en_sha256": "750fa6f9cfb9f01e6a57c8ef9641b718756c5a5fa6f31c77505b91eb68fe63aa",
+      "text": "Abriendo una sesión TLS y leyendo la cadena de certificados."
+    },
+    "gui.wait.whois": {
+      "en_sha256": "ed806f3b55d230eb04b1d253422e66daadc41e3d109e214c9f66e156681447af",
+      "text": "RDAP por defecto; el WHOIS heredado usa referidos del puerto 43 desde IANA."
+    },
+    "gui.wall.add": {
+      "en_sha256": "7e9e5ac30f2216fd0fd6f5faed316f2d5983361a4203c3330cfa46ef65bb4767",
+      "text": "agregar"
+    },
+    "gui.wall.added": {
+      "en_sha256": "279b8a60f444fa8b6275687ce7e44363d97f72f88e4a3285baf0d9ed812e4061",
+      "text": "agregado"
+    },
+    "gui.wall.allow": {
+      "en_sha256": "410083735735a10e658a19edd1704e606c9dd112e225825b63fafeded766c8b9",
+      "text": "permitir"
+    },
+    "gui.wall.block": {
+      "en_sha256": "496aca80e4d8f29fb8e8cd816c3afb48d3f103970b3a2ee1600c08ca67326dee",
+      "text": "bloquear"
+    },
+    "gui.wall.collapse": {
+      "en_sha256": "93bc5d02dc2a24b5365347573b6f5115f069ca1097f319a1041c2a6c770079e0",
+      "text": "contraer"
+    },
+    "gui.wall.confirm_allow": {
+      "en_sha256": "1176700b8f97fbb7bf4a747239683671b5ea8660254741198c9d62a5530337e9",
+      "text": "¿Permitir {value}?"
+    },
+    "gui.wall.confirm_block": {
+      "en_sha256": "f8bbaff2ba68eb93817c4a05529b07c1944bf50036f0ac116fed7705d29f4a36",
+      "text": "¿Bloquear {value}?"
+    },
+    "gui.wall.confirm_challenge": {
+      "en_sha256": "e63555edf2774539399fc5af2e1caae852bd193c2ba822a5d5d689dba8f539b1",
+      "text": "¿Desafiar {value}?"
+    },
+    "gui.wall.confirm_remove": {
+      "en_sha256": "62c56d2f545338a584d932129fac4efa469c16625abf8479d94b26b24989dad5",
+      "text": "¿Eliminar {value}?"
+    },
+    "gui.wall.country": {
+      "en_sha256": "aff64e4fd520bd185cb01adab98d2d20060f621c62d5cad5204712cfa2294ef7",
+      "text": "país"
+    },
+    "gui.wall.decision": {
+      "en_sha256": "86ae35d58a6aa3b5742df94ef9d7162219f0106a911ae1954c1f0604aaec805d",
+      "text": "decisión"
+    },
+    "gui.wall.empty": {
+      "en_sha256": "90dfcf06321d3c5edf4c9ca3b0b88c1244ee7b0ad53b3439742f171b543254fd",
+      "text": "sin entradas"
+    },
+    "gui.wall.event": {
+      "en_sha256": "b8e1f80bd70ae0784c7855a451731b745fddb67749d23f637be9082b75e9575b",
+      "text": "evento"
+    },
+    "gui.wall.expand": {
+      "en_sha256": "d78de925a87867319201d056c74bc4413bbffb4cb9883ccdb348e30252dc9e7a",
+      "text": "expandir"
+    },
+    "gui.wall.failed": {
+      "en_sha256": "5d28a90f4498a81461efbaf6f628a19d9778390bb5c81a393dd936181cc3d826",
+      "text": "fallido"
+    },
+    "gui.wall.firewall": {
+      "en_sha256": "a3863c5d7ce546d24186581bcba0b0a157db9d318d9174d46d0db3f3f38cc1a6",
+      "text": "firewall"
+    },
+    "status.wall": {
+      "en_sha256": "a3863c5d7ce546d24186581bcba0b0a157db9d318d9174d46d0db3f3f38cc1a6",
+      "text": "firewall"
+    },
+    "gui.wall.hint": {
+      "en_sha256": "ff309d0dc9dc33d29b37b6fb897251b02d36fba7320f92b43332783bd89a3a45",
+      "text": "Seleccione una IP o CIDR para permitir, bloquear o desafiar."
+    },
+    "gui.wall.ip": {
+      "en_sha256": "bb9af5d1915da1fbc132ced081325efcd2e63e4804f96890f42e9739677237a4",
+      "text": "ip"
+    },
+    "gui.wall.ip_or_cidr": {
+      "en_sha256": "8f6d6a9a428ee9367bb74b608b851282cea5de985c20248edd8aff0ab654a9d7",
+      "text": "IP o CIDR"
+    },
+    "gui.wall.issued": {
+      "en_sha256": "c91a3cc769f870fddc83082ba1274ed09441626dfe257c2c434684373a72e4ad",
+      "text": "emitido"
+    },
+    "gui.wall.lists": {
+      "en_sha256": "4c14c4a453f98de4bd1c972fea7850adb52822c5823e5da287085165afcf2020",
+      "text": "listas"
+    },
+    "gui.wall.live": {
+      "en_sha256": "247610f4dedd4ab7247d07dbda19c81ca9817f85820742cad49d407ffae9e4ed",
+      "text": "en vivo"
+    },
+    "gui.wall.method": {
+      "en_sha256": "5b7e6bf2dc4a32a6aa4770cd5639c2c7af890fc86c273b5c8567fe5382086bf3",
+      "text": "método"
+    },
+    "gui.wall.ms": {
+      "en_sha256": "f785c3ce1d580c8f22c1db8a14cf1268e44279ff5d461361dbbfaf19e8b11578",
+      "text": "ms"
+    },
+    "gui.wall.note": {
+      "en_sha256": "edb465624291e4053c6c5ea4b7eb320dec773e10a57d26b95dcf0564f8e310f8",
+      "text": "nota"
+    },
+    "gui.wall.reason": {
+      "en_sha256": "8fcfccf675b1f0bfd39dcbb13015052fe82bc51c003c165a410945c913dbb2be",
+      "text": "motivo"
+    },
+    "gui.wall.remove": {
+      "en_sha256": "7e5608ab610017afe6c1894fdd4f56848823dcb1d12302bd49751d16a290f774",
+      "text": "eliminar"
+    },
+    "gui.wall.requests": {
+      "en_sha256": "ef230491749c54370ac9bd8741b08923112ddb1144c29057b61a6eeb01ba111b",
+      "text": "{n} solicitudes"
+    },
+    "gui.wall.search": {
+      "en_sha256": "2e0c8f846825035ce2703d6998f5dcc01c1975d0f51fa014ded35de3bc010852",
+      "text": "Buscar listas, tráfico o desafío"
+    },
+    "gui.wall.search_country": {
+      "en_sha256": "ea1a9c787afc2a252bd0ff4069a0c702bea25cb0b82b9ccd108acab2ee285a4a",
+      "text": "Buscar país"
+    },
+    "gui.wall.solved": {
+      "en_sha256": "ca7b7333032bd3997d54309f7ec80433afa74d2b8ad4cd27ff3f2ed87311aa83",
+      "text": "resuelto"
+    },
+    "gui.wall.status": {
+      "en_sha256": "073c1634c496cdb649d1afe0a312bbb4b7e1741b271542e4a436c3b8824b1761",
+      "text": "estado"
+    },
+    "result.status": {
+      "en_sha256": "073c1634c496cdb649d1afe0a312bbb4b7e1741b271542e4a436c3b8824b1761",
+      "text": "estado"
+    },
+    "gui.wall.time": {
+      "en_sha256": "336074805fc853987abe6f7fe3ad97a6a6f3077a16391fec744f671a015fbd7e",
+      "text": "tiempo"
+    },
+    "gui.wall.traffic": {
+      "en_sha256": "075f4ab854e2a33c8ac11c0758796af4ae994ec4e37e36b6f11b503492c68289",
+      "text": "tráfico"
+    },
+    "gui.wall.value": {
+      "en_sha256": "cd42404d52ad55ccfa9aca4adc828aa5800ad9d385a0671fbcbf724118320619",
+      "text": "valor"
+    },
+    "gui.working": {
+      "en_sha256": "5474eef8d0f179c707cf418e2bbb468c77cc24edc5e9f5f4e137e85e06a8eea0",
+      "text": "Trabajando…"
+    },
+    "gui.you": {
+      "en_sha256": "bb0347a468d97e98a9c00e37cebec1ab930f6f1221cae0f1fbb92b07e1900ba2",
+      "text": "tú"
+    },
+    "inspect.additional": {
+      "en_sha256": "9c3487427f9f5dfa3a6ba4713617555fbeb17b4f659bf71ec3ab4c997347f765",
+      "text": "Adicional"
+    },
+    "inspect.announced": {
+      "en_sha256": "07dfab861df1deb5ba1a8e08901ec65b98f57681715e3adf25010a0e0c61d400",
+      "text": "Anunciado"
+    },
+    "inspect.announcement": {
+      "en_sha256": "028cd1c8834585ddc0803f307378547072553fc893ae2dd5abd9f99a5674a438",
+      "text": "Anuncio"
+    },
+    "inspect.answer": {
+      "en_sha256": "b2a3aa602762a782e47a4f8e93bb5ae1b8819d1b92b7e6ceb3ef46a3c7077eb0",
+      "text": "Respuesta"
+    },
+    "inspect.apex.failed": {
+      "en_sha256": "f86b7a0eca39d7def67c7705d82b02a2d48702bf9c9ff2c7c69eff13644b4b9f",
+      "text": "Apex falló."
+    },
+    "inspect.apex.kicker": {
+      "en_sha256": "f9366e4c675dbfcaad539f8913a31d6b6553513a21eaa55cae007a063000d859",
+      "text": "Informe Apex"
+    },
+    "inspect.apex.loading": {
+      "en_sha256": "3c7a03c5438aa91bcae4e1d9575854c244872ee6badc07bf4731d0e2bfd118c9",
+      "text": "Ejecutando Apex…"
+    },
+    "inspect.as_transitions": {
+      "en_sha256": "943d021a93c9d6c2dbf23747a14a40572c7fad57e95feb84c113d7b6a2155455",
+      "text": "Transiciones de AS"
+    },
+    "inspect.authenticated": {
+      "en_sha256": "6ab694cfc6fa5d8c7045d318bba5f3eb791ab0a859ea54c54b1c660a4ccf8ed1",
+      "text": "Autenticado"
+    },
+    "inspect.authority": {
+      "en_sha256": "b80e403d2645d45e3503a6575390f40760515800fc9199c522bb2466c9132f1d",
+      "text": "Autoridad"
+    },
+    "inspect.banner": {
+      "en_sha256": "b7f4d98f98d51f8e0dca27ea5b64679b328281af1d0b0985816c208d1c9a1d46",
+      "text": "Banner"
+    },
+    "inspect.bgp.loading": {
+      "en_sha256": "c648660809704c775090486d3fcb4aef8b1a4586819280e1fb4cfe9cc6766ed8",
+      "text": "Comprobando BGP…"
+    },
+    "inspect.bytes": {
+      "en_sha256": "0d2a0d3c2b4578a8113b7ad1a03fde092658e7cd2e99199570138f2de5b2a430",
+      "text": "{n} bytes"
+    },
+    "inspect.chain": {
+      "en_sha256": "dae0896cbc2c67bfbf74f011e826f2fb06aac119ed2938ec2c2f049774a7b89c",
+      "text": "Cadena"
+    },
+    "inspect.chain_holds": {
+      "en_sha256": "49614b039c2d7f5a12bb0af95b513fa6b138d65ae6bc1984ac52b45970392060",
+      "text": "La cadena de confianza se mantiene"
+    },
+    "inspect.chain_secure": {
+      "en_sha256": "721123d3543bf6e7e765bed41676931642b81c4afbc93e2e46be51f2af6ea84e",
+      "text": "Cadena segura"
+    },
+    "inspect.cipher": {
+      "en_sha256": "8c3e467dc5c897ad5815261c08d622bf3ef3e14fd6fbf870271b7d02160b9473",
+      "text": "Cifrado"
+    },
+    "inspect.clean": {
+      "en_sha256": "3b066804f6d1d077173cfe4d06002e6a61e6f21c2b2e648417962115f1afcd8e",
+      "text": "limpio"
+    },
+    "inspect.country": {
+      "en_sha256": "701d021d08c54579f23343581e45b65ffb1150b2c99f94352fdac4b7036dbbd5",
+      "text": "País"
+    },
+    "rdap.country": {
+      "en_sha256": "701d021d08c54579f23343581e45b65ffb1150b2c99f94352fdac4b7036dbbd5",
+      "text": "País"
+    },
+    "inspect.dest_reached": {
+      "en_sha256": "e5278efcfae0a7797df90927ade1bfde35281819e92d490ed9973c5dea35dce0",
+      "text": "Destino alcanzado"
+    },
+    "inspect.detail": {
+      "en_sha256": "9c0211c51d04574fdaee6d51f53f41952570b0bf68a7219aaae01ce00fa6b8dd",
+      "text": "detalle"
+    },
+    "inspect.diff.added": {
+      "en_sha256": "2cfb89beec3354c13b28fe715e39587f5f328eb2fd9245a609557df65cd79a03",
+      "text": "{path} añadido: {to}"
+    },
+    "inspect.diff.cert_changed": {
+      "en_sha256": "2e33a8f585b19c66b3165dcce145b9fa9bb43eb6df8c219631aef94ef931e3f3",
+      "text": "certificado cambiado"
+    },
+    "inspect.diff.changed_from": {
+      "en_sha256": "3bf6a934c49261b0c418450d769b015f33a427112282f6d6e1c17e66a7699186",
+      "text": "{path} cambiado de {from} a {to}"
+    },
+    "inspect.diff.current": {
+      "en_sha256": "e0d1b68224bf0b31ef16b206c65b5f8f6b89d18161f4a7cdcb8d0ac8d952549a",
+      "text": "Actual"
+    },
+    "inspect.diff.no_previous": {
+      "en_sha256": "bdc570da910afd982a3c12a8e6eba99ea3227b5354786df03655a369264e6748",
+      "text": "No hay instantánea anterior para comparar."
+    },
+    "inspect.diff.ok_changed": {
+      "en_sha256": "52af55ba13d6155fb84d81ddb3c42b9b29d3c291c1e55f47e18b72c69c953966",
+      "text": "estado cambiado"
+    },
+    "inspect.diff.path_changed": {
+      "en_sha256": "7e46209e2ba87453c2da8f86090aed25de256e30da84bf741abc76104c1a087f",
+      "text": "ruta cambiada"
+    },
+    "inspect.diff.peer_changed": {
+      "en_sha256": "42115730ace38c35cffc72307a663615506da41e3e1b479d8e9bc2132ef3f57e",
+      "text": "peer cambiado"
+    },
+    "inspect.diff.previous": {
+      "en_sha256": "a57b08a480b822a0a572b993391c292ede593bf8000b406675b180bbb16260fa",
+      "text": "Anterior"
+    },
+    "inspect.diff.removed": {
+      "en_sha256": "2326ba6df22ab8790acf87d0e05bd2a8071ba012d2f34e8a6d74244ec24ec427",
+      "text": "{path} eliminado: {from}"
+    },
+    "inspect.diff.rtt_delta": {
+      "en_sha256": "5ce13d193b6b57d546aef4368cfcfaa0b59f7e214007f17fc3b7a6b1fb75c4bd",
+      "text": "RTT {n} ms"
+    },
+    "inspect.diff.truncated": {
+      "en_sha256": "d0e82f7f6e64d709eead0ac510876027efc32913b40ebfe06aa76cf8322632a9",
+      "text": "Más campos modificados; lista truncada."
+    },
+    "inspect.diff.vs_previous": {
+      "en_sha256": "b70cbf3f9b014ab74682e2af37bcc251dda6ef376895b5dd1a20016fdc5b27a2",
+      "text": "vs anterior"
+    },
+    "inspect.dns.loading": {
+      "en_sha256": "49ceb8559daf5a9f5e2c30865b4b8771f679c160286483abc5750be0086b06f5",
+      "text": "Consultando DNS…"
+    },
+    "inspect.dnssec.loading": {
+      "en_sha256": "1c13cdf128ac8b0b3b53f9505624f3cceef58fe592e0b31cf738d03eb5e8c661",
+      "text": "Validando DNSSEC…"
+    },
+    "inspect.dnstrace.loading": {
+      "en_sha256": "ef43d236b678b23e157592e9afeddc6401b0f63001f48add382d3ab24eddca58",
+      "text": "Trazando DNS…"
+    },
+    "inspect.end_to_end_loss": {
+      "en_sha256": "1d814172bc1b692e5e8070164009a16b049ea0ed2f2a64d64ae50cf5937262fc",
+      "text": "Pérdida de extremo a extremo"
+    },
+    "inspect.expired": {
+      "en_sha256": "fa64ea1e82e1206f828ab2a02917c7e92accb98e3b95881a1b4ad52b914b66e3",
+      "text": "expirado"
+    },
+    "inspect.failed": {
+      "en_sha256": "a8a25eeb73a101c62e2f3abc4266e3b0933bca7272b40db8ba71ab007f034e84",
+      "text": "Consulta fallida"
+    },
+    "inspect.forward_confirm": {
+      "en_sha256": "59e940da2d9d91254f24b742dbf3f74a0688e2c2cebddfe3866550da5a6fcaa5",
+      "text": "Confirmación directa"
+    },
+    "inspect.forward_confirmed": {
+      "en_sha256": "39249899d752f9d8ea0ceed4f74324157c0a179e994b9f078ae95c2028d11b83",
+      "text": "Confirmado en sentido directo"
+    },
+    "inspect.handshake": {
+      "en_sha256": "7443d0e10a429054098fe16c89fdc1d9045181caa5cce6bcd4784a7e0399aca1",
+      "text": "Handshake"
+    },
+    "inspect.holder": {
+      "en_sha256": "efb13468b1325dfc7b9d2cf25525af78c96b9d914ec67204c64a456c07e9dc55",
+      "text": "Titular"
+    },
+    "inspect.hops": {
+      "en_sha256": "98e037737e012b59ad3159d2db851b9cb8f3fed61ce9c3eb6d1a983127690b06",
+      "text": "saltos"
+    },
+    "inspect.hostname_match": {
+      "en_sha256": "116be88ada6ae6ca1f92d53c23e825abc166ed26282f471857ec92dae9acbcd1",
+      "text": "Coincidencia de hostname"
+    },
+    "inspect.how_to_fix": {
+      "en_sha256": "2fe70aa22547b7df41fa7541b3e01d5027354295a86b8e95a84b84390d5a3103",
+      "text": "Cómo solucionarlo"
+    },
+    "inspect.http.loading": {
+      "en_sha256": "1ecf0c91abbefedddda016a8732a9d1f96ebaef99edc7a6a98841c498233602c",
+      "text": "Inspeccionando HTTP…"
+    },
+    "inspect.http.protocol_error": {
+      "en_sha256": "4a05b29e18b69d3aabbd2c40a96673d65ed4548d36696920cf21fb0b393c15bd",
+      "text": "http2_handshake_failed"
+    },
+    "inspect.ip.loading": {
+      "en_sha256": "ebe810f4e0fa8aa9a917c7d60fb52353785bd1859a46a6bd1e8ceb2ddc027d93",
+      "text": "Consultando IP…"
+    },
+    "inspect.issuer": {
+      "en_sha256": "39e02c46a08382b7b352b4f1a9d38698b8fe7c8eb74ead609c804b25eeb1db52",
+      "text": "Emisor"
+    },
+    "inspect.iterative_iana": {
+      "en_sha256": "95a69a985ce7e4e3e94cfe84e116c2c20c8c005d9588bf5101e4b0786a4c07dc",
+      "text": "iterativo desde la raíz IANA"
+    },
+    "inspect.latency": {
+      "en_sha256": "e0e7d293043c8cf606a531a927363d5bc80aee9f4da6eaeaecc3787e6ed9eebe",
+      "text": "Latencia"
+    },
+    "inspect.leaf_cert": {
+      "en_sha256": "14269f0a51e4f885e436c5cb3756d47eb69cda96aa8cb3ee33da86f8a1017f7d",
+      "text": "Certificado leaf"
+    },
+    "inspect.list": {
+      "en_sha256": "a330395cc0a53ad1207736546afff4735940937564bbf75ce1edad40780d9139",
+      "text": "lista"
+    },
+    "inspect.listed": {
+      "en_sha256": "56547a7cc8bbf46bb4aa2f18a097fee842ce6e94ca4c7f5cda6df35c4f5825c9",
+      "text": "en lista"
+    },
+    "inspect.lists": {
+      "en_sha256": "308d5a0903f2c5714ec7774808fc9a67b92c602a01a69b2084b05bdb2f6ae699",
+      "text": "Listas"
+    },
+    "inspect.mail.loading": {
+      "en_sha256": "2b10b0fde0b93da0edc55cbdcd80a3189162cea8b55272b56e2d7ad880804742",
+      "text": "Comprobando correo…"
+    },
+    "inspect.mail.null_mx": {
+      "en_sha256": "1abc81e3591bd54ff87bcacc13e1503bb47bc39c370d923bbdc888b6c4d4cbc8",
+      "text": "Null MX (RFC 7505): este dominio no acepta correo, así que MX no necesita A/AAAA."
+    },
+    "inspect.matches": {
+      "en_sha256": "a54084383e3cf7c246307c0f656da443a587afe30dd18a1878c2fcad9db93da4",
+      "text": "coincide"
+    },
+    "inspect.mtr.loading": {
+      "en_sha256": "79703b04e8f9b750ce1249be9f88b17a1deb9365fad82371b2edef2d3bce96f9",
+      "text": "Ejecutando MTR…"
+    },
+    "inspect.nameservers": {
+      "en_sha256": "08c8bfaf58f7983b2a222461362ac107780bd7b71d3c5ed9d6ec51dcf591a52c",
+      "text": "Nameservers"
+    },
+    "inspect.nameservers_disagree": {
+      "en_sha256": "ce4e0a170bba8da64f976213c348ae93fd708d0ec1489563e8f04eeb619728f1",
+      "text": "Nameservers · las respuestas no coinciden"
+    },
+    "inspect.network": {
+      "en_sha256": "1744b96470b51bf30935e2748b237a708d226a0430063f92accf90961cd28d86",
+      "text": "Red"
+    },
+    "inspect.no": {
+      "en_sha256": "1ea442a134b2a184bd5d40104401f2a37fbc09ccf3f4bc9da161c6099be3691d",
+      "text": "No"
+    },
+    "inspect.no_additional": {
+      "en_sha256": "b6fdfab255b66c646d86a4d91c9e924e772d767707cea88e1cfec29acbedd09a",
+      "text": "Sin registros adicionales"
+    },
+    "inspect.no_authority": {
+      "en_sha256": "f162df9544c1ea36b210168799792bfe9b69e59f113681df31554d1cf733f7f9",
+      "text": "Sin registros de autoridad"
+    },
+    "inspect.no_common_dkim": {
+      "en_sha256": "13ec25d93de376ee6a230b013e52807e55b7ee347ad27287f69d993c05be9080",
+      "text": "no se encontraron selectores comunes"
+    },
+    "inspect.no_icmp": {
+      "en_sha256": "e88a892d6151ab8b3754b278337a82b474ac122cdbfcd2c7a43e2ab50563b25f",
+      "text": "Sin ICMP time-exceeded de este hop"
+    },
+    "inspect.no_match": {
+      "en_sha256": "9bc94ab9b39bfff44297d99f66b2d1dc08ba96658be582098c879d223aa84283",
+      "text": "sin coincidencia"
+    },
+    "inspect.no_mx": {
+      "en_sha256": "a746ec633387a22ecf8187a3c31095cf974ca3748466edd32e1f1ae6ebec1577",
+      "text": "sin MX"
+    },
+    "inspect.no_public_hops": {
+      "en_sha256": "bf7a680ca7a8eedf9d51aa50f5451c36ff452cc2543d6af3f45c93085c692079",
+      "text": "Sin hops públicos de GeoIP"
+    },
+    "inspect.none": {
+      "en_sha256": "140bedbf9c3f6d56a9846d2ba7088798683f4da0c248231336e6a05679e4fdfe",
+      "text": "ninguno"
+    },
+    "inspect.not_after": {
+      "en_sha256": "577c1c7930d2f5dcdef1810951943b4d82cbfc2016c1c13dc4e4c0d5ba5a0b40",
+      "text": "No después de"
+    },
+    "inspect.not_before": {
+      "en_sha256": "69bf0cd3a168d4903fae93e24ddf1d621bd7affb8644f19dce8dcb6927a7b62c",
+      "text": "No antes de"
+    },
+    "inspect.not_confirmed": {
+      "en_sha256": "bc1c29a467aef97badbb3224895d56b469a31eb7821e6d3c7ee181e526595d2a",
+      "text": "No confirmado"
+    },
+    "inspect.note": {
+      "en_sha256": "d8da2c49df39d91df7ecd199b92da7bf264f026242ccc69b08daeadfe587c45b",
+      "text": "Nota"
+    },
+    "inspect.nxdomain": {
+      "en_sha256": "089b8bc7fd2a39d5ffd408e01206b0ed23d5e2f2521048b173c020e85fb6508a",
+      "text": "NXDOMAIN — este nombre no existe"
+    },
+    "inspect.observed": {
+      "en_sha256": "ba9c736f19e7f60b7f6764adb0b7908c0a2b394e09b6c09863528c7f2bc86095",
+      "text": "probe"
+    },
+    "inspect.org": {
+      "en_sha256": "350be3643ce78043f7c268bdcee1df0bd01bc04f4eb83a62beb66e76c6e776a7",
+      "text": "Organización"
+    },
+    "inspect.origin_asn": {
+      "en_sha256": "e2e4ac09399f03e5010be6b84c86da8b470f2ee0ccd874176dc29fd589e4b4f3",
+      "text": "ASN de origen"
+    },
+    "inspect.origins": {
+      "en_sha256": "02dedc3e35530ca3e63a03a93f9a6f7a81d12592880457ce0373d7fd1d3adc0a",
+      "text": "Orígenes"
+    },
+    "inspect.path_geoip": {
+      "en_sha256": "61b4e8c17ae7f592123fd456a00863feb28497715315431dcb61f2aee09dec78",
+      "text": "Ruta (GeoIP)"
+    },
+    "inspect.path_hostname": {
+      "en_sha256": "77f7e35c9895a1a327cb5cf9495460719a1c15317514122fd9925857414f9ed6",
+      "text": "Ruta (hostname)"
+    },
+    "inspect.payload": {
+      "en_sha256": "99733344956dde482674bdb7ee44a5a2f203569c8a0a5c7a10284f97cd5d65c8",
+      "text": "Payload"
+    },
+    "inspect.peer": {
+      "en_sha256": "f8e772465499a50b3949725fffd82a2690bac705ebad084bcfb8000376914bb6",
+      "text": "Peer"
+    },
+    "inspect.pem": {
+      "en_sha256": "384fb9a44fabe158be2757b9b8d8f67029f2280fcc1776ab2a53103e6f0c582d",
+      "text": "PEM"
+    },
+    "inspect.ping.loading": {
+      "en_sha256": "3cee8450cd6cdae2190975606dfd7661f6cf457af0554b86df79c50c063f8101",
+      "text": "Haciendo ping…"
+    },
+    "inspect.pmtu.loading": {
+      "en_sha256": "7711f133ad009288b8da913847bf3905661e65cdde55d2e818f8690c387a9391",
+      "text": "Buscando el MTU de la ruta…"
+    },
+    "inspect.prefix": {
+      "en_sha256": "74feac5eb8d98c340fa0f81f7e684d5e240bd78a64aa10c8014e317dfb0011e6",
+      "text": "Prefijo"
+    },
+    "inspect.probe": {
+      "en_sha256": "3bd51ab9c14f9514ea37fac91f5f245e93cf5733bd39ca1652e5525a1d67b5d1",
+      "text": "Probe"
+    },
+    "inspect.ptr.loading": {
+      "en_sha256": "602c1a9230b1af7c5546ff15ffb3b47b384191eae94b6a0c9eab44a4415b2d65",
+      "text": "Comprobando PTR…"
+    },
+    "inspect.rdap.loading": {
+      "en_sha256": "fd6ffbcdbc8eb83114aa9cd3196db1461a84f8786e952697d7a3eadb80a91757",
+      "text": "Consultando WHOIS…"
+    },
+    "inspect.records": {
+      "en_sha256": "47a84e92d5b225ee185aff8a30bafb3240a41b84c740bcaeac43772dd7f2fd37",
+      "text": "Registros"
+    },
+    "inspect.redirects": {
+      "en_sha256": "4340f2850559b250954d7cc02b66816a250edc9f4aae195030d29d0fb99d88a9",
+      "text": "Redirecciones"
+    },
+    "inspect.register.loading": {
+      "en_sha256": "969a07ee494c6d61332fbe056a36f0bff6b9d20fa0ffb9a144451212c2b976d2",
+      "text": "Comprobando TLD…"
+    },
+    "inspect.reputation.loading": {
+      "en_sha256": "6a051b4dd0946bba495677cfbb3bbff3d4d2889cf1b5f399dd2b91c42fd180a3",
+      "text": "Comprobando listas…"
+    },
+    "inspect.resolver": {
+      "en_sha256": "ecafbea5727aeb095a1a0001322666b51e59ebf9d33b7e4007302d16ab04c669",
+      "text": "resolver {value}"
+    },
+    "inspect.reverse": {
+      "en_sha256": "fae1c6f105d6fca1cc2d2a72f0d1d36e378b3ff3f331a02c96434bd66ca912cf",
+      "text": "Inverso"
+    },
+    "inspect.rfcs": {
+      "en_sha256": "aff5bdaec3dc78c05405722cfb5dd476f3e10aa68f6732c569014e045baed903",
+      "text": "RFC que usa este informe"
+    },
+    "inspect.rfcs.hint": {
+      "en_sha256": "d785f9b8425e1210b22a37c1e3fb25eaa262329f4cc745ebd679248ffee3892f",
+      "text": "Los mismos documentos que cita una auditoría DNS clásica, con números de sección en las filas que correspondan."
+    },
+    "inspect.route_summary": {
+      "en_sha256": "4b9b7572609c1770d626371d43c768467516b278534a4a84a3d6a48dc96592c0",
+      "text": "Resumen de ruta"
+    },
+    "inspect.san": {
+      "en_sha256": "8217143646e511ed7f8ab2f83dc8a69d61b119960d92d2f3f61c9d621b286ca3",
+      "text": "SAN"
+    },
+    "inspect.section": {
+      "en_sha256": "dfca5da56b8cdb627309e2aa5a45e17b0e3e3e09e729209216b4fb0684ad8bae",
+      "text": "Sección"
+    },
+    "inspect.sender_score": {
+      "en_sha256": "8577347b25194b762ea20840185537bfa4245a240add0a41f31777b1b214fd59",
+      "text": "puntuación del remitente"
+    },
+    "inspect.serial": {
+      "en_sha256": "8ea0949377f7f900998153c6e100bbc34cf34809b930c8d0797a21343d82315e",
+      "text": "Serial"
+    },
+    "inspect.session": {
+      "en_sha256": "6959b4159575d8dd76d9f3bbe2c6437904f861e7860c35abd18deffb1c3425a0",
+      "text": "Sesión"
+    },
+    "inspect.sha256": {
+      "en_sha256": "bbd07c4fc02c99b97124febf42c7b63b5011c0df28d409fbb486b5a9d2e615ea",
+      "text": "SHA-256"
+    },
+    "inspect.smtp_host": {
+      "en_sha256": "ab328f83926c40ddac11163635824f6d861edb56ac12d51746b551ae55beeb50",
+      "text": "host SMTP"
+    },
+    "inspect.source": {
+      "en_sha256": "0e570ca6fabe24f94e52c1833f3ffd25567022beb826fa16891f3322051bc221",
+      "text": "Origen"
+    },
+    "inspect.status": {
+      "en_sha256": "920e413c7d411b61ef3e8c63b1cb6ad058d5f95f8b481dbafe60248387d8c355",
+      "text": "Estado"
+    },
+    "rdap.status": {
+      "en_sha256": "920e413c7d411b61ef3e8c63b1cb6ad058d5f95f8b481dbafe60248387d8c355",
+      "text": "Estado"
+    },
+    "inspect.subject_cn": {
+      "en_sha256": "6ffaa67e0fe57a12a68053f71abfbaafb4536f06e6985c98a734f282c3755b5b",
+      "text": "CN del sujeto"
+    },
+    "inspect.system_resolver": {
+      "en_sha256": "b4305f126a50fccc23428cbdf5be0c7f622f8faff0d7fbd50d63fa2761fff564",
+      "text": "resolver del sistema"
+    },
+    "inspect.tcp.loading": {
+      "en_sha256": "adc18138374b90fb7d6c284dfdc0a3ffd9ad4a342ca3126b6d057217054403d3",
+      "text": "Comprobando TCP…"
+    },
+    "inspect.tcp.status.refused": {
+      "en_sha256": "83c874d33e8bff73caaa762c79cd1ed101d727c7f20fe4972c67e67978292f23",
+      "text": "rechazado"
+    },
+    "inspect.tcp.status.reset": {
+      "en_sha256": "01be30bb4a27765c37462e6bf2a0bf8b6c109f9be9d81e6fd56455db1a736a43",
+      "text": "reset"
+    },
+    "inspect.tcp.status.resolve": {
+      "en_sha256": "fdf09cdfc26cccf610edccd7f9b558e1ce0a793a4ee57f8306df9058f1aa929b",
+      "text": "resolución"
+    },
+    "inspect.tcp.status.timeout": {
+      "en_sha256": "f77d1bb58da886e3cbeebbf35a0b3d217b003506792268052c6a730fbc5ec9bc",
+      "text": "timeout"
+    },
+    "inspect.tcp.status.unreach": {
+      "en_sha256": "5e6017027437e595ec72adee0718d78f092cddaa8d31048c9d5ba2ed647ded5e",
+      "text": "inalcanzable"
+    },
+    "inspect.tcptraceroute.loading": {
+      "en_sha256": "df2319f0fdf21061962a307da4933e0ef75f347a8487e829a5164752291fa509",
+      "text": "traceroute TCP…"
+    },
+    "inspect.timeouts": {
+      "en_sha256": "901a7de90fa97cd406e907621ee2d5d591b6848e519a1d5e5981ed23b8121e6d",
+      "text": "timeouts"
+    },
+    "inspect.tls.loading": {
+      "en_sha256": "ae91662bed2976f66d122c6f9ff5e4097f3c8fe8021801929187b01bd271244f",
+      "text": "Inspeccionando TLS…"
+    },
+    "inspect.traceroute.loading": {
+      "en_sha256": "f4f92dc3a4c68aec46ecd96ec6f7fa7f0d356b25c971fe9c61a047ebe1ef995f",
+      "text": "Trazando la ruta…"
+    },
+    "inspect.transit_warning": {
+      "en_sha256": "e76425dd60f98495dc61ef82f34c4dcfd03a575a6775590f1215470cc55d4ea8",
+      "text": "Advertencia de tránsito"
+    },
+    "inspect.unsigned": {
+      "en_sha256": "22e1942855bbfd0e4ff4580857463ba25f1189ae2456517a4b5a0d0f65b7cf7a",
+      "text": "Delegación sin firmar"
+    },
+    "inspect.unsigned_path": {
+      "en_sha256": "ef7bff73d064699f86b9ff644c49bb70101c96f3bfc92fcfa35c4e0d09b75be3",
+      "text": "La ruta no está autenticada, pero no es una ruptura."
+    },
+    "inspect.verified": {
+      "en_sha256": "1c34f88707b55e6104c4eb20e71ffa3d33e414b71ef689a15fad0640d0ac58cb",
+      "text": "verificado"
+    },
+    "inspect.version": {
+      "en_sha256": "dd167905de0defcaf72de673ee44c07431770d129ccffab286bd2edfdaf62396",
+      "text": "Versión"
+    },
+    "inspect.what_resolvers": {
+      "en_sha256": "868727e5678e51450ddcbcd885cbfa4f0c46539a25075ab1a33b655a33bb34c1",
+      "text": "Qué hacen los resolvers"
+    },
+    "inspect.whats_wrong": {
+      "en_sha256": "903b2b2e2ad41d03eebc93005db9fb8a1f1043e684bbca0cbf2dd8882618f5b1",
+      "text": "Qué está mal"
+    },
+    "inspect.yes": {
+      "en_sha256": "85a39ab345d672ff8ca9b9c6876f3adcacf45ee7c1e2dbd2408fd338bd55e07e",
+      "text": "Sí"
+    },
+    "rdap.delegation_signed": {
+      "en_sha256": "0e98a4bec5efd7777af49f88ca07821ce1c8ec1dc80c37cb0bc17dd10c8bcf98",
+      "text": "Delegación firmada"
+    },
+    "rdap.end": {
+      "en_sha256": "f4db1e48476f60753980b10d66219042b3a3d9c65c9cc77a53d81b88fd869c64",
+      "text": "Fin"
+    },
+    "rdap.entities": {
+      "en_sha256": "7fdb3ccec0e0d23662eb4c22eb63a64c5873e7c383efde354432152eed55c9ce",
+      "text": "Entidades"
+    },
+    "rdap.events": {
+      "en_sha256": "8d14f6e72de8f18ab1ee5c5330f00653c0c3ce099e63024454f80af97e72d333",
+      "text": "Eventos"
+    },
+    "rdap.expires": {
+      "en_sha256": "f6725f3af08a06a2804bf70e4493e6c78dd37ef533eebf9b419fc48b520ec753",
+      "text": "Caduca"
+    },
+    "rdap.handle": {
+      "en_sha256": "fa04ae3d5198bd40ecd7b91e5180b808dec7c9c8242ba5f06a103ecd2d1eac5b",
+      "text": "Handle"
+    },
+    "rdap.kicker": {
+      "en_sha256": "88f5e787280820e8e9c052e4842a4a2943e3c1976ef90dc065b3e85f55beae72",
+      "text": "WHOIS / RDAP"
+    },
+    "rdap.kicker_asn": {
+      "en_sha256": "1765007145a3929d9e11540449e31577bc5d36d93c818b23da5cb50e7170dee5",
+      "text": "ASN + RDAP"
+    },
+    "rdap.kicker_legacy": {
+      "en_sha256": "da2baaf72c7489a4366fc9dae8a0b49111b4317b55720b103c31f73ea8bc9e57",
+      "text": "WHOIS legado"
+    },
+    "rdap.last_changed": {
+      "en_sha256": "d8c5670ad98e508b8f010e54c1145f8f1a75d039a95185f0a4da2999318eeaf6",
+      "text": "Último cambio"
+    },
+    "rdap.no": {
+      "en_sha256": "9390298f3fb0c5b160498935d79cb139aef28e1c47358b4bbba61862b9c26e59",
+      "text": "no"
+    },
+    "rdap.object": {
+      "en_sha256": "62a6da8735c18e2d66fe5de3dc5440252a1da49e3cbaa7c1d2d5068ad73ffba0",
+      "text": "Objeto"
+    },
+    "rdap.origin_as": {
+      "en_sha256": "8e65ab4872ed8ec59f0d781537007bf3ebc09ae1faa80f502c74449dc8830a99",
+      "text": "AS de origen"
+    },
+    "rdap.parent": {
+      "en_sha256": "5f7953f7c9b6ba16602898e540795140db39847cf03fd10d32ef636cded0360e",
+      "text": "Padre"
+    },
+    "rdap.port43": {
+      "en_sha256": "399c66d44a28060f7f91cdc3e081847508d98d717b5bd458d199d0a23dfb268b",
+      "text": "Puerto 43"
+    },
+    "rdap.port43_response": {
+      "en_sha256": "2998e80d8f49a12c81a61bcef499f7a116c6a055cb03ae77f9cc623cb363fc62",
+      "text": "Respuesta del puerto 43"
+    },
+    "rdap.prefixes": {
+      "en_sha256": "6f20e73b9302a68d1391f759608a427454b08e1a1614fe63b956d60e9394f87b",
+      "text": "Prefijos"
+    },
+    "rdap.range": {
+      "en_sha256": "5de74a81b192304c10bf7b8cf50e863a19e8ae4c38a4d5c5116359db0deed29f",
+      "text": "Rango"
+    },
+    "rdap.registered": {
+      "en_sha256": "2351ee992626bafb88f7985721ec0f56c7d2e242f753e542dee015f178fffea6",
+      "text": "Registrado"
+    },
+    "rdap.registrar": {
+      "en_sha256": "a50cc21ffd572fea908a5ad0bb9227c2943c53d040b70c4bff241cc8276d930a",
+      "text": "Registrador"
+    },
+    "rdap.registration": {
+      "en_sha256": "c793e0d9a1cc64216681c7d7cd5a0e5e71a0d4a09566e448bbe775bcc4a3153f",
+      "text": "Registro"
+    },
+    "rdap.remarks": {
+      "en_sha256": "b5025c735015c2942556c84379ce0c3c4ea792d1fc7d9930a6d38a1ce11220a2",
+      "text": "Observaciones"
+    },
+    "rdap.start": {
+      "en_sha256": "e4bb9f1ece9af9264a3b9e3913bbdb2cf497457167b14ced5f85688bfde74644",
+      "text": "Inicio"
+    },
+    "rdap.yes": {
+      "en_sha256": "8a798890fe93817163b10b5f7bd2ca4d25d84c52739a645a889c173eee7d9d3d",
+      "text": "sí"
+    },
+    "rdap.zone_signed": {
+      "en_sha256": "915fc05dacbf177dd6ab4de20c3d47f66c80fca4c82cacbe5369e234c4010f0d",
+      "text": "Zona firmada"
+    },
+    "status.cache": {
+      "en_sha256": "5e1ecee06a7fc06f305ae5c12acfe7a7f67b8ece7af76932ed3afab00c3c6921",
+      "text": "caché"
+    },
+    "status.config": {
+      "en_sha256": "b79606fb3afea5bd1609ed40b622142f1c98125abcfe89a76a661b0e8e343910",
+      "text": "configuración"
+    },
+    "status.docs": {
+      "en_sha256": "46b42b4229cd7a39c564e780bb665a8bde4fdf722007e8473f167fe53ed4b995",
+      "text": "documentación"
+    },
+    "status.docs.regen": {
+      "en_sha256": "459ba967bb5a71d628aafe49ce32dd02e85f08bb626f493ea2ec50697c63fba4",
+      "text": "regenerar"
+    },
+    "status.exit": {
+      "en_sha256": "e596899f114b5162402325dfb31fdaa792fabed718628336cc7a35a24f38eaa9",
+      "text": "salir"
+    },
+    "status.history": {
+      "en_sha256": "259aa8ef98a8b91de574cd904138ef643240c23080cf24da4793a6f10a43fa9d",
+      "text": "historial"
+    },
+    "status.https.down": {
+      "en_sha256": "4b6ddf87776e0a33361facef71f977cf3ed845598270cfebbe59a12c68dc18a8",
+      "text": "tls inactivo"
+    },
+    "status.https.up": {
+      "en_sha256": "8566fb64e8db088602cb9448a08dc5c19f367de44cec1aa15b285c719c4493dc",
+      "text": "tls activo"
+    },
+    "status.load": {
+      "en_sha256": "3b05b3909546aa4d27cb45fdd9e2646b816f7074ddcb608b83e228a268415381",
+      "text": "carga {value}"
+    },
+    "status.locale": {
+      "en_sha256": "6ac671dad299cfeb566b4fafb9e5ec7035305c8980bb5e23efb422289809115e",
+      "text": "idioma de la interfaz"
+    },
+    "status.logs": {
+      "en_sha256": "98f38f12db221a8cf8ca7aadfdcd759b01d52eb4ebb3eedbb2d97e92805c6960",
+      "text": "registros"
+    },
+    "status.ms": {
+      "en_sha256": "4cec1c9ab1b22c3abde5902f658fd604e5217ea0313b8066b46505daae7c48e2",
+      "text": "{n} ms"
+    },
+    "status.serve.building": {
+      "en_sha256": "c2e53b52beacc20cba29f5b647284a2088d0015e1278540fbc8ac1469bf2fc22",
+      "text": "construyendo intel"
+    },
+    "status.serve.down": {
+      "en_sha256": "053ea9d301377297cf1dcd0ada4ab9f78beda47d81d489d0653a25b6e6955815",
+      "text": "intel inactivo"
+    },
+    "status.serve.start": {
+      "en_sha256": "cced28c6dc3f99c2396a5eaad732bf6b28142335892b1cd0e6af6cdb53f5ccfa",
+      "text": "iniciar"
+    },
+    "status.serve.stop": {
+      "en_sha256": "6c45cb72a36e63d522aa54ed8adbd7a29a989474f2f77e0458af8800564ef3cb",
+      "text": "detener"
+    },
+    "status.serve.up": {
+      "en_sha256": "1dbd86958ba25273d86722d2f708520056abb7c3b854b3daed9e0b3cd737e8d4",
+      "text": "intel activo"
+    },
+    "status.up": {
+      "en_sha256": "b6eb004614d26d66a7c4a667a9dd027f77133b05edaf47a143921510ccf8f078",
+      "text": "activo {value}"
+    },
+    "status.windows.min": {
+      "en_sha256": "1f6fa6f69d185e6086d04e7330361bf9001a3b8d0ce511171055dc34eb90c1c5",
+      "text": "mín"
+    },
+    "status.windows.restore": {
+      "en_sha256": "f329e3a317eee6a8a1a7357f69bc0488e0fad238ad58b30fc99139445f51e6ab",
+      "text": "restaurar"
+    },
+    "term.copied": {
+      "en_sha256": "a77198933575e47a046dfab886184d953901bf0000f123f710f1f3c54e43c73e",
+      "text": " copiado"
+    }
+  }
+}

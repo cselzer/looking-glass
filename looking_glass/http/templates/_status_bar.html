@@ -1,0 +1,86 @@
+<footer class="status-bar" id="status-bar">
+  <span class="status-wins" id="status-wins"></span>
+  <span class="status-start" id="status-start">
+    <button type="button" id="status-windows" hidden>{{ t("status.windows.min") }}</button>
+    {% if user %}
+    <span id="status-auth-user">
+      <span id="status-user">{{ user }}</span>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <span id="status-serve">{{ t("status.serve.down") }}</span>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <span id="status-https">{{ t("status.https.down") }}</span>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <button type="button" id="status-logs">{{ t("status.logs") }}</button>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <button type="button" id="status-wall">{{ t("status.wall") }}</button>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <button type="button" id="status-history">{{ t("status.history") }}</button>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <button type="button" id="cache-btn">{{ t("status.cache") }}</button>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <button type="button" id="status-config">{{ t("status.config") }}</button>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <button type="button" id="status-logout">{{ t("gui.logout") }}</button>
+    </span>
+    {% else %}
+    <span id="status-auth-guest">
+      <button type="button" id="status-login">{{ t("gui.login") }}</button>
+    </span>
+    {% endif %}
+  </span>
+  <span class="status-cluster">
+    <span class="status-id">
+      <span id="status-host">—</span>
+      <span id="status-ip"></span>
+    </span>
+    <span class="status-sep" aria-hidden="true">·</span>
+    <span id="status-time">—</span>
+    <span class="status-sep" aria-hidden="true">·</span>
+    <span id="status-rtt">—</span>
+    <span class="status-sep" aria-hidden="true">·</span>
+    <span id="status-uptime">up —</span>
+    <span class="status-sep" aria-hidden="true">·</span>
+    <span id="status-load">load —</span>
+    <span class="status-sep" aria-hidden="true">·</span>
+    <span id="status-mode">—</span>
+  </span>
+    <span class="status-end">
+    {% if locales and locales|length > 1 %}
+    <select class="status-locale" id="status-locale" title="{{ t('status.locale') }}" aria-label="{{ t('status.locale') }}">
+      {% for code in locales %}
+      <option value="{{ code }}"{% if code == locale %} selected{% endif %}>{{ code }}</option>
+      {% endfor %}
+    </select>
+    {% else %}
+    <span class="status-locale" id="status-locale" title="{{ t('status.locale') }}">{{ locale|default('en') }}</span>
+    {% endif %}
+    {% if user %}
+    <button type="button" id="status-docs-regen"{% if not (docs_enabled and not docs_generated) %} hidden{% endif %}>{{ t("status.docs.regen") }}</button>
+    {% endif %}
+    <a class="status-docs" id="status-docs" href="/docs"{% if not docs_enabled %} hidden{% endif %}>{{ t("status.docs") }}</a>
+  </span>
+</footer>
+{% if not user %}
+<div class="login-layer" id="login-layer" hidden>
+  <section class="card login-card" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="status-row">
+      <h2 id="login-title" style="margin:0;">{{ t("gui.login.title") }}</h2>
+      <button type="button" class="ghost" id="login-close">{{ t("gui.close") }}</button>
+    </div>
+    <form id="login-form">
+      <label>{{ t("gui.login.username") }}
+        <input name="username" autocomplete="username" required>
+      </label>
+      <label>{{ t("gui.login.password") }}
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <p class="login-error" id="login-error" hidden></p>
+      <button type="submit" class="go">{{ t("gui.login.submit") }}</button>
+    </form>
+  </section>
+</div>
+{% endif %}
+<script type="application/json" id="status-boot">{{ {
+  "docs_enabled": docs_enabled,
+  "docs_generated": docs_generated
+} | tojson }}</script>

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ payload.query or site }} · {{ site }}{% endblock %}
+{% block body_class %}gui{% endblock %}
+{% block body %}
+  {% include "_site_head.html" %}
+  <div class="result-layout">
+    <div>
+  <dl class="meta">
+    <dt>{{ t("result.query") }}</dt>
+    <dd>{{ payload.query or "—" }}</dd>
+    <dt>{{ t("result.kind") }}</dt>
+    <dd>{{ payload.kind or "—" }}</dd>
+    <dt>{{ t("result.visitor") }}</dt>
+    <dd>{{ payload.visitor or "—" }}</dd>
+    <dt>{{ t("result.status") }}</dt>
+    <dd class="{{ 'ok' if payload.ok else 'bad' }}">{{ t("result.ok") if payload.ok else (payload.error or t("result.error")) }}</dd>
+  </dl>
+  <pre class="result">{{ payload | tojson(indent=2) }}</pre>
+  <div class="result-history is-empty" id="result-history" hidden></div>
+  {% include "_howto_cli.html" %}
+    </div>
+  </div>
+  <script type="application/json" id="report-payload">{{ payload | tojson }}</script>
+{% endblock %}
