@@ -166,8 +166,11 @@ echo "[*] Allowing unprivileged bind from port 80..."
 printf 'net.ipv4.ip_unprivileged_port_start=80\n' >/etc/sysctl.d/99-looking-glass.conf
 sysctl -w net.ipv4.ip_unprivileged_port_start=80
 
-echo "[*] ufw default allow outgoing..."
+echo "[*] ufw: allow outgoing; inbound 22, 80 (ACME), 5555 (HTTPS)..."
 ufw default allow outgoing
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 5555/tcp
 
 echo "[*] Enabling linger for ${LG_USER}..."
 loginctl enable-linger "$LG_USER"

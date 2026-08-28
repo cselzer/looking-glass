@@ -62,6 +62,17 @@ sys.exit(0 if ready else 1)
 '
 }
 
+if [[ -d "$VENV" ]]; then
+  echo "[*] Stopping looking-glass daemons before replacing the venv..."
+  if [[ -x "$VENV/bin/looking-glass" ]]; then
+    "$VENV/bin/looking-glass" https stop || true
+    "$VENV/bin/looking-glass" lookup-server stop || true
+  fi
+  systemctl --user stop looking-glass.target || true
+  echo "[*] Removing existing venv at ${VENV}..."
+  rm -rf "$VENV"
+fi
+
 echo "[*] Creating venv at ${VENV}..."
 python3 -m venv "$VENV"
 # shellcheck disable=SC1091
@@ -91,8 +102,12 @@ if ! pip install --force-reinstall "$PIP_URL"; then
   exit 1
 fi
 
-echo "[*] Building datasets (ASN origin can take several minutes)..."
-looking-glass build
+if looking-glass validate >/dev/null 2>&1; then
+  echo "    datasets already present; leaving ~/.looking-glass/data unchanged"
+else
+  echo "[*] Building datasets (ASN origin can take several minutes)..."
+  looking-glass build
+fi
 
 echo "[*] Setting http.hostname from hostname -f..."
 looking-glass config hostname "$(hostname -f)"
