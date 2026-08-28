@@ -13,12 +13,23 @@ pip install -e .
 looking-glass --help
 ```
 
-VM (Debian/Ubuntu): run [`deploy/bootstrap-root.sh`](deploy/bootstrap-root.sh) as root. It creates the `looking-glass` user and then runs [`deploy/bootstrap-user.sh`](deploy/bootstrap-user.sh) as that account. Let's Encrypt contact email is optional:
+VM (Debian/Ubuntu): as root, after the FQDN has A+AAAA on the NIC and the cloud firewall allows 80 and 5555 (IPv4 and IPv6). [`deploy/bootstrap-root.sh`](deploy/bootstrap-root.sh) creates the `looking-glass` user and runs [`deploy/bootstrap-user.sh`](deploy/bootstrap-user.sh) as that account. Let's Encrypt contact email is optional.
+
+Convenience (current `main`):
 
 ```
-./deploy/bootstrap-root.sh
-./deploy/bootstrap-root.sh --email you@example.com
+curl -fsSL https://raw.githubusercontent.com/cselzer/looking-glass/refs/heads/main/deploy/bootstrap-root.sh | bash
+curl -fsSL https://raw.githubusercontent.com/cselzer/looking-glass/refs/heads/main/deploy/bootstrap-root.sh | bash -s -- --email you@example.com
 ```
+
+Bulk: same pipe from cloud-init, pin the URL (or `LOOKING_GLASS_RAW_BASE`) to a tag or commit so a push mid-rollout does not mix versions:
+
+```
+LOOKING_GLASS_RAW_BASE=https://raw.githubusercontent.com/cselzer/looking-glass/refs/tags/v0.1.0/deploy
+curl -fsSL "$LOOKING_GLASS_RAW_BASE/bootstrap-root.sh" | LOOKING_GLASS_RAW_BASE="$LOOKING_GLASS_RAW_BASE" bash
+```
+
+From a checkout: `./deploy/bootstrap-root.sh` (uses the sibling user script).
 
 Config, datasets, caches, sessions, and certs live under `~/.looking-glass` (`config.json`, `data/`, `certs/`).
 

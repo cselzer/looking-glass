@@ -4,8 +4,14 @@ set -euo pipefail
 
 LG_USER="looking-glass"
 LG_HOME="/home/looking-glass"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+LOOKING_GLASS_RAW_BASE="${LOOKING_GLASS_RAW_BASE:-https://raw.githubusercontent.com/cselzer/looking-glass/refs/heads/main/deploy}"
 USAGE="usage: $0 [--email ADDRESS]"
+
+SELF="${BASH_SOURCE[0]:-$0}"
+SCRIPT_DIR=""
+if [[ -f "$SELF" && "$SELF" != "bash" && "$SELF" != "-" ]]; then
+  SCRIPT_DIR="$(cd "$(dirname "$SELF")" && pwd)"
+fi
 
 EMAIL=""
 while [[ $# -gt 0 ]]; do
@@ -239,8 +245,19 @@ EOF
 chmod +x /etc/update-motd.d/99-looking-glass
 
 echo "[*] Running user bootstrap as ${LG_USER}..."
+user_src=""
+if [[ -n "$SCRIPT_DIR" && -f "$SCRIPT_DIR/bootstrap-user.sh" ]]; then
+  user_src="$SCRIPT_DIR/bootstrap-user.sh"
+else
+  echo "    fetching bootstrap-user.sh from ${LOOKING_GLASS_RAW_BASE}"
+  user_src="$(mktemp)"
+  curl -fsSL "${LOOKING_GLASS_RAW_BASE%/}/bootstrap-user.sh" -o "$user_src"
+fi
 install -o "$LG_USER" -g "$LG_USER" -m 0755 \
-  "$SCRIPT_DIR/bootstrap-user.sh" "$LG_HOME/.bootstrap-user.sh"
+  "$user_src" "$LG_HOME/.bootstrap-user.sh"
+if [[ -z "$SCRIPT_DIR" || "$user_src" != "$SCRIPT_DIR/bootstrap-user.sh" ]]; then
+  rm -f "$user_src"
+fi
 if [[ -n "$EMAIL" ]]; then
   runuser -u "$LG_USER" -- env HOME="$LG_HOME" USER="$LG_USER" LOGNAME="$LG_USER" \
     "$LG_HOME/.bootstrap-user.sh" --email "$EMAIL"
