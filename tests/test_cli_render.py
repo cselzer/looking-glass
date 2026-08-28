@@ -104,6 +104,7 @@ def _https_report(**extra):
         "uptime": 1.11,
         "days_left": 89,
         "fullchain": "/tmp/fullchain.pem",
+        "privkey": "/tmp/privkey.pem",
     }
     payload.update(extra)
     return payload
@@ -127,6 +128,8 @@ class DaemonCliTests(unittest.TestCase):
         self.assertIn(":5555", human.stdout)
         self.assertIn("up 0s", human.stdout)
         self.assertIn("cert 89d", human.stdout)
+        self.assertIn("/tmp/fullchain.pem", human.stdout)
+        self.assertIn("/tmp/privkey.pem", human.stdout)
         self.assertNotIn("pidfile", human.stdout)
         self.assertEqual(blob.exit_code, 0, blob.output)
         payload = json.loads(blob.stdout)
@@ -185,3 +188,22 @@ class DaemonCliTests(unittest.TestCase):
             result = runner.invoke(cli, ["restart"])
         self.assertEqual(result.exit_code, 1, result.output)
         self.assertIn("https", result.stdout)
+
+    def test_https_renew_issued_shows_paths(self):
+        runner = CliRunner()
+        fake = {
+            "ok": True,
+            "running": False,
+            "state": "issued",
+            "issued": True,
+            "port": 5555,
+            "days_left": 89,
+            "fullchain": "/tmp/fullchain.pem",
+            "privkey": "/tmp/privkey.pem",
+        }
+        with patch("looking_glass.http.https_serve.renew", return_value=fake):
+            result = runner.invoke(cli, ["https", "renew"])
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertIn("issued", result.stdout)
+        self.assertIn("/tmp/fullchain.pem", result.stdout)
+        self.assertIn("/tmp/privkey.pem", result.stdout)

@@ -148,21 +148,36 @@ if err:
   exit 1
 }
 
-echo "[*] Waiting for certificate (https status)..."
-deadline=$((SECONDS + 300))
-while true; do
-  if _https_ready; then
-    looking-glass https status
-    break
-  fi
-  if (( SECONDS >= deadline )); then
-    echo "[-] Timed out waiting for a certificate." >&2
-    looking-glass https status || true
-    looking-glass https logs || true
-    exit 1
-  fi
-  sleep 3
-done
+printf '%s\n' "$renew_json" | python3 -c '
+import json, sys
+info = json.load(sys.stdin)
+if info.get("issued"):
+    print("[+] Let'\''s Encrypt certificate issued.")
+else:
+    print("[+] Certificate already valid.")
+for key in ("fullchain", "privkey"):
+    path = info.get(key)
+    if path:
+        print(f"    {key} {path}")
+'
+
+if ! _https_ready; then
+  echo "[*] Waiting for certificate (https status)..."
+  deadline=$((SECONDS + 300))
+  while true; do
+    if _https_ready; then
+      looking-glass https status
+      break
+    fi
+    if (( SECONDS >= deadline )); then
+      echo "[-] Timed out waiting for a certificate." >&2
+      looking-glass https status || true
+      looking-glass https logs || true
+      exit 1
+    fi
+    sleep 3
+  done
+fi
 
 echo "[*] Enabling systemd --user units..."
 looking-glass boot enable

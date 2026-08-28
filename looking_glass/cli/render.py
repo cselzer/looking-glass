@@ -338,7 +338,7 @@ def _serve_line(name: str, payload: Dict[str, Any]) -> Text:
     ok = payload.get("ok")
     if ok is False:
         mark, style, word = "✗", "bold red", state or "failed"
-    elif running or state in {"started", "running"}:
+    elif running or state in {"started", "running", "issued", "unchanged"}:
         mark, style = "✓", "bold green"
         word = state or "running"
         if ready is False and running:
@@ -373,6 +373,14 @@ def _print_serve_error(payload: Dict[str, Any]) -> None:
         _console().print(Text(str(err), style="bold red"))
 
 
+def _print_serve_paths(payload: Dict[str, Any]) -> None:
+    con = _console()
+    for key in ("fullchain", "privkey"):
+        path = payload.get(key)
+        if path:
+            con.print(Text(f"    {key}  {path}"))
+
+
 def _render_serve(payload: Any) -> None:
     if not isinstance(payload, dict):
         _render_pretty(payload)
@@ -385,9 +393,13 @@ def _render_serve(payload: Any) -> None:
         _print_serve_error(intel)
         con.print(_serve_line("https", https))
         _print_serve_error(https)
+        _print_serve_paths(https)
         return
-    con.print(_serve_line(_daemon_name(payload), payload))
+    name = _daemon_name(payload)
+    con.print(_serve_line(name, payload))
     _print_serve_error(payload)
+    if name == "https":
+        _print_serve_paths(payload)
 
 
 def _render_kv(payload: Any) -> None:
