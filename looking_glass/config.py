@@ -16,6 +16,7 @@ DEFAULT_REFRESH: Dict[str, int] = {
     "iana": 30,
     "dns_types": 30,
     "tlds": 30,
+    "rdap_dns": 30,
     "rir": 1,
     "asn_org": 7,
     "asn": 1,

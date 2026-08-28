@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from .dns import register as tlds_mod
 from .dns import resolve
 from .intel import asn as asn_mod
-from .intel import asn_org, iana, rir
+from .intel import asn_org, iana, rdap, rir
 from .utility import get_cache_path
 
 LogFn = Callable[[str], None]
@@ -20,6 +20,7 @@ DATASETS: Tuple[Tuple[str, Any, str, str], ...] = (
     ("iana", iana, "iana.json", "IANA special registries"),
     ("dns_types", resolve, "dns_types.json", "IANA DNS RR types"),
     ("tlds", tlds_mod, "tlds.json", "IANA TLD list"),
+    ("rdap_dns", rdap, "rdap-dns.json", "IANA RDAP DNS bootstrap"),
     ("rir", rir, "rir.json", "RIR country allocations"),
     ("asn_org", asn_org, "asn2org.json", "ASN organization names"),
     ("asn", asn_mod, "asn_prefix.ipasn.dat", "ASN origin prefixes"),

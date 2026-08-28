@@ -3074,7 +3074,7 @@
 
       const refSec = el("fieldset", "config-sec");
       refSec.append(el("legend", null, t("gui.config.refresh", "Dataset refresh (days)")));
-      ["iana", "dns_types", "tlds", "rir", "asn_org", "asn"].forEach((name) => {
+      ["iana", "dns_types", "tlds", "rdap_dns", "rir", "asn_org", "asn"].forEach((name) => {
         refSec.append(field(
           "refresh." + name,
           t("gui.config.refresh." + name, name),

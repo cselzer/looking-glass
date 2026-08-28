@@ -185,6 +185,7 @@ _MIN_CACHE_BYTES = {
     "iana.json": 8_000,
     "dns_types.json": 2_000,
     "tlds.json": 2_000,
+    "rdap-dns.json": 20_000,
     "rir.json": 1_000_000,
     "asn2org.json": 100_000,
     "asn_prefix.ipasn.dat": 1_000_000,
@@ -680,6 +681,30 @@ def _run_validate(
             continue
         stamp(f"load.{key}", f"Load {label}", "ok", "loaded", started)
         loaded[key] = True
+
+    if loaded.get("rdap_dns"):
+        started = time.time()
+        from ..intel import rdap as rdap_mod
+
+        jp_urls = rdap_mod.domain_rdap_urls("jprs.jp")
+        de_urls = rdap_mod.domain_rdap_urls("xn--bcher-kva.de")
+        org = [url for url in list(jp_urls) + list(de_urls) if "rdap.org" in url]
+        if not jp_urls or not de_urls or org:
+            stamp(
+                "rdap.bootstrap",
+                "RDAP DNS bootstrap",
+                "failed",
+                "jp/de mapped to rdap.org" if org else "jp/de missing from bootstrap",
+                started,
+            )
+        else:
+            stamp(
+                "rdap.bootstrap",
+                "RDAP DNS bootstrap",
+                "ok",
+                f"jp={jp_urls[0]} de={de_urls[0]}",
+                started,
+            )
 
     def lookup(ip: str, started: float) -> Dict[str, Any]:
         cached = lookup_cache.get(ip)
@@ -1243,6 +1268,7 @@ def docs_cmd(path: Optional[str]) -> None:
 @click.option("--iana", "do_iana", is_flag=True, help="IANA special-use ranges only.")
 @click.option("--dns-types", "do_dns_types", is_flag=True, help="IANA DNS RR types only.")
 @click.option("--tlds", "do_tlds", is_flag=True, help="IANA TLD list only.")
+@click.option("--rdap-dns", "do_rdap_dns", is_flag=True, help="IANA RDAP DNS bootstrap only.")
 @click.option("--rir", "do_rir", is_flag=True, help="RIR country allocations only.")
 @click.option("--asn", "do_asn", is_flag=True, help="ASN origin prefixes only (slow; RouteViews RIB).")
 @click.option("--asn-org", "do_asn_org", is_flag=True, help="ASN organization names only (RIPE).")
@@ -1253,6 +1279,7 @@ def build_cmd(
     do_iana: bool,
     do_dns_types: bool,
     do_tlds: bool,
+    do_rdap_dns: bool,
     do_rir: bool,
     do_asn: bool,
     do_asn_org: bool,
@@ -1269,6 +1296,7 @@ def build_cmd(
         "iana": do_iana,
         "dns_types": do_dns_types,
         "tlds": do_tlds,
+        "rdap_dns": do_rdap_dns,
         "rir": do_rir,
         "asn": do_asn,
         "asn_org": do_asn_org,
