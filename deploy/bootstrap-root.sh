@@ -308,6 +308,8 @@ else
     "$LG_HOME/.bootstrap-user.sh"
 fi
 
+rm -fv "$LG_HOME/.bootstrap-user.sh"
+
 echo
 echo "[*] Done. This box is a looking glass; the service account is ${LG_USER}."
 echo
