@@ -233,9 +233,12 @@ def format_acme_error(exc: BaseException, *, _depth: int = 0) -> str:
     name = type(exc).__name__ or "Error"
     msg = str(exc).strip()
     details = _failed_authz_details(exc)
-    body = details or msg or name
+    location = str(getattr(exc, "location", "") or "").strip()
+    body = details or msg or location or name
     if name not in body:
         body = f"{name}: {body}"
+    if location and location not in body:
+        body = f"{body} {location}"
     cause = exc.__cause__
     if _depth < 3 and cause is not None and cause is not exc:
         caused = format_acme_error(cause, _depth=_depth + 1)
@@ -435,6 +438,46 @@ def _domain_csr_pem(pkey, hostname: str) -> bytes:
     return crypto_util.make_csr(pem, [hostname])
 
 
+def _bind_existing_account(acme, location: str, messages) -> None:
+    regr = messages.RegistrationResource(body=messages.Registration(), uri=location)
+    acme.net.account = regr
+    query = getattr(acme, "query_registration", None)
+    if not callable(query):
+        return
+    try:
+        query(regr)
+    except Exception:
+        acme.net.account = regr
+
+
+def _ensure_acme_account(acme, mail: str) -> None:
+    """Register or reuse the account for this account.pem."""
+    from acme import errors as acme_errors
+    from acme import messages
+
+    mail = str(mail or "").strip()
+    if mail:
+        reg = messages.NewRegistration.from_data(
+            email=mail, terms_of_service_agreed=True
+        )
+    else:
+        reg = messages.NewRegistration.from_data(terms_of_service_agreed=True)
+    try:
+        acme.new_account(reg)
+        return
+    except acme_errors.ConflictError as exc:
+        location = str(getattr(exc, "location", "") or "").strip()
+        if not location:
+            raise
+        append_acme_log(f"account exists {location}")
+        _bind_existing_account(acme, location, messages)
+        return
+    except messages.Error as exc:
+        if "already been registered" not in str(exc).lower():
+            raise
+        append_acme_log("account exists")
+
+
 def run_http01_order(
     hostname: str,
     email: str,
@@ -452,18 +495,7 @@ def run_http01_order(
     net = client.ClientNetwork(account_key, user_agent="looking-glass")
     directory = messages.Directory.from_json(net.get(url).json())
     acme = client.ClientV2(directory, net)
-    mail = str(email or "").strip()
-    try:
-        if mail:
-            reg = messages.NewRegistration.from_data(
-                email=mail, terms_of_service_agreed=True
-            )
-        else:
-            reg = messages.NewRegistration.from_data(terms_of_service_agreed=True)
-        acme.new_account(reg)
-    except messages.Error as exc:
-        if "already been registered" not in str(exc).lower():
-            raise
+    _ensure_acme_account(acme, email)
     fullchain_path, privkey_path = cert_files(hostname)
     pkey = _load_or_create_domain_key(privkey_path)
     order = acme.new_order(_domain_csr_pem(pkey, hostname))

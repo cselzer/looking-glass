@@ -250,6 +250,73 @@ class AcmeIssueTests(unittest.TestCase):
         self.assertIn("s1.example.com", text)
         self.assertIn("Timeout during connect", text)
 
+    def test_format_includes_conflict_location(self):
+        from acme.errors import ConflictError
+
+        text = acme_issue.format_acme_error(
+            ConflictError("https://acme.example/acct/1")
+        )
+        self.assertIn("ConflictError", text)
+        self.assertIn("https://acme.example/acct/1", text)
+
+    def test_ensure_account_reuses_on_conflict(self):
+        from acme.errors import ConflictError
+
+        conflict = ConflictError("https://acme.example/acct/1")
+        acme = MagicMock()
+        acme.new_account.side_effect = conflict
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            acme_issue._ensure_acme_account(acme, "")
+            log = Path(tmp).joinpath("data", "acme.log").read_text(encoding="utf-8")
+        acme.new_account.assert_called_once()
+        acme.query_registration.assert_called()
+        called_regr = acme.query_registration.call_args[0][0]
+        self.assertEqual(called_regr.uri, "https://acme.example/acct/1")
+        self.assertEqual(acme.net.account.uri, "https://acme.example/acct/1")
+        self.assertIn("account exists", log)
+        self.assertIn("https://acme.example/acct/1", log)
+
+    def test_conflict_does_not_abort_issue(self):
+        from acme.errors import ConflictError
+
+        conflict = ConflictError("https://acme.example/acct/1")
+        acme = MagicMock()
+        acme.new_account.side_effect = conflict
+        order = MagicMock()
+        order.fullchain_pem = "CHAIN"
+        order.authorizations = []
+        acme.new_order.return_value = order
+        net = MagicMock()
+        net.get.return_value.json.return_value = {}
+        pkey = MagicMock()
+        pkey.private_bytes.return_value = b"KEY"
+
+        class FakeDir:
+            @staticmethod
+            def from_json(_payload):
+                return MagicMock()
+
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            with (
+                patch.object(acme_issue, "preflight_http01", return_value=["0.0.0.0"]),
+                patch.object(acme_issue, "_load_or_create_account_key", return_value=MagicMock()),
+                patch.object(acme_issue, "_load_or_create_domain_key", return_value=pkey),
+                patch.object(acme_issue, "_domain_csr_pem", return_value=b"csr"),
+                patch("acme.client.ClientNetwork", return_value=net),
+                patch("acme.client.ClientV2", return_value=acme),
+                patch("acme.messages.Directory", FakeDir),
+            ):
+                chain, key = acme_issue.run_http01_order(
+                    "s1.example.com",
+                    "",
+                    staging=True,
+                    acme_port=80,
+                )
+        acme.new_account.assert_called_once()
+        acme.new_order.assert_called_once()
+        self.assertEqual(chain, "CHAIN")
+        self.assertEqual(key, "KEY")
+
 
 class HttpsSupervisorTests(unittest.TestCase):
     def test_start_requires_hostname(self):
