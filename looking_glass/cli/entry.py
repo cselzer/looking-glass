@@ -689,20 +689,22 @@ def _run_validate(
         jp_urls = rdap_mod.domain_rdap_urls("jprs.jp")
         de_urls = rdap_mod.domain_rdap_urls("xn--bcher-kva.de")
         org = [url for url in list(jp_urls) + list(de_urls) if "rdap.org" in url]
-        if not jp_urls or not de_urls or org:
-            stamp(
-                "rdap.bootstrap",
-                "RDAP DNS bootstrap",
-                "failed",
-                "jp/de mapped to rdap.org" if org else "jp/de missing from bootstrap",
-                started,
-            )
+        de_ok = bool(de_urls) and "rdap.denic.de" in de_urls[0] and not org
+        if jp_urls or not de_ok:
+            detail = "jp invented or de not DENIC"
+            if org:
+                detail = "jp/de mapped to rdap.org"
+            elif jp_urls:
+                detail = f"jp has RDAP URL {jp_urls[0]}"
+            elif not de_urls:
+                detail = "de missing from bootstrap"
+            stamp("rdap.bootstrap", "RDAP DNS bootstrap", "failed", detail, started)
         else:
             stamp(
                 "rdap.bootstrap",
                 "RDAP DNS bootstrap",
                 "ok",
-                f"jp={jp_urls[0]} de={de_urls[0]}",
+                f"jp=none de={de_urls[0]}",
                 started,
             )
 

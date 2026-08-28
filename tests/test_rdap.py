@@ -11,9 +11,9 @@ from looking_glass.intel import rdap
 
 
 _IANA_FIXTURE = [
-    [["jp"], ["https://rdap.jprs.jp/"]],
     [["de"], ["https://rdap.denic.de/"]],
     [["com", "net"], ["https://rdap.verisign.com/com/v1/"]],
+    [["jprs"], ["https://rdap.nic.jprs/rdap/"]],
 ]
 _IANA_COM_ONLY = [
     [["com", "net"], ["https://rdap.verisign.com/com/v1/"]],
@@ -283,20 +283,39 @@ class RdapCacheTests(unittest.TestCase):
         get.assert_not_called()
 
     def test_idn_fetch_uses_punycode(self):
-        hit = _json_resp({"handle": "EXAMPLE", "ldhName": "xn--fsq.jp"})
+        hit = _json_resp({"handle": "BUECHER", "ldhName": "xn--bcher-kva.de"})
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
                 with patch("requests.get", return_value=hit) as get:
-                    data = rdap.fetch_rdap("例.jp")
-                    again = rdap.fetch_rdap("xn--fsq.jp")
-        self.assertEqual(data["handle"], "EXAMPLE")
-        self.assertEqual(again["handle"], "EXAMPLE")
+                    data = rdap.fetch_rdap("bücher.de")
+                    again = rdap.fetch_rdap("xn--bcher-kva.de")
+        self.assertEqual(data["handle"], "BUECHER")
+        self.assertEqual(again["handle"], "BUECHER")
         urls = [call[0][0] for call in get.call_args_list]
-        self.assertTrue(any("xn--fsq.jp" in url for url in urls))
-        self.assertFalse(any("例" in url for url in urls))
+        self.assertTrue(any("xn--bcher-kva.de" in url for url in urls))
+        self.assertFalse(any("bücher" in url or "例" in url for url in urls))
         self.assertFalse(any("rdap.org" in url for url in urls))
-        self.assertTrue(all("rdap.jprs.jp" in url or "jpnic" in url for url in urls))
+        self.assertTrue(all("rdap.denic.de" in url for url in urls))
+
+    def test_jp_idn_is_no_service(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("requests.get") as get:
+                    data = rdap.fetch_rdap("例.jp")
+                    looked = rdap.lookup_rdap("例.jp")
+                    puny = rdap.lookup_rdap("xn--fsq.jp")
+        get.assert_not_called()
+        self.assertIsNone(data)
+        self.assertFalse(looked["ok"])
+        self.assertEqual(looked["status"], 501)
+        self.assertEqual(looked["error"], "no RDAP for this TLD")
+        self.assertNotIn("url", looked)
+        self.assertEqual(looked.get("result"), None)
+        self.assertFalse(puny["ok"])
+        self.assertEqual(puny["status"], 501)
+        self.assertNotIn("rdap.jprs.jp", looked.get("error") or "")
 
     def test_html_200_is_not_cached(self):
         html = MagicMock()
@@ -337,42 +356,74 @@ class RdapCacheTests(unittest.TestCase):
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
                 jp = rdap.domain_rdap_urls("jprs.jp")
+                nic = rdap.domain_rdap_urls("nic.jp")
                 idn = rdap.domain_rdap_urls("xn--fsq.jp")
                 de = rdap.domain_rdap_urls("xn--bcher-kva.de")
                 com = rdap.domain_rdap_urls("example.com")
-        self.assertEqual(jp, ["https://rdap.jprs.jp/domain/jprs.jp"])
-        self.assertEqual(idn, ["https://rdap.jprs.jp/domain/xn--fsq.jp"])
+                gtld = rdap.domain_rdap_urls("foo.jprs")
+        self.assertEqual(jp, [])
+        self.assertEqual(nic, [])
+        self.assertEqual(idn, [])
         self.assertEqual(de, ["https://rdap.denic.de/domain/xn--bcher-kva.de"])
         self.assertEqual(com, ["https://rdap.verisign.com/com/v1/domain/example.com"])
-        self.assertFalse(any("rdap.org" in url for url in jp + idn + de + com))
+        self.assertEqual(gtld, ["https://rdap.nic.jprs/rdap/domain/foo.jprs"])
+        self.assertFalse(any("rdap.org" in url for url in de + com + gtld))
+        self.assertFalse(any("rdap.jprs.jp" in url for url in de + com + gtld))
 
     def test_bootstrap_reads_disk_cache(self):
         with tempfile.TemporaryDirectory() as tmp:
-            _write_iana(tmp, [[["jp"], ["https://rdap.jprs.jp/"]]])
+            _write_iana(tmp, [[["com"], ["https://rdap.verisign.com/com/v1/"]]])
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
                 with patch("requests.get") as get:
-                    urls = rdap.domain_rdap_urls("jprs.jp")
+                    urls = rdap.domain_rdap_urls("example.com")
+                    jp = rdap.domain_rdap_urls("jprs.jp")
             get.assert_not_called()
-            self.assertEqual(urls, ["https://rdap.jprs.jp/domain/jprs.jp"])
+            self.assertEqual(urls, ["https://rdap.verisign.com/com/v1/domain/example.com"])
+            self.assertEqual(jp, [])
 
-    def test_jprs_and_denic_fetch(self):
-        hit = _json_resp({"handle": "JPRS.JP", "ldhName": "JPRS.JP"})
+    def test_denic_fetch_jp_is_no_service(self):
+        hit = _json_resp({"handle": "BUECHER", "ldhName": "xn--bcher-kva.de"})
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
                 with patch("requests.get", return_value=hit) as get:
-                    data = rdap.fetch_rdap("jprs.jp")
+                    missing = rdap.fetch_rdap("jprs.jp")
                     looked = rdap.lookup_rdap("例.jp")
+                    nic = rdap.lookup_rdap("nic.jp")
                     de = rdap.fetch_rdap("bücher.de")
-        self.assertEqual(data["handle"], "JPRS.JP")
+                    mun = rdap.lookup_rdap("münchen.de")
+        self.assertIsNone(missing)
+        self.assertFalse(looked["ok"])
+        self.assertEqual(looked["status"], 501)
+        self.assertEqual(looked["error"], "no RDAP for this TLD")
+        self.assertNotIn("url", looked)
+        self.assertFalse(nic["ok"])
+        self.assertEqual(nic["status"], 501)
+        self.assertEqual(de["handle"], "BUECHER")
+        self.assertTrue(mun["ok"])
+        self.assertEqual(mun["result"]["query"], "münchen.de")
         urls = [call[0][0] for call in get.call_args_list]
-        self.assertIn("rdap.jprs.jp/domain/jprs.jp", urls[0])
+        self.assertEqual(get.call_count, 2)
+        self.assertTrue(all("rdap.denic.de" in url for url in urls))
+        self.assertTrue(any("xn--bcher-kva.de" in url for url in urls))
+        self.assertTrue(any("xn--mnchen-3ya.de" in url for url in urls))
         self.assertFalse(any("rdap.org" in url for url in urls))
-        self.assertFalse(any("verisign" in url for url in urls if "jprs" in url or "xn--fsq" in url or "bcher" in url))
-        self.assertTrue(looked["ok"])
-        self.assertEqual(looked["result"]["query"], "例.jp")
-        self.assertIn("rdap.jprs.jp/domain/xn--fsq.jp", urls[1])
-        self.assertIn("rdap.denic.de/domain/xn--bcher-kva.de", urls[2])
+        self.assertFalse(any("rdap.jprs.jp" in url for url in urls))
+
+    def test_jprs_gtld_is_not_jp(self):
+        hit = _json_resp({"ldhName": "foo.jprs"})
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("requests.get", return_value=hit) as get:
+                    data = rdap.fetch_rdap("foo.jprs")
+                    jp = rdap.lookup_rdap("jprs.jp")
+        self.assertEqual(data["ldhName"], "foo.jprs")
+        self.assertFalse(jp["ok"])
+        self.assertEqual(jp["status"], 501)
+        self.assertEqual(get.call_count, 1)
+        self.assertIn("rdap.nic.jprs/rdap/domain/foo.jprs", get.call_args[0][0])
+        self.assertNotIn("rdap.jprs.jp", get.call_args[0][0])
 
     def test_registry_404_is_not_found(self):
         miss = _json_resp({"errorCode": 404, "title": "Not Found"}, status=404)
@@ -380,12 +431,13 @@ class RdapCacheTests(unittest.TestCase):
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
                 with patch("requests.get", return_value=miss) as get:
-                    payload = rdap.lookup_rdap("missing.jp")
+                    payload = rdap.lookup_rdap("missing.de")
         self.assertFalse(payload["ok"])
         self.assertEqual(payload["status"], 404)
         self.assertEqual(payload["error"], "not found")
         self.assertNotIn("rdap.org", payload["url"])
-        self.assertIn("jprs.jp", payload["url"])
+        self.assertIn("rdap.denic.de", payload["url"])
+        self.assertIn("missing.de", payload["url"])
         self.assertEqual(payload["http_status"], 404)
         self.assertNotEqual(payload["error"], "rdap lookup failed")
         get.assert_called_once()
@@ -401,22 +453,22 @@ class RdapCacheTests(unittest.TestCase):
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
                 with patch("requests.get", return_value=html):
-                    html_fail = rdap.lookup_rdap("jprs.jp")
+                    html_fail = rdap.lookup_rdap("example.com")
                 with patch("requests.get", side_effect=TimeoutError("timed out")) as get:
-                    timed = rdap.lookup_rdap("nic.jp")
+                    timed = rdap.lookup_rdap("verisign.com")
         self.assertFalse(html_fail["ok"])
         self.assertEqual(html_fail["status"], 502)
-        self.assertIn("rdap.jprs.jp", html_fail["error"])
+        self.assertIn("rdap.verisign.com", html_fail["error"])
         self.assertNotIn("rdap.org", html_fail["url"])
         self.assertNotEqual(html_fail["error"], "rdap lookup failed")
         self.assertFalse(timed["ok"])
         self.assertEqual(timed["status"], 502)
         self.assertNotIn("rdap.org", timed["error"])
-        self.assertIn("nic.jp", get.call_args[0][0])
+        self.assertIn("verisign.com", get.call_args[0][0])
         timeout = get.call_args[1]["timeout"]
         self.assertEqual(timeout, (3, 8))
 
-    def test_iana_fixture_without_jp_de_uses_supplement(self):
+    def test_com_only_uses_denic_override_jp_no_fetch(self):
         hit = _json_resp({"ldhName": "xn--bcher-kva.de"})
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_COM_ONLY)
@@ -426,15 +478,17 @@ class RdapCacheTests(unittest.TestCase):
                     jp = rdap.lookup_rdap("jprs.jp")
         self.assertTrue(de["ok"])
         self.assertEqual(de["result"]["query"], "bücher.de")
-        de_url = get.call_args_list[0][0][0]
-        jp_url = get.call_args_list[1][0][0]
+        self.assertEqual(get.call_count, 1)
+        de_url = get.call_args[0][0]
         self.assertIn("rdap.denic.de/domain/xn--bcher-kva.de", de_url)
         self.assertNotIn("rdap.org", de_url)
-        self.assertNotIn("rdap.org", jp_url)
-        self.assertTrue("jprs.jp" in jp_url or "jpnic" in jp_url)
+        self.assertFalse(jp["ok"])
+        self.assertEqual(jp["status"], 501)
+        self.assertEqual(jp["error"], "no RDAP for this TLD")
+        self.assertNotIn("url", jp)
         self.assertIn("denic", de.get("url") or de_url)
 
-    def test_missing_bootstrap_is_502_not_rdap_org(self):
+    def test_missing_bootstrap_is_501_not_rdap_org(self):
         with tempfile.TemporaryDirectory() as tmp:
             _reset_bootstrap()
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
@@ -442,10 +496,12 @@ class RdapCacheTests(unittest.TestCase):
                     payload = rdap.lookup_rdap("example.com")
         get.assert_not_called()
         self.assertFalse(payload["ok"])
-        self.assertEqual(payload["status"], 502)
-        self.assertIn("dns.json", (payload.get("error") or "") + (payload.get("url") or ""))
+        self.assertEqual(payload["status"], 501)
+        self.assertEqual(payload["error"], "no RDAP for this TLD")
+        self.assertNotIn("url", payload)
         self.assertNotIn("rdap.org/domain", payload.get("url") or "")
         self.assertNotIn("rdap.org/domain", payload.get("error") or "")
+        self.assertNotIn("rdap.jprs.jp", payload.get("error") or "")
 
     def test_redirect_uses_final_registry_url(self):
         hit = _json_resp(
@@ -520,36 +576,64 @@ class RdapCacheTests(unittest.TestCase):
         failed = {
             "ok": False,
             "result": None,
-            "error": "rdap lookup failed https://rdap.jprs.jp/domain/nic.jp timeout",
-            "url": "https://rdap.jprs.jp/domain/nic.jp",
+            "error": "rdap lookup failed https://rdap.verisign.com/com/v1/domain/example.com timeout",
+            "url": "https://rdap.verisign.com/com/v1/domain/example.com",
             "http_status": None,
             "status": 502,
             "total_ms": 1,
         }
         with patch("looking_glass.http.site.lookup_rdap", return_value=failed):
             status, _, body, *_ = respond(
-                "wsgi", "127.0.0.1", "/rdap/nic.jp", {}, accept="application/json"
+                "wsgi", "127.0.0.1", "/rdap/example.com", {}, accept="application/json"
             )
         self.assertEqual(status, 502)
         payload = json.loads(body)
         self.assertFalse(payload["ok"])
-        self.assertEqual(payload["query"], "nic.jp")
-        self.assertIn("rdap.jprs.jp", payload["error"])
-        self.assertEqual(payload["url"], "https://rdap.jprs.jp/domain/nic.jp")
+        self.assertEqual(payload["query"], "example.com")
+        self.assertIn("rdap.verisign.com", payload["error"])
+        self.assertEqual(payload["url"], "https://rdap.verisign.com/com/v1/domain/example.com")
+        self.assertNotIn("rdap.jprs.jp", payload["error"])
+
+    def test_json_http_no_rdap_tld_is_501(self):
+        failed = {
+            "ok": False,
+            "result": None,
+            "error": "no RDAP for this TLD",
+            "status": 501,
+            "total_ms": 1,
+        }
+        with patch("looking_glass.http.site.lookup_rdap", return_value=failed) as lookup:
+            for path, query in (
+                ("/rdap/jprs.jp", "jprs.jp"),
+                ("/rdap/nic.jp", "nic.jp"),
+                ("/rdap/xn--fsq.jp", "xn--fsq.jp"),
+                ("/rdap/例.jp", "例.jp"),
+            ):
+                status, _, body, *_ = respond(
+                    "wsgi", "127.0.0.1", path, {}, accept="application/json"
+                )
+                self.assertEqual(status, 501)
+                payload = json.loads(body)
+                self.assertFalse(payload["ok"])
+                self.assertEqual(payload["query"], query)
+                self.assertEqual(payload["error"], "no RDAP for this TLD")
+                self.assertNotIn("url", payload)
+                self.assertNotIn("rdap.jprs.jp", json.dumps(payload))
+        self.assertEqual(lookup.call_count, 4)
 
     def test_json_http_registry_404(self):
         failed = {
             "ok": False,
             "result": None,
             "error": "not found",
-            "url": "https://rdap.jprs.jp/domain/missing.jp",
+            "url": "https://rdap.denic.de/domain/missing.de",
             "http_status": 404,
             "status": 404,
             "total_ms": 1,
         }
         with patch("looking_glass.http.site.lookup_rdap", return_value=failed):
             status, _, body, *_ = respond(
-                "wsgi", "127.0.0.1", "/rdap/missing.jp", {}, accept="application/json"
+                "wsgi", "127.0.0.1", "/rdap/missing.de", {}, accept="application/json"
             )
         self.assertEqual(status, 404)
         payload = json.loads(body)
@@ -557,3 +641,4 @@ class RdapCacheTests(unittest.TestCase):
         self.assertEqual(payload["error"], "not found")
         self.assertNotEqual(payload["error"], "rdap lookup failed")
         self.assertEqual(payload["http_status"], 404)
+        self.assertEqual(payload["url"], "https://rdap.denic.de/domain/missing.de")

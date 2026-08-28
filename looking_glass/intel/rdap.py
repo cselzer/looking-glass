@@ -1,9 +1,10 @@
 """RDAP client for IP, domain, and autnum.
 
-Domain lookups follow IANA dns.json (jp → JPRS, de → DENIC, com → Verisign).
-IP and autnum still try https://rdap.org then the RIRs. Responses are cached
-under ~/.looking-glass/data/cache/rdap. The GUI uses the summarized fields;
-JSON includes the raw object as well.
+Domain lookups use IANA dns.json only (e.g. com → Verisign). If IANA has no
+de row, DENIC is a checked override. A TLD with no bootstrap service is not
+fetched. IP and autnum still try https://rdap.org then the RIRs. Responses
+are cached under ~/.looking-glass/data/cache/rdap. The GUI uses the
+summarized fields; JSON includes the raw object as well.
 """
 
 from __future__ import annotations
@@ -655,8 +656,9 @@ _DNS_BOOTSTRAP_URL = "https://data.iana.org/rdap/dns.json"
 _FETCH_TIMEOUT = (3, 8)
 _DNS_BOOTSTRAP: Optional[List[Tuple[Tuple[str, ...], Tuple[str, ...]]]] = None
 _DNS_BOOTSTRAP_LOADED = 0.0
-_DNS_SUPPLEMENT: Tuple[Tuple[Tuple[str, ...], Tuple[str, ...]], ...] = (
-    (("jp",), ("https://jpnic.rdap.nic.ad.jp/", "https://rdap.jprs.jp/")),
+_NO_RDAP_TLD = "no RDAP for this TLD"
+# IANA dns.json (2026-07-23) has no "de" service. Live DENIC RDAP was verified.
+_DENIC_OVERRIDE: Tuple[Tuple[Tuple[str, ...], Tuple[str, ...]], ...] = (
     (("de",), ("https://rdap.denic.de/",)),
 )
 
@@ -831,12 +833,12 @@ def _longest_bases(
 
 
 def domain_rdap_urls(alabel: str) -> List[str]:
-    """Registry URLs for an A-label domain. Never rdap.org."""
+    """Registry URLs for an A-label domain. Never rdap.org; never invent hosts."""
     ascii_name = str(alabel or "").strip().rstrip(".").lower()
     quoted = urllib.parse.quote(ascii_name, safe="")
     best = _longest_bases(ascii_name, dns_bootstrap_services())
     if not best:
-        best = _longest_bases(ascii_name, _DNS_SUPPLEMENT)
+        best = _longest_bases(ascii_name, _DENIC_OVERRIDE)
     if not best:
         return []
     return [_join_rdap(base, "domain", quoted) for base in best]
@@ -862,6 +864,7 @@ def _fetch_rdap_result(
     empty = {
         "data": None,
         "not_found": False,
+        "no_service": False,
         "url": None,
         "http_status": None,
         "error": None,
@@ -909,11 +912,10 @@ def _fetch_rdap_result(
         return {
             "data": None,
             "not_found": False,
-            "url": _DNS_BOOTSTRAP_URL,
+            "no_service": True,
+            "url": None,
             "http_status": None,
-            "error": _fail_message(
-                _DNS_BOOTSTRAP_URL, None, "no RDAP service for this TLD"
-            ),
+            "error": _NO_RDAP_TLD,
             "kind": kind,
             "lookup": lookup,
         }
@@ -1053,6 +1055,10 @@ def lookup_rdap(target: str, *, force: bool = False) -> Dict[str, Any]:
     if fetched.get("not_found"):
         out["error"] = "not found"
         out["status"] = 404
+    elif fetched.get("no_service"):
+        out["error"] = _NO_RDAP_TLD
+        out["status"] = 501
+        out.pop("url", None)
     elif out["error"] == "rdap lookup failed":
         out["error"] = _fail_message(fetched.get("url"), fetched.get("http_status"))
     return out
