@@ -16,11 +16,12 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import ExtensionOID, NameOID
 
-from ..utility import get_certs_dir
+from ..utility import get_certs_dir, get_data_dir
 
 DIRECTORY_PROD = "https://acme-v02.api.letsencrypt.org/directory"
 DIRECTORY_STAGING = "https://acme-staging-v02.api.letsencrypt.org/directory"
 RENEW_DAYS = 30
+ACME_LOG_NAME = "acme.log"
 BIND_HINT = (
     "Cannot bind port {port} for Let's Encrypt HTTP-01 ({err}). "
     "Set net.ipv4.ip_unprivileged_port_start=0 (or 80) once on the host; "
@@ -64,6 +65,75 @@ def bind_error_message(exc: BaseException, port: int) -> str:
     name = errno.errorcode.get(err, "") if isinstance(err, int) else ""
     label = name or type(exc).__name__
     return BIND_HINT.format(port=int(port), err=label or str(exc) or "error")
+
+
+def acme_log_path() -> Path:
+    return Path(get_data_dir()) / ACME_LOG_NAME
+
+
+def append_acme_log(line: str) -> None:
+    text = str(line or "").strip()
+    if not text:
+        return
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        with acme_log_path().open("a", encoding="utf-8") as fh:
+            fh.write(f"{stamp} {text}\n")
+    except OSError:
+        pass
+
+
+def _challenge_error_text(error: Any) -> str:
+    if error is None:
+        return ""
+    detail = getattr(error, "detail", None)
+    if detail:
+        return str(detail).strip()
+    return str(error).strip()
+
+
+def _authz_identifier(authzr: Any) -> str:
+    body = getattr(authzr, "body", None)
+    ident = getattr(body, "identifier", None) if body is not None else None
+    value = getattr(ident, "value", None)
+    return str(value).strip() if value else ""
+
+
+def _failed_authz_details(exc: BaseException) -> str:
+    authzrs = getattr(exc, "failed_authzrs", None)
+    if not authzrs:
+        return ""
+    parts: List[str] = []
+    for authzr in authzrs:
+        host = _authz_identifier(authzr)
+        body = getattr(authzr, "body", None)
+        challenges = getattr(body, "challenges", None) if body is not None else None
+        found = False
+        for chall in challenges or ():
+            text = _challenge_error_text(getattr(chall, "error", None))
+            if not text:
+                continue
+            found = True
+            parts.append(f"{host}: {text}" if host else text)
+        if not found and host:
+            parts.append(f"{host}: authorization failed")
+    return "; ".join(parts)
+
+
+def format_acme_error(exc: BaseException, *, _depth: int = 0) -> str:
+    """Human error for ACME failures. Never empty; ValidationError has no str()."""
+    name = type(exc).__name__ or "Error"
+    msg = str(exc).strip()
+    details = _failed_authz_details(exc)
+    body = details or msg or name
+    if name not in body:
+        body = f"{name}: {body}"
+    cause = exc.__cause__
+    if _depth < 3 and cause is not None and cause is not exc:
+        caused = format_acme_error(cause, _depth=_depth + 1)
+        if caused and caused not in body:
+            body = f"{body}; caused by {caused}"
+    return body.strip() or name
 
 
 def _load_cert(fullchain: Path) -> Optional[x509.Certificate]:
@@ -292,9 +362,15 @@ def ensure_certificate(
     if not force and not needs_issue(host, days=days):
         return {"fullchain": str(fullchain), "privkey": str(privkey), "issued": False}
     fn = issuer or run_http01_order
-    chain_pem, key_pem = fn(host, mail, staging=staging, acme_port=int(acme_port))
+    append_acme_log(f"issue {host} staging={bool(staging)} acme_port={int(acme_port)}")
+    try:
+        chain_pem, key_pem = fn(host, mail, staging=staging, acme_port=int(acme_port))
+    except Exception as exc:
+        append_acme_log(f"fail {format_acme_error(exc)}")
+        raise
     _write_secret(fullchain, chain_pem)
     _write_secret(privkey, key_pem)
+    append_acme_log(f"ok {host}")
     return {"fullchain": str(fullchain), "privkey": str(privkey), "issued": True}
 
 

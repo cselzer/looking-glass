@@ -20,6 +20,7 @@ PID_NAME = "https.pid"
 STARTED_NAME = "https.started"
 OUT_LOG = "https.out.log"
 ERR_LOG = "https.err.log"
+ACME_LOG = acme_issue.ACME_LOG_NAME
 POLL_SECONDS = 2.0
 RENEW_SECONDS = 24 * 60 * 60
 UVICORN_APP = "looking_glass.http.asgi:app"
@@ -103,6 +104,7 @@ def _base_info() -> Dict[str, Any]:
         "pidfile": str(pidfile),
         "out_log": str(outlog),
         "err_log": str(errlog),
+        "acme_log": str(_data_dir() / ACME_LOG),
         "started_file": str(started),
     }
 
@@ -419,7 +421,9 @@ def supervisor_loop(
                     fullchain, privkey = acme_issue.cert_files(host)
                     paths = {"fullchain": str(fullchain), "privkey": str(privkey)}
             except Exception as exc:
-                print(f"HTTPS ACME: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
+                err = acme_issue.format_acme_error(exc)
+                acme_issue.append_acme_log(f"fail {err}")
+                print(f"HTTPS ACME: {err}", file=sys.stderr, flush=True)
                 sleep(poll)
                 continue
             fullchain = Path(paths["fullchain"])
@@ -507,14 +511,10 @@ def start(timeout: int = 8, foreground: bool = False) -> Dict[str, Any]:
         return info
     try:
         ensure_ready(http)
-    except OSError as exc:
-        info.update({"ok": False, "state": "error", "error": str(exc)})
-        return info
-    except ValueError as exc:
-        info.update({"ok": False, "state": "error", "error": str(exc)})
-        return info
     except Exception as exc:
-        info.update({"ok": False, "state": "error", "error": str(exc)})
+        err = acme_issue.format_acme_error(exc)
+        acme_issue.append_acme_log(f"fail {err}")
+        info.update({"ok": False, "state": "error", "error": err})
         return info
     if foreground:
         _write_pid(pidfile, os.getpid())
@@ -624,14 +624,10 @@ def renew(*, force: bool = False) -> Dict[str, Any]:
         return info
     try:
         result = ensure_ready(http, force=force)
-    except OSError as exc:
-        info.update({"ok": False, "state": "error", "error": str(exc)})
-        return info
-    except ValueError as exc:
-        info.update({"ok": False, "state": "error", "error": str(exc)})
-        return info
     except Exception as exc:
-        info.update({"ok": False, "state": "error", "error": str(exc)})
+        err = acme_issue.format_acme_error(exc)
+        acme_issue.append_acme_log(f"fail {err}")
+        info.update({"ok": False, "state": "error", "error": err})
         return info
     info = status()
     issued = bool(result.get("issued"))

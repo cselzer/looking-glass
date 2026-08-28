@@ -89,6 +89,54 @@ class AcmeIssueTests(unittest.TestCase):
         self.assertIn("80", text)
         self.assertIn("EACCES", text)
 
+    def test_format_empty_str_is_type_name(self):
+        class Silent(Exception):
+            def __str__(self) -> str:
+                return ""
+
+        text = acme_issue.format_acme_error(Silent())
+        self.assertTrue(text)
+        self.assertIn("Silent", text)
+
+    def test_format_failed_authzrs_detail(self):
+        class Silent(Exception):
+            def __str__(self) -> str:
+                return ""
+
+        err = Silent()
+        err.failed_authzrs = [
+            type(
+                "Authzr",
+                (),
+                {
+                    "body": type(
+                        "Body",
+                        (),
+                        {
+                            "identifier": type("Ident", (), {"value": "s1.example.com"})(),
+                            "challenges": [
+                                type(
+                                    "Chall",
+                                    (),
+                                    {
+                                        "error": type(
+                                            "Err",
+                                            (),
+                                            {"detail": "Timeout during connect (likely firewall)"},
+                                        )()
+                                    },
+                                )()
+                            ],
+                        },
+                    )()
+                },
+            )()
+        ]
+        text = acme_issue.format_acme_error(err)
+        self.assertIn("Silent", text)
+        self.assertIn("s1.example.com", text)
+        self.assertIn("Timeout during connect", text)
+
 
 class HttpsSupervisorTests(unittest.TestCase):
     def test_start_requires_hostname(self):
@@ -342,6 +390,57 @@ class HttpsSupervisorTests(unittest.TestCase):
         self.assertEqual(report["state"], "issued")
         issue.assert_called_once()
         self.assertTrue(issue.call_args.kwargs.get("force"))
+
+    def test_renew_empty_exc_writes_acme_log(self):
+        class Silent(Exception):
+            def __str__(self) -> str:
+                return ""
+
+        err = Silent()
+        err.failed_authzrs = [
+            type(
+                "Authzr",
+                (),
+                {
+                    "body": type(
+                        "Body",
+                        (),
+                        {
+                            "identifier": type("Ident", (), {"value": "s1.example.com"})(),
+                            "challenges": [
+                                type(
+                                    "Chall",
+                                    (),
+                                    {
+                                        "error": type(
+                                            "Err",
+                                            (),
+                                            {"detail": "Timeout during connect (likely firewall)"},
+                                        )()
+                                    },
+                                )()
+                            ],
+                        },
+                    )()
+                },
+            )()
+        ]
+        with tempfile.TemporaryDirectory() as tmp, _roots(tmp)[0], _roots(tmp)[1]:
+            load()
+            set_value("http.hostname", "s1.example.com")
+            with patch(
+                "looking_glass.http.https_serve.ensure_ready",
+                side_effect=err,
+            ):
+                report = https_serve.renew()
+            self.assertFalse(report["ok"])
+            self.assertEqual(report["state"], "error")
+            self.assertTrue(report["error"])
+            self.assertIn("Timeout during connect", report["error"])
+            self.assertIn("acme.log", report["acme_log"])
+            log = Path(tmp) / "data" / "acme.log"
+            self.assertTrue(log.is_file())
+            self.assertIn("Timeout during connect", log.read_text(encoding="utf-8"))
 
     def test_supervisor_logs_acme_errors(self):
         import io
