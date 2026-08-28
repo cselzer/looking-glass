@@ -67,6 +67,7 @@ def http_envelope_query(parsed: str, query_string: str = "") -> str:
     text = restore_collapsed_slashes(str(parsed or "")).strip()
     if not text:
         raise ValueError("http path needs a host or URL, e.g. /http/example.com")
+    _reject_non_http_scheme(text)
     if _SCHEME_URL.match(text) or "://" in text:
         value = _normalize_http_target(text)
         scheme = urllib.parse.urlsplit(value).scheme.lower()
@@ -139,6 +140,25 @@ def _split_schemeless(raw: str) -> Tuple[str, Optional[int], str]:
     return auth, None, path
 
 
+def _reject_non_http_scheme(raw: str) -> None:
+    text = str(raw or "").strip()
+    host = unbracket_host(text)
+    try:
+        ipaddress.ip_address(host.split("%", 1)[0] if "%" in host else host)
+        return
+    except ValueError:
+        pass
+    match = re.match(r"^([a-z][a-z0-9+.-]*):(.*)$", text, re.I)
+    if not match:
+        return
+    scheme = match.group(1).lower()
+    rest = match.group(2)
+    if rest.isdigit():
+        return
+    if scheme not in {"http", "https"}:
+        raise ValueError("scheme must be http or https")
+
+
 def _normalize_http_target(target: str) -> str:
     """Turn a host, URL, or path leftover (`https:/host`) into a real URL.
 
@@ -148,6 +168,7 @@ def _normalize_http_target(target: str) -> str:
     raw = restore_collapsed_slashes(str(target or "")).strip()
     if not raw:
         raise ValueError("http path needs a host")
+    _reject_non_http_scheme(raw)
     peeled = _SCHEME_URL.match(raw)
     if peeled:
         scheme = peeled.group(1).lower()

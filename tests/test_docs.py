@@ -215,7 +215,7 @@ class DocsHttpTests(unittest.TestCase):
             with _roots(tmp)[0], _roots(tmp)[1]:
                 set_value("docs.enabled", True)
                 write_docs()
-                token = session.create("alice")
+                token = session.create()
                 cookie = f"looking_glass_session={token}"
                 status, _, body, *_ = respond("wsgi", "127.0.0.1", "/docs", {}, cookie=cookie)
                 self.assertEqual(status, 200)
@@ -223,7 +223,7 @@ class DocsHttpTests(unittest.TestCase):
                 self.assertIn("/static/admin.js", raw)
                 text = _with_static(raw)
                 self.assertNotIn('id="status-login"', text)
-                self.assertIn('id="status-user">alice</span>', text)
+                self.assertIn('id="status-auth-user"', text)
                 self.assertIn('id="status-logout"', text)
                 self.assertIn('id="status-logs"', text)
                 self.assertIn('id="status-history"', text)
@@ -266,7 +266,7 @@ class DocsHttpTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:
                 set_value("docs.enabled", True)
-                token = session.create("alice")
+                token = session.create()
                 status, _, body, *_ = respond(
                     "wsgi",
                     "127.0.0.1",
@@ -276,7 +276,7 @@ class DocsHttpTests(unittest.TestCase):
                 )
         self.assertEqual(status, 404)
         text = body.decode("utf-8")
-        self.assertIn('id="status-user">alice</span>', text)
+        self.assertIn('id="status-auth-user"', text)
         self.assertIn('id="status-logout"', text)
         self.assertIn('id="status-docs-regen"', text)
         self.assertNotIn(" hidden>", text.split('id="status-docs-regen"', 1)[1][:20])
@@ -285,7 +285,7 @@ class DocsHttpTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:
                 set_value("docs.enabled", True)
-                token = session.create("alice")
+                token = session.create()
                 cookie = f"looking_glass_session={token}"
                 status, _, body, *_ = respond("wsgi", "127.0.0.1", "/status", {}, cookie=cookie)
                 self.assertEqual(status, 200)

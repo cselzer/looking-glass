@@ -131,11 +131,11 @@ looking-glass wall log
 
 ## Auth
 
-GUI admin is PAM. Root is never allowed. The first successful non-root login is appended to `auth.users`; later logins must be on that allowlist.
+GUI admin is a password (no username) plus API keys. An unset password disables login; it does not open admin. Keys work independently (`Authorization: Bearer`).
 
 ```
-looking-glass auth users
-looking-glass auth users add alice
+looking-glass auth password set
+looking-glass auth keys create tokyo
 looking-glass auth sessions clear
 ```
 

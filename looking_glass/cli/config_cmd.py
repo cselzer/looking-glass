@@ -17,7 +17,7 @@ def config_group(ctx: click.Context) -> None:
     """Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).
 
     Locale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.
-    Lookup caches stay in ~/.looking-glass/data/cache. Admin users: `looking-glass auth users`.
+    Lookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.
 
     \b
     looking-glass config

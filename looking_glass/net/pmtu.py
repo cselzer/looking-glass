@@ -22,9 +22,11 @@ def parse_pmtu_path(path: str) -> str:
     rest = "" if text == "pmtu" else text[len("pmtu/") :]
     if not rest:
         raise ValueError("pmtu path needs a host, e.g. /pmtu/1.1.1.1")
-    from .host import unbracket_host
+    from .host import reject_probe_target, unbracket_host
 
-    return unbracket_host(rest)
+    host = unbracket_host(rest)
+    reject_probe_target(host)
+    return host
 
 
 def _is_ipv6_host(host: str) -> bool:

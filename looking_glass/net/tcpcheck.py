@@ -9,7 +9,7 @@ import time
 import urllib.parse
 from typing import Any, Dict, Tuple
 
-from .host import format_hostport, resolve_probe_host, restore_collapsed_slashes, unbracket_host
+from .host import format_hostport, resolve_probe_host, restore_collapsed_slashes, unbracket_host, reject_probe_target, reject_url_as_host
 
 _REFUSED = {errno.ECONNREFUSED, 10061}
 _TIMEOUT = {errno.ETIMEDOUT, 10060}
@@ -37,21 +37,13 @@ def parse_tcp_path(path: str) -> Tuple[str, int]:
     rest = "" if text == "tcp" else text[len("tcp/") :]
     if not rest:
         raise ValueError("tcp path needs host/port, e.g. /tcp/example.com/443")
-    if "://" in rest:
-        parsed = urllib.parse.urlsplit(rest)
-        host = unbracket_host(parsed.hostname or "")
-        if not host:
-            raise ValueError("tcp path needs a host")
-        path_part = (parsed.path or "").strip("/")
-        if path_part.isdigit():
-            port = int(path_part)
-        else:
-            port = parsed.port or 443
-        if not 1 <= int(port) <= 65535:
-            raise ValueError("tcp port must be 1–65535")
-        return host, int(port)
+    if "://" in rest or rest.lower().startswith("//"):
+        raise ValueError("host is not a URL")
+    reject_url_as_host(rest.split("/")[0])
     if "/" not in rest:
-        return unbracket_host(rest), 443
+        host = unbracket_host(rest)
+        reject_probe_target(host)
+        return host, 443
     host, port_s = rest.rsplit("/", 1)
     try:
         port = int(port_s)
@@ -61,7 +53,9 @@ def parse_tcp_path(path: str) -> Tuple[str, int]:
         raise ValueError("tcp port must be 1–65535")
     if not host:
         raise ValueError("tcp path needs a host")
-    return unbracket_host(host), port
+    host = unbracket_host(host)
+    reject_probe_target(host)
+    return host, port
 
 
 def fail_status(exc: BaseException) -> str:

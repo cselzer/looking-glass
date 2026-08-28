@@ -15,10 +15,10 @@ import ssl
 import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import unquote, urlsplit
+from urllib.parse import unquote
 
 from ..dns.resolve import normalize_qname
-from .host import format_hostport, restore_collapsed_slashes, resolve_probe_host, split_host_port, unbracket_host
+from .host import format_hostport, restore_collapsed_slashes, resolve_probe_host, split_host_port, unbracket_host, reject_probe_target, reject_url_as_host
 
 
 def _tls_port(raw: Any) -> int:
@@ -42,12 +42,9 @@ def parse_tls_path(path: str) -> Tuple[str, int]:
     rest = "" if text == "tls" else text[len("tls/") :]
     if not rest:
         raise ValueError("tls path needs a host, e.g. /tls/example.com")
-    if "://" in rest:
-        parsed = urlsplit(rest)
-        host = unbracket_host(parsed.hostname or "")
-        if not host:
-            raise ValueError("tls path needs a host, e.g. /tls/example.com")
-        return host, _tls_port(parsed.port or 443)
+    if "://" in rest or rest.lower().startswith("//"):
+        raise ValueError("host is not a URL")
+    reject_url_as_host(rest.split("/")[0])
     parts = rest.split("/")
     try:
         host, colon_port = split_host_port(parts[0], 443)
@@ -58,6 +55,7 @@ def parse_tls_path(path: str) -> Tuple[str, int]:
         raise
     if not host:
         raise ValueError("tls path needs a host, e.g. /tls/example.com")
+    reject_probe_target(host)
     if len(parts) == 1:
         return host, colon_port
     if len(parts) == 2:

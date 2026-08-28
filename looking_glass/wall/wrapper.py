@@ -181,13 +181,11 @@ def _header_value(headers: Any, name: str) -> Optional[str]:
     return None
 
 
-def _admin_user(cookie: Optional[str]) -> Optional[str]:
-    if not cookie:
-        return None
+def _admin_user(cookie: Optional[str], authorization: Optional[str] = None) -> Optional[str]:
     try:
-        from ..auth.session import user_from_cookie
+        from ..http.admin import current_user
 
-        return user_from_cookie(cookie)
+        return current_user(cookie, authorization)
     except Exception:
         return None
 
@@ -484,12 +482,13 @@ class Wall:
         meta: Dict[str, Any],
         path: str,
         cookie: Optional[str],
+        authorization: Optional[str] = None,
     ) -> Tuple[Decision, Dict[str, Any]]:
         if decision != Decision.CHALLENGE:
             return decision, meta
         if not _is_wall_admin_path(path):
             return decision, meta
-        if not _admin_user(cookie):
+        if not _admin_user(cookie, authorization):
             return decision, meta
         out = dict(meta)
         out["reason"] = "session"
@@ -670,6 +669,7 @@ class Wall:
         query = str(environ.get("QUERY_STRING") or "")
         accept = environ.get("HTTP_ACCEPT")
         cookie = environ.get("HTTP_COOKIE")
+        authorization = environ.get("HTTP_AUTHORIZATION")
         scheme = _request_scheme(
             environ.get("wsgi.url_scheme"),
             environ.get("HTTP_X_FORWARDED_PROTO"),
@@ -677,7 +677,7 @@ class Wall:
         corr = _correlation_id()
         decision, meta, ctx = self._finish_sync(ip)
         decision, meta = self._soften_challenge(decision, meta, ip, cookie)
-        decision, meta = self._admin_wall_allow(decision, meta, path, cookie)
+        decision, meta = self._admin_wall_allow(decision, meta, path, cookie, authorization)
         items = self._header_items(ctx, decision, meta, corr)
         if wall_challenge.is_challenge_path(path) and decision != Decision.BLOCK:
             try:
@@ -794,6 +794,7 @@ class Wall:
         query = raw_qs.decode("latin-1") if isinstance(raw_qs, (bytes, bytearray)) else str(raw_qs)
         accept = _header_value(scope.get("headers"), "accept")
         cookie = _header_value(scope.get("headers"), "cookie")
+        authorization = _header_value(scope.get("headers"), "authorization")
         scheme = _request_scheme(
             scope.get("scheme"),
             _header_value(scope.get("headers"), "x-forwarded-proto"),
@@ -801,7 +802,7 @@ class Wall:
         corr = _correlation_id()
         decision, meta, ctx = await self._finish_async(ip)
         decision, meta = self._soften_challenge(decision, meta, ip, cookie)
-        decision, meta = self._admin_wall_allow(decision, meta, path, cookie)
+        decision, meta = self._admin_wall_allow(decision, meta, path, cookie, authorization)
         items = self._header_items(ctx, decision, meta, corr)
         extra = [
             (k.lower().encode("latin-1"), v.encode("latin-1")) for k, v in items

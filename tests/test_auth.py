@@ -6,11 +6,12 @@ from unittest.mock import patch
 
 from click.testing import CliRunner
 
-from looking_glass.auth import session, users
+from looking_glass.auth import history as action_history
+from looking_glass.auth import keys, password, session
 from looking_glass.cli.entry import cli
 from looking_glass.http.site import respond
-from tests.test_wall import _wsgi_get, _with_static
 from looking_glass.http.wsgi import app as wsgi_app
+from tests.test_wall import _wsgi_get, _with_static
 
 
 def _roots(tmp: str):
@@ -20,108 +21,61 @@ def _roots(tmp: str):
     )
 
 
-class AuthUsersTests(unittest.TestCase):
-    def test_rejects_root(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            with _roots(tmp)[0], _roots(tmp)[1]:
-                with self.assertRaises(ValueError):
-                    users.add_user("root")
-                with self.assertRaises(ValueError):
-                    users.add_user("Root")
-
-    def test_cli_add_remove(self):
-        runner = CliRunner()
-        with tempfile.TemporaryDirectory() as tmp:
-            with _roots(tmp)[0], _roots(tmp)[1]:
-                added = runner.invoke(cli, ["--json", "auth", "users", "add", "alice"])
-                self.assertEqual(added.exit_code, 0, added.output)
-                payload = json.loads(added.output)
-                self.assertEqual(payload["users"], ["alice"])
-                listed = runner.invoke(cli, ["--json", "auth", "users"])
-                self.assertEqual(json.loads(listed.output)["users"], ["alice"])
-                removed = runner.invoke(cli, ["--json", "auth", "users", "remove", "alice"])
-                self.assertEqual(json.loads(removed.output)["users"], [])
-                bad = runner.invoke(cli, ["--json", "auth", "users", "add", "root"])
-                self.assertNotEqual(bad.exit_code, 0)
-
-    def test_sessions_clear(self):
-        runner = CliRunner()
-        with tempfile.TemporaryDirectory() as tmp:
-            with _roots(tmp)[0], _roots(tmp)[1]:
-                session.create("alice")
-                out = runner.invoke(cli, ["--json", "auth", "sessions", "clear"])
-                self.assertEqual(out.exit_code, 0, out.output)
-                self.assertEqual(json.loads(out.output)["removed"], 1)
-
-    def test_session_token_is_hex(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            with _roots(tmp)[0], _roots(tmp)[1]:
-                token = session.create("alice")
-                self.assertRegex(token, r"^[0-9a-f]{64}$")
-                self.assertEqual(session.user_from_cookie(f"looking_glass_session={token}"), "alice")
-                self.assertEqual(len(token), 64)
-                self.assertNotIn(".", token)
-                self.assertIsNone(session.user_from_cookie("looking_glass_session=aaa.bbb.ccc"))
+def _cookie(token: str) -> str:
+    return f"looking_glass_session={token}"
 
 
-class AuthHttpTests(unittest.TestCase):
-    def test_root_forbidden_even_if_pam_ok(self):
+class AuthCoreTests(unittest.TestCase):
+    def test_unset_password_is_not_open(self):
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:
-                with patch("looking_glass.auth.pam.authenticate", return_value=True):
-                    status, _, body, extra = respond(
-                        "wsgi",
-                        "127.0.0.1",
-                        "/login",
-                        {},
-                        method="POST",
-                        body=b'{"username":"root","password":"x"}',
-                    )
-        self.assertEqual(status, 403)
-        self.assertFalse(json.loads(body)["ok"])
-        self.assertFalse(any(name.lower() == "set-cookie" for name, _ in extra))
-
-    def test_first_user_bootstraps(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            with _roots(tmp)[0], _roots(tmp)[1]:
-                with patch("looking_glass.auth.pam.authenticate", return_value=True):
-                    status, _, body, extra = respond(
-                        "wsgi",
-                        "127.0.0.1",
-                        "/login",
-                        {},
-                        method="POST",
-                        body=b'{"username":"alice","password":"secret"}',
-                    )
-                self.assertEqual(status, 200)
-                payload = json.loads(body)
-                self.assertTrue(payload["ok"])
-                self.assertEqual(payload["user"], "alice")
-                self.assertEqual(users.list_users(), ["alice"])
-                cookie = dict(extra).get("Set-Cookie", "")
-                self.assertIn("looking_glass_session=", cookie)
-                with patch("looking_glass.auth.pam.authenticate", return_value=True):
-                    denied, _, raw, _ = respond(
-                        "wsgi",
-                        "127.0.0.1",
-                        "/login",
-                        {},
-                        method="POST",
-                        body=b'{"username":"bob","password":"secret"}',
-                    )
-                self.assertEqual(denied, 403)
+                status, _, body, extra = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/login",
+                    {},
+                    method="POST",
+                    body=b'{"password":"secret"}',
+                )
+                self.assertEqual(status, 401)
+                self.assertFalse(json.loads(body)["ok"])
+                self.assertFalse(any(name.lower() == "set-cookie" for name, _ in extra))
+                denied, _, raw, _ = respond(
+                    "wsgi", "127.0.0.1", "/config", {}, accept="application/json"
+                )
+                self.assertEqual(denied, 401)
                 self.assertFalse(json.loads(raw)["ok"])
-                with patch("looking_glass.auth.pam.authenticate", return_value=True):
-                    listed, _, listed_body, extra2 = respond(
-                        "wsgi",
-                        "127.0.0.1",
-                        "/login",
-                        {},
-                        method="POST",
-                        body=b'{"username":"alice","password":"secret"}',
-                    )
-                self.assertEqual(listed, 200)
-                token = extra2[0][1].split(";", 1)[0]
+
+    def test_password_login_and_wrong_password(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with _roots(tmp)[0], _roots(tmp)[1]:
+                password.set_password("secret")
+                bad, _, body, extra = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/login",
+                    {},
+                    method="POST",
+                    body=b'{"password":"nope"}',
+                )
+                self.assertEqual(bad, 401)
+                self.assertFalse(any(name.lower() == "set-cookie" for name, _ in extra))
+                ok, _, raw, headers = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/login",
+                    {},
+                    method="POST",
+                    body=b'{"password":"secret"}',
+                )
+                self.assertEqual(ok, 200)
+                payload = json.loads(raw)
+                self.assertTrue(payload["ok"])
+                self.assertTrue(payload["admin"])
+                self.assertEqual(payload["user"], "admin")
+                cookie = dict(headers).get("Set-Cookie", "")
+                self.assertIn("looking_glass_session=", cookie)
+                token = cookie.split(";", 1)[0]
                 stats, _, cache_body, _ = respond(
                     "wsgi",
                     "127.0.0.1",
@@ -133,31 +87,178 @@ class AuthHttpTests(unittest.TestCase):
                 self.assertEqual(stats, 200)
                 self.assertTrue(json.loads(cache_body)["ok"])
 
-    def test_bad_password(self):
+    def test_bearer_key_and_revoke(self):
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:
-                with patch("looking_glass.auth.pam.authenticate", return_value=False):
-                    status, _, body, extra = respond(
-                        "wsgi",
-                        "127.0.0.1",
-                        "/login",
-                        {},
-                        method="POST",
-                        body=b'{"username":"alice","password":"nope"}',
-                    )
-        self.assertEqual(status, 401)
-        self.assertFalse(any(name.lower() == "set-cookie" for name, _ in extra))
+                created = keys.create("tokyo")
+                secret = created["secret"]
+                self.assertTrue(secret.startswith("lg_"))
+                listed = keys.list_keys()
+                self.assertEqual(len(listed), 1)
+                self.assertNotIn("secret", listed[0])
+                self.assertNotIn("hash", listed[0])
+                ok, _, body, _ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/config",
+                    {},
+                    accept="application/json",
+                    authorization=f"Bearer {secret}",
+                )
+                self.assertEqual(ok, 200)
+                self.assertTrue(json.loads(body)["ok"])
+                self.assertNotIn("password_hash", json.loads(body))
+                denied, _, raw, _ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/config",
+                    {},
+                    accept="application/json",
+                    authorization="Bearer nope",
+                )
+                self.assertEqual(denied, 401)
+                self.assertTrue(keys.revoke(created["id"]))
+                gone, _, _, _ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/config",
+                    {},
+                    accept="application/json",
+                    authorization=f"Bearer {secret}",
+                )
+                self.assertEqual(gone, 401)
 
+    def test_cli_password_keys_sessions(self):
+        runner = CliRunner()
+        with tempfile.TemporaryDirectory() as tmp:
+            with _roots(tmp)[0], _roots(tmp)[1]:
+                listed = runner.invoke(cli, ["--json", "auth", "password"])
+                self.assertEqual(listed.exit_code, 0, listed.output)
+                self.assertFalse(json.loads(listed.output)["set"])
+                set_out = runner.invoke(
+                    cli, ["--json", "auth", "password", "set"], input="secret\nsecret\n"
+                )
+                self.assertEqual(set_out.exit_code, 0, set_out.output)
+                self.assertTrue(json.loads(set_out.output)["set"])
+                created = runner.invoke(cli, ["--json", "auth", "keys", "create", "probe"])
+                self.assertEqual(created.exit_code, 0, created.output)
+                payload = json.loads(created.output)
+                self.assertIn("secret", payload)
+                self.assertTrue(payload["secret"].startswith("lg_"))
+                keys_out = runner.invoke(cli, ["--json", "auth", "keys"])
+                self.assertEqual(json.loads(keys_out.output)["count"], 1)
+                self.assertNotIn("secret", json.loads(keys_out.output)["keys"][0])
+                revoked = runner.invoke(cli, ["--json", "auth", "keys", "revoke", payload["id"]])
+                self.assertEqual(revoked.exit_code, 0, revoked.output)
+                session.create()
+                cleared = runner.invoke(cli, ["--json", "auth", "sessions", "clear"])
+                self.assertEqual(cleared.exit_code, 0, cleared.output)
+                self.assertEqual(json.loads(cleared.output)["removed"], 1)
+
+    def test_session_token_is_hex(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with _roots(tmp)[0], _roots(tmp)[1]:
+                token = session.create()
+                self.assertRegex(token, r"^[0-9a-f]{64}$")
+                self.assertEqual(session.user_from_cookie(_cookie(token)), "admin")
+                self.assertEqual(len(token), 64)
+                self.assertNotIn(".", token)
+                self.assertIsNone(session.user_from_cookie("looking_glass_session=aaa.bbb.ccc"))
+
+    def test_login_html_is_password_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with _roots(tmp)[0], _roots(tmp)[1]:
+                page, _, html, _ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/",
+                    {},
+                    accept="text/html",
+                    host="lg.example.com",
+                )
+                self.assertEqual(page, 200)
+                text = html.decode("utf-8")
+                self.assertIn('name="password"', text)
+                self.assertNotIn('name="user"', text)
+                self.assertNotIn('name="username"', text)
+                self.assertNotIn('id="status-user"', text)
+                password.set_password("secret")
+                _, _, _, extra = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/login",
+                    {},
+                    method="POST",
+                    body=b'{"password":"secret"}',
+                )
+                cookie = dict(extra).get("Set-Cookie", "").split(";", 1)[0]
+                authed, _, body, _ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/",
+                    {},
+                    accept="text/html",
+                    host="lg.example.com",
+                    cookie=cookie,
+                )
+                self.assertEqual(authed, 200)
+                signed = body.decode("utf-8")
+                self.assertIn('id="status-auth-user"', signed)
+                self.assertNotIn('id="status-user"', signed)
+                self.assertNotIn('id="status-login"', signed)
+
+    def test_http_key_crud(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with _roots(tmp)[0], _roots(tmp)[1]:
+                password.set_password("secret")
+                _, _, _, extra = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/login",
+                    {},
+                    method="POST",
+                    body=b'{"password":"secret"}',
+                )
+                cookie = dict(extra).get("Set-Cookie", "").split(";", 1)[0]
+                created, _, raw, _ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/auth/keys",
+                    {},
+                    method="POST",
+                    cookie=cookie,
+                    body=b'{"name":"gui"}',
+                )
+                self.assertEqual(created, 200)
+                payload = json.loads(raw)
+                self.assertIn("secret", payload)
+                listed, _, body, _ = respond(
+                    "wsgi", "127.0.0.1", "/auth/keys", {}, cookie=cookie
+                )
+                self.assertEqual(listed, 200)
+                data = json.loads(body)
+                self.assertTrue(data["password_set"])
+                self.assertEqual(data["count"], 1)
+                self.assertNotIn("secret", data["keys"][0])
+                gone, _, _, _ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    f"/auth/keys/{payload['id']}",
+                    {},
+                    method="DELETE",
+                    cookie=cookie,
+                )
+                self.assertEqual(gone, 200)
+
+
+class AuthHttpTests(unittest.TestCase):
     def test_history_replay(self):
-        from looking_glass.auth import history as action_history
-
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:
-                users.add_user("alice")
-                token = session.create("alice")
-                cookie = f"looking_glass_session={token}"
+                token = session.create()
+                cookie = _cookie(token)
                 ident = action_history.append(
-                    "alice",
+                    "admin",
                     path="/1.1.1.1",
                     kind="ip",
                     query="1.1.1.1",
@@ -248,13 +349,9 @@ class AuthHttpTests(unittest.TestCase):
                 self.assertIn('id="status-login"', guest_text)
 
     def test_history_is_global(self):
-        from looking_glass.auth import history as action_history
-
         fake = {"ok": True, "kind": "ip", "query": "8.8.8.8", "result": {"ip": "8.8.8.8"}}
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:
-                users.add_user("alice")
-                users.add_user("bob")
                 with patch(
                     "looking_glass.http.site.lookup_classified",
                     return_value=fake,
@@ -291,7 +388,7 @@ class AuthHttpTests(unittest.TestCase):
                         },
                         handle,
                     )
-                cookie = f"looking_glass_session={session.create('alice')}"
+                cookie = _cookie(session.create())
                 listed, _, raw, _ = respond(
                     "wsgi",
                     "127.0.0.1",
@@ -320,8 +417,6 @@ class AuthHttpTests(unittest.TestCase):
                 self.assertEqual(leftover["user"], "carol")
 
     def test_history_intel_is_visitor_not_query(self):
-        from looking_glass.auth import history as action_history
-
         def fake_intel(value):
             text = str(value or "")
             if text == "203.0.113.9":
@@ -334,7 +429,7 @@ class AuthHttpTests(unittest.TestCase):
             with _roots(tmp)[0], _roots(tmp)[1]:
                 with patch("looking_glass.http.weblog.compact_intel", side_effect=fake_intel):
                     ident = action_history.append(
-                        "alice",
+                        "admin",
                         path="/8.8.8.8",
                         kind="ip",
                         query="8.8.8.8",
@@ -352,7 +447,7 @@ class AuthHttpTests(unittest.TestCase):
                     self.assertEqual(row["visitor"], "203.0.113.9")
                     self.assertEqual(row["intel"]["asn"], 64496)
                     self.assertEqual(row["intel"]["org_name"], "EXAMPLE-VISITOR")
-                    entry = action_history.get_entry("alice", ident)
+                    entry = action_history.get_entry("admin", ident)
                     self.assertEqual(entry["intel"]["asn"], 64496)
                     self.assertEqual(entry["payload"]["result"]["asn"], 15169)
 
@@ -370,9 +465,7 @@ class AuthHttpTests(unittest.TestCase):
     def test_serve_start_stop(self):
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:
-                users.add_user("alice")
-                token = session.create("alice")
-                cookie = f"looking_glass_session={token}"
+                cookie = _cookie(session.create())
                 with patch(
                     "looking_glass.intel_server.app.start",
                     return_value={"ok": True, "running": True, "state": "started"},
@@ -407,14 +500,14 @@ class AuthHttpTests(unittest.TestCase):
     def test_wsgi_login_sets_cookie(self):
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:
-                with patch("looking_glass.auth.pam.authenticate", return_value=True):
-                    status, headers, body = _wsgi_get(
-                        wsgi_app,
-                        path="/login",
-                        method="POST",
-                        accept="application/json",
-                        body=b'{"username":"alice","password":"x"}',
-                    )
+                password.set_password("x")
+                status, headers, body = _wsgi_get(
+                    wsgi_app,
+                    path="/login",
+                    method="POST",
+                    accept="application/json",
+                    body=b'{"password":"x"}',
+                )
         self.assertEqual(status, 200)
         self.assertIn("looking_glass_session=", headers.get("Set-Cookie", ""))
         self.assertIn("HttpOnly", headers.get("Set-Cookie", ""))
@@ -424,18 +517,37 @@ class AuthHttpTests(unittest.TestCase):
     def test_https_login_keeps_secure_if_forwarded_http(self):
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:
-                with patch("looking_glass.auth.pam.authenticate", return_value=True):
-                    status, headers, body = _wsgi_get(
-                        wsgi_app,
-                        path="/login",
-                        method="POST",
-                        accept="application/json",
-                        body=b'{"username":"alice","password":"x"}',
-                        scheme="https",
-                        forwarded_proto="http",
-                    )
+                password.set_password("x")
+                status, headers, body = _wsgi_get(
+                    wsgi_app,
+                    path="/login",
+                    method="POST",
+                    accept="application/json",
+                    body=b'{"password":"x"}',
+                    scheme="https",
+                    forwarded_proto="http",
+                )
         self.assertEqual(status, 200)
         cookie = headers.get("Set-Cookie", "")
         self.assertIn("looking_glass_session=", cookie)
         self.assertIn("Secure", cookie)
         self.assertTrue(json.loads(body)["ok"])
+
+    def test_wall_admin_allows_bearer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with _roots(tmp)[0], _roots(tmp)[1]:
+                created = keys.create("wall")
+                denied, _, raw, _ = respond(
+                    "wsgi", "127.0.0.1", "/wall", {}, accept="application/json"
+                )
+                self.assertEqual(denied, 401)
+                ok, _, body, _ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/wall",
+                    {},
+                    accept="application/json",
+                    authorization=f"Bearer {created['secret']}",
+                )
+                self.assertEqual(ok, 200)
+                self.assertTrue(json.loads(body)["ok"])

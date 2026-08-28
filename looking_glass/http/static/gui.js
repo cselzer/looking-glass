@@ -3349,7 +3349,6 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
     const serveEl = document.getElementById("status-serve");
     const httpsEl = document.getElementById("status-https");
     const authedEl = document.getElementById("status-auth-user");
-    const userEl = document.getElementById("status-user");
     const regenBtn = document.getElementById("status-docs-regen");
     const dash = "—";
     let clockSkewMs = 0;
@@ -3437,7 +3436,6 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
         location.reload();
         return;
       }
-      if (userEl && name) userEl.textContent = name;
       paintDocsChrome();
     }
 
@@ -3559,7 +3557,6 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
             credentials: "same-origin",
             headers: { Accept: "application/json", "Content-Type": "application/json" },
             body: JSON.stringify({
-              username: String(fd.get("username") || ""),
               password: String(fd.get("password") || ""),
             }),
           });
@@ -3614,7 +3611,7 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
       if (event.key === "Escape") closeLogin();
     });
 
-    paintAuth(signedIn && userEl ? userEl.textContent : "");
+    paintAuth(signedIn ? "admin" : "");
     poll();
     setInterval(poll, 5000);
     setInterval(paintTime, 1000);

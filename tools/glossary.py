@@ -61,7 +61,6 @@ DEFAULT_GLOSSARY: List[str] = [
     "Apex",
     "GeoIP",
     "looking-glass",
-    "PAM",
     "JSON",
     "JSONL",
     "IPv4",

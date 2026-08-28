@@ -34,10 +34,19 @@ def parse_dnstrace_path(path: str) -> Tuple[str, str]:
     rest = "" if text == "dnstrace" else text[len("dnstrace/") :]
     if not rest:
         raise ValueError("dnstrace path needs a name, e.g. /dnstrace/example.com")
-    if "/" in rest:
-        name, qtype = rest.split("/", 1)
-        return name, (qtype or "A").upper()
-    return rest, "A"
+    if "://" in rest or rest.lower().startswith("//"):
+        raise ValueError("dnstrace path needs a name, e.g. /dnstrace/example.com")
+    parts = rest.split("/")
+    if any(seg in {".", ".."} or not seg for seg in parts):
+        raise ValueError("dnstrace path needs a name, e.g. /dnstrace/example.com")
+    if len(parts) == 1:
+        return rest, "A"
+    if len(parts) == 2:
+        from .resolve import canonicalize_qtype
+
+        canonicalize_qtype(parts[1])
+        return parts[0], parts[1].upper()
+    raise ValueError("dnstrace path is /dnstrace/<name> or /dnstrace/<name>/<type>")
 
 
 def _rr_rows(msg: Any, section: str) -> List[Dict[str, Any]]:

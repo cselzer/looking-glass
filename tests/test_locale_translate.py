@@ -33,7 +33,7 @@ class BakedDefaultsTests(unittest.TestCase):
         self.assertEqual(BAKED_MODELS["grok"], "grok-4.6")
 
     def test_glossary_extras(self):
-        for term in ("looking-glass", "PAM", "JSON", "JSONL", "IPv4", "IPv6", "GUI", "Click"):
+        for term in ("looking-glass", "JSON", "JSONL", "IPv4", "IPv6", "GUI", "Click"):
             self.assertIn(term, DEFAULT_GLOSSARY)
 
 

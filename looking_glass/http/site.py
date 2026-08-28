@@ -42,7 +42,7 @@ from ..net.mail import check_mail, check_mail_async, parse_mail_path
 from ..net.pmtu import check_pmtu, check_pmtu_async, parse_pmtu_path
 from ..net.tcpcheck import check_tcp, check_tcp_async, parse_tcp_path
 from .cli_text import curl_line, httpie_line, wall_cli
-from ..net.probe import parse_probe_path, parse_tcp_trace_path, run_probe, run_probe_async
+from ..net.probe import parse_mtr_query_cycles, parse_probe_path, parse_tcp_trace_path, run_probe, run_probe_async
 from ..net.tls import inspect_tls, inspect_tls_async, parse_tls_path
 from . import render
 from . import admin as http_admin
@@ -230,6 +230,23 @@ def path_token(path: str) -> str:
     if text.startswith("/"):
         text = text[1:]
     return text.rstrip("/")
+
+
+def _intel_client_error(query: str) -> bool:
+    from ..net.host import parse_asn_number, unbracket_host
+
+    text = unbracket_host(str(query or "")).strip()
+    if "%" in text:
+        return True
+    token = text.upper()
+    raw = token[2:].strip() if token.startswith("AS") else token
+    if not raw.isdigit():
+        return False
+    try:
+        parse_asn_number(text)
+    except ValueError:
+        return True
+    return False
 
 
 def _status_hostname() -> str:
@@ -1292,7 +1309,26 @@ def _plan(
         if kind == "mtr":
             raw = ((parse_qs(query_string or "", keep_blank_values=True).get("cycles") or [None])[0])
             if raw is not None:
-                base["cycles"] = raw
+                try:
+                    base["cycles"] = parse_mtr_query_cycles(raw)
+                except ValueError as e:
+                    return (
+                        _error_body(
+                            400,
+                            _envelope(
+                                ok=False,
+                                protocol=protocol,
+                                kind="mtr",
+                                visitor=visitor,
+                                query=value,
+                                error=str(e),
+                                include_result=False,
+                            ),
+                        ),
+                        None,
+                        None,
+                        base,
+                    )
         return None, kind, value, base
     query = token or visitor
     base = {
@@ -1320,9 +1356,10 @@ def _plan(
     try:
         kind, value = classify_query(query)
     except ValueError as e:
+        status = 400 if _intel_client_error(query) else 404
         return (
             _error_body(
-                404,
+                status,
                 _envelope(
                     ok=False,
                     protocol=protocol,
@@ -1475,12 +1512,13 @@ def _audit_http(
     visitor: Optional[str],
     cookie: Optional[str],
     correlation_id: Optional[str] = None,
+    authorization: Optional[str] = None,
 ) -> HttpOut:
     from . import weblog
 
     try:
         status, _ctype, body, _extra = out
-        user = http_admin.current_user(cookie)
+        user = http_admin.current_user(cookie, authorization)
         err = None
         if int(status) >= 500:
             try:
@@ -1503,32 +1541,6 @@ def _audit_http(
     except OSError:
         pass
     return out
-    from . import weblog
-
-    try:
-        status, _ctype, body, _extra = out
-        user = http_admin.current_user(cookie)
-        err = None
-        if int(status) >= 500:
-            try:
-                payload = json.loads(body.decode("utf-8"))
-                if isinstance(payload, dict):
-                    err = str(payload.get("error") or "") or None
-            except (json.JSONDecodeError, UnicodeDecodeError, TypeError):
-                err = f"HTTP {status}"
-        weblog.record_response(
-            method=method,
-            path=path,
-            status=int(status),
-            body=body,
-            peer=visitor,
-            user=user,
-            ms=(time.perf_counter() - started) * 1000,
-            error=err,
-        )
-    except OSError:
-        pass
-    return out
 
 
 def _respond_impl(
@@ -1545,6 +1557,7 @@ def _respond_impl(
     accept_language: Optional[str] = None,
     cookie: Optional[str] = None,
     body: bytes = b"",
+    authorization: Optional[str] = None,
 ) -> HttpOut:
     html = wants_html(accept)
     _bind_html_locale(html, accept_language, cookie)
@@ -1555,8 +1568,10 @@ def _respond_impl(
         return serve_static(method, token)
     if token == "i18n" or token.startswith("i18n/"):
         return _serve_ui_i18n(method, token)
-    user = http_admin.current_user(cookie)
-    handled = http_admin.dispatch(method, token, cookie, body or b"", scheme, query_string, visitor)
+    user = http_admin.current_user(cookie, authorization)
+    handled = http_admin.dispatch(
+        method, token, cookie, body or b"", scheme, query_string, visitor, authorization
+    )
     if handled is not None:
         html_out = _maybe_history_html(
             handled, html=html, token=token, path=path, host=host, scheme=scheme, user=user
@@ -1624,6 +1639,7 @@ async def _respond_async_impl(
     accept_language: Optional[str] = None,
     cookie: Optional[str] = None,
     body: bytes = b"",
+    authorization: Optional[str] = None,
 ) -> HttpOut:
     html = wants_html(accept)
     _bind_html_locale(html, accept_language, cookie)
@@ -1634,8 +1650,10 @@ async def _respond_async_impl(
         return serve_static(method, token)
     if token == "i18n" or token.startswith("i18n/"):
         return _serve_ui_i18n(method, token)
-    user = http_admin.current_user(cookie)
-    handled = http_admin.dispatch(method, token, cookie, body or b"", scheme, query_string, visitor)
+    user = http_admin.current_user(cookie, authorization)
+    handled = http_admin.dispatch(
+        method, token, cookie, body or b"", scheme, query_string, visitor, authorization
+    )
     if handled is not None:
         html_out = _maybe_history_html(
             handled, html=html, token=token, path=path, host=host, scheme=scheme, user=user
@@ -1704,6 +1722,7 @@ def respond(
     cookie: Optional[str] = None,
     body: bytes = b"",
     correlation_id: Optional[str] = None,
+    authorization: Optional[str] = None,
 ) -> HttpOut:
     started = time.perf_counter()
     try:
@@ -1720,6 +1739,7 @@ def respond(
             accept_language=accept_language,
             cookie=cookie,
             body=body,
+            authorization=authorization,
         )
     except Exception as exc:
         from . import weblog
@@ -1730,7 +1750,7 @@ def respond(
                 status=500,
                 error=str(exc),
                 peer=visitor,
-                user=http_admin.current_user(cookie),
+                user=http_admin.current_user(cookie, authorization),
             )
         except OSError:
             pass
@@ -1743,6 +1763,7 @@ def respond(
         visitor=visitor,
         cookie=cookie,
         correlation_id=correlation_id,
+        authorization=authorization,
     )
 
 
@@ -1761,6 +1782,7 @@ async def respond_async(
     cookie: Optional[str] = None,
     body: bytes = b"",
     correlation_id: Optional[str] = None,
+    authorization: Optional[str] = None,
 ) -> HttpOut:
     started = time.perf_counter()
     try:
@@ -1777,6 +1799,7 @@ async def respond_async(
             accept_language=accept_language,
             cookie=cookie,
             body=body,
+            authorization=authorization,
         )
     except Exception as exc:
         from . import weblog
@@ -1787,7 +1810,7 @@ async def respond_async(
                 status=500,
                 error=str(exc),
                 peer=visitor,
-                user=http_admin.current_user(cookie),
+                user=http_admin.current_user(cookie, authorization),
             )
         except OSError:
             pass
@@ -1800,5 +1823,6 @@ async def respond_async(
         visitor=visitor,
         cookie=cookie,
         correlation_id=correlation_id,
+        authorization=authorization,
     )
 

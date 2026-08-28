@@ -1,54 +1,92 @@
-"""Click commands for PAM admin allowlist and sessions."""
+"""Click commands for admin password, API keys, and sessions."""
 
 from __future__ import annotations
 
+import getpass
+import sys
+
 import click
 
-from ..auth import session, users
+from ..auth import keys, password, session
 from .render import emit
 
 
 @click.group("auth")
 def auth_group() -> None:
-    """Manage GUI admin users and file sessions.
+    """Manage the GUI password, API keys, and file sessions.
 
-    The first successful PAM login (never root) is added automatically.
-    Later logins must be on the allowlist. Passwords stay in PAM.
+    An unset password disables login (it does not open admin). API keys
+    work independently and grant the same admin rights as a password session.
 
     \b
-    looking-glass auth users
-    looking-glass auth users add alice
-    looking-glass auth users remove alice
+    looking-glass auth password set
+    looking-glass auth keys create tokyo
     looking-glass auth sessions clear
     """
 
 
-@auth_group.group("users", invoke_without_command=True)
+@auth_group.group("password", invoke_without_command=True)
 @click.pass_context
-def users_group(ctx: click.Context) -> None:
-    """List or edit the admin allowlist in ~/.looking-glass/config.json."""
+def password_group(ctx: click.Context) -> None:
+    """Show whether the admin password is set, or set/clear it."""
     if ctx.invoked_subcommand is None:
-        names = users.list_users()
-        emit({"ok": True, "users": names, "count": len(names)}, kind="auth")
+        emit({"ok": True, "set": password.is_set()}, kind="auth")
 
 
-@users_group.command("add")
-@click.argument("name")
-def users_add(name: str) -> None:
-    """Allow NAME to log in after PAM succeeds."""
+def _secret(label: str) -> str:
+    if sys.stdin.isatty():
+        return getpass.getpass(f"{label}: ")
+    return (sys.stdin.readline() or "").rstrip("\n")
+
+
+@password_group.command("set")
+def password_set() -> None:
+    """Set the GUI admin password (prompted, not on the command line)."""
+    first = _secret("Password")
+    second = _secret("Confirm")
+    if first != second:
+        raise click.UsageError("passwords do not match")
     try:
-        names = users.add_user(name)
+        password.set_password(first)
     except ValueError as exc:
         raise click.UsageError(str(exc)) from exc
-    emit({"ok": True, "users": names, "count": len(names)}, kind="auth")
+    emit({"ok": True, "set": True}, kind="auth")
 
 
-@users_group.command("remove")
-@click.argument("name")
-def users_remove(name: str) -> None:
-    """Remove NAME from the admin allowlist."""
-    names = users.remove_user(name)
-    emit({"ok": True, "users": names, "count": len(names)}, kind="auth")
+@password_group.command("clear")
+def password_clear() -> None:
+    """Disable GUI login. Existing API keys still work."""
+    password.clear()
+    emit({"ok": True, "set": False}, kind="auth")
+
+
+@auth_group.group("keys", invoke_without_command=True)
+@click.pass_context
+def keys_group(ctx: click.Context) -> None:
+    """List or create API keys. Secrets are shown once at create."""
+    if ctx.invoked_subcommand is None:
+        listed = keys.list_keys()
+        emit({"ok": True, "keys": listed, "count": len(listed)}, kind="auth")
+
+
+@keys_group.command("create")
+@click.argument("name", required=False, default="key")
+def keys_create(name: str) -> None:
+    """Create a key named NAME and print the secret once."""
+    try:
+        created = keys.create(name)
+    except ValueError as exc:
+        raise click.UsageError(str(exc)) from exc
+    emit({"ok": True, **created}, kind="auth")
+
+
+@keys_group.command("revoke")
+@click.argument("key_id")
+def keys_revoke(key_id: str) -> None:
+    """Revoke the key with ID."""
+    if not keys.revoke(key_id):
+        raise click.UsageError("unknown key")
+    emit({"ok": True, "id": key_id}, kind="auth")
 
 
 @auth_group.group("sessions")

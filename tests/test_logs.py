@@ -116,25 +116,26 @@ class WebLogTests(unittest.TestCase):
                 self.assertIn("inspect-pop-refresh", home_html)
                 self.assertIn("resize: both", home_html)
                 respond("wsgi", "127.0.0.1", "/status", {}, accept="application/json")
-                with patch("looking_glass.auth.pam.authenticate", return_value=False):
-                    denied, _, _body, _ = respond(
-                        "wsgi",
-                        "10.0.0.1",
-                        "/login",
-                        {},
-                        method="POST",
-                        body=b'{"username":"alice","password":"nope"}',
-                    )
+                from looking_glass.auth import password as admin_password
+
+                admin_password.set_password("secret")
+                denied, _, _body, _ = respond(
+                    "wsgi",
+                    "10.0.0.1",
+                    "/login",
+                    {},
+                    method="POST",
+                    body=b'{"password":"nope"}',
+                )
                 self.assertEqual(denied, 401)
-                with patch("looking_glass.auth.pam.authenticate", return_value=True):
-                    ok, _, _raw, extra = respond(
-                        "wsgi",
-                        "10.0.0.1",
-                        "/login",
-                        {},
-                        method="POST",
-                        body=b'{"username":"alice","password":"secret"}',
-                    )
+                ok, _, _raw, extra = respond(
+                    "wsgi",
+                    "10.0.0.1",
+                    "/login",
+                    {},
+                    method="POST",
+                    body=b'{"password":"secret"}',
+                )
                 self.assertEqual(ok, 200)
                 cookie = dict(extra).get("Set-Cookie", "").split(";", 1)[0]
                 authed, _, authed_body, _ = respond(
@@ -283,7 +284,7 @@ class WebLogTests(unittest.TestCase):
                 )
                 self.assertEqual(login_ok, 200)
                 wins = json.loads(login_ok_body)["rows"]
-                self.assertTrue(any(row.get("ok") and row.get("user") == "alice" for row in wins))
+                self.assertTrue(any(row.get("ok") is True for row in wins))
                 stats_st, _, stats_body, _ = respond(
                     "wsgi",
                     "127.0.0.1",

@@ -19,6 +19,12 @@ class RdapHelpers(unittest.TestCase):
             rdap.detect_rdap_type("notanip")
         with self.assertRaises(ValueError):
             rdap.detect_rdap_type("999.999.999.999")
+        with self.assertRaises(ValueError):
+            rdap.detect_rdap_type("AS99999999999")
+        with self.assertRaises(ValueError):
+            rdap.detect_rdap_type("4294967296")
+        with self.assertRaises(ValueError):
+            rdap.detect_rdap_type("fe80::1%eth0")
 
     def test_parse_path(self):
         self.assertEqual(rdap.parse_rdap_path("/rdap/AS13335"), "AS13335")
@@ -228,6 +234,23 @@ class RdapCacheTests(unittest.TestCase):
             bogus = rdap.lookup_rdap("999.999.999.999")
             self.assertFalse(bogus["ok"])
         get.assert_not_called()
+
+    def test_idn_fetch_uses_punycode(self):
+        hit = MagicMock()
+        hit.status_code = 200
+        hit.headers = {"Content-Type": "application/rdap+json"}
+        hit.json.return_value = {"handle": "EXAMPLE", "ldhName": "xn--fsq.jp"}
+        hit.text = "{}"
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
+                with patch("requests.get", return_value=hit) as get:
+                    data = rdap.fetch_rdap("例.jp")
+                    again = rdap.fetch_rdap("xn--fsq.jp")
+        self.assertEqual(data["handle"], "EXAMPLE")
+        self.assertEqual(again["handle"], "EXAMPLE")
+        urls = [call[0][0] for call in get.call_args_list]
+        self.assertTrue(any("xn--fsq.jp" in url for url in urls))
+        self.assertFalse(any("例" in url for url in urls))
 
     def test_html_200_is_not_cached(self):
         html = MagicMock()

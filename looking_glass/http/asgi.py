@@ -61,6 +61,7 @@ async def inner(scope, receive, send):
         cookie=headers.get("cookie"),
         body=raw_body,
         correlation_id=headers.get("x-correlation-id"),
+        authorization=headers.get("authorization"),
     )
     out_headers = [
         (b"content-type", content_type.encode("latin-1")),

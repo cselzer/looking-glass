@@ -53,11 +53,14 @@ class TlsPathTests(unittest.TestCase):
             ("2606:4700:4700::1111", 443),
         )
 
-    def test_collapsed_https_url_uses_hostname(self):
+    def test_rejects_https_url(self):
         self.assertEqual(path_token("/tls/https:/example.com"), "tls/https://example.com")
-        self.assertEqual(parse_tls_path("/tls/https:/example.com"), ("example.com", 443))
-        self.assertEqual(parse_tls_path("/tls/https://example.com"), ("example.com", 443))
-        self.assertEqual(parse_tls_path("/tls/https://example.com:8443"), ("example.com", 8443))
+        with self.assertRaises(ValueError):
+            parse_tls_path("/tls/https:/example.com")
+        with self.assertRaises(ValueError):
+            parse_tls_path("/tls/https://example.com")
+        with self.assertRaises(ValueError):
+            parse_tls_path("/tls/https://example.com:8443")
 
 
 class TlsSniPlanTests(unittest.TestCase):
@@ -71,15 +74,14 @@ class TlsSniPlanTests(unittest.TestCase):
         self.assertEqual(base.get("sni"), "www.example.com")
         self.assertEqual(_lookup_kwargs(base).get("sni"), "www.example.com")
 
-    def test_collapsed_https_envelope_is_host(self):
-        err, kind, value, base = _plan(
+    def test_collapsed_https_envelope_is_rejected(self):
+        err, kind, value, _base = _plan(
             "wsgi", "1.1.1.1", "/tls/https:/example.com", {}, ""
         )
-        self.assertIsNone(err)
-        self.assertEqual(kind, "tls")
-        self.assertEqual(value, "example.com")
-        self.assertEqual(base["query"], "example.com")
-        self.assertEqual(base["port"], 443)
+        self.assertIsNotNone(err)
+        self.assertIsNone(kind)
+        status, _ctype, body = err
+        self.assertEqual(status, 400)
 
     def test_colon_port_reaches_plan(self):
         err, kind, value, base = _plan(

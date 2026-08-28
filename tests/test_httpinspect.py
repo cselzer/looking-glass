@@ -188,6 +188,12 @@ class HttpKindPlanTests(unittest.TestCase):
             http_envelope_query("ftp:/example.com")
         with self.assertRaises(ValueError):
             http_envelope_query("ftp://example.com")
+        with self.assertRaises(ValueError):
+            http_envelope_query("javascript:alert(1)")
+        with self.assertRaises(ValueError):
+            http_envelope_query("data:text/html,x")
+        with self.assertRaises(ValueError):
+            http_envelope_query("", "url=javascript:alert(1)")
 
 
 class HttpFtpSchemeTests(unittest.TestCase):

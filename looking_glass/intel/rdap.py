@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from .. import cache as query_cache
+from ..net.host import parse_asn_number
 
 _ASN = re.compile(r"^(?:AS)?(\d+)$", re.IGNORECASE)
 _LDH_LABEL = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)
@@ -66,12 +67,15 @@ def detect_rdap_type(target: str) -> str:
     text = str(target).strip()
     if text.startswith("[") and text.endswith("]") and len(text) > 2:
         text = text[1:-1]
+    if "%" in text:
+        raise ValueError(_RDAP_TARGET_ERROR)
     try:
         ipaddress.ip_address(text)
         return "ip"
     except ValueError:
         pass
     if _ASN.match(text):
+        parse_asn_number(text)
         return "autnum"
     if _is_rdap_domain(text):
         return "domain"
@@ -79,10 +83,7 @@ def detect_rdap_type(target: str) -> str:
 
 
 def _autnum(target: str) -> str:
-    match = _ASN.match(str(target).strip())
-    if not match:
-        return str(target).strip()
-    return match.group(1)
+    return str(parse_asn_number(target))
 
 
 _DNSSEC_ALGS = {
@@ -685,6 +686,10 @@ def fetch_rdap(
         lookup = str(ipaddress.ip_address(str(target).strip().strip("[]")))
     else:
         lookup = str(target).strip().rstrip(".")
+        try:
+            lookup = lookup.encode("idna").decode("ascii")
+        except (UnicodeError, ValueError) as exc:
+            raise ValueError(_RDAP_TARGET_ERROR) from exc
         kind = "domain"
     endpoint = {"ip": "ip", "domain": "domain", "autnum": "autnum"}.get(kind, "ip")
     key = f"{kind}_{lookup}"

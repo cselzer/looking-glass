@@ -1,19 +1,16 @@
-"""Operator settings in ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh, auth)."""
+"""Operator settings in ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh)."""
 
 from __future__ import annotations
 
 import fcntl
 import json
 import os
-import re
 from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from .utility import atomic_write, get_root
-
-_USER_NAME = re.compile(r"^[A-Za-z0-9._][A-Za-z0-9._-]{0,31}$")
 
 DEFAULT_REFRESH: Dict[str, int] = {
     "iana": 30,
@@ -28,7 +25,6 @@ DEFAULTS: Dict[str, Any] = {
     "locale": "en",
     "cache": {"ttl_days": 7, "gui": False},
     "refresh": dict(DEFAULT_REFRESH),
-    "auth": {"users": []},
     "history": {"snapshots": -1},
     "wall": {"challenge_ttl_days": 5, "challenge_bits": 16},
     "docs": {"enabled": False},
@@ -184,25 +180,6 @@ def _merge_cache(raw: Any) -> Dict[str, Any]:
         out["ttl_days"] = days
     if "gui" in raw:
         out["gui"] = bool(raw["gui"])
-    return out
-
-
-def _merge_auth(raw: Any) -> Dict[str, Any]:
-    out: Dict[str, Any] = {"users": []}
-    if not isinstance(raw, dict):
-        return out
-    users = raw.get("users")
-    if not isinstance(users, list):
-        return out
-    seen: List[str] = []
-    for item in users:
-        name = str(item or "").strip()
-        if not name or name.lower() == "root":
-            continue
-        if not _USER_NAME.fullmatch(name) or name in seen:
-            continue
-        seen.append(name)
-    out["users"] = seen
     return out
 
 
@@ -365,7 +342,6 @@ def normalize(payload: Any) -> Dict[str, Any]:
         "locale": _normalize_locale(data.get("locale") or DEFAULTS["locale"]),
         "cache": _merge_cache(data.get("cache")),
         "refresh": _merge_refresh(data.get("refresh")),
-        "auth": _merge_auth(data.get("auth")),
         "history": _merge_history(data.get("history")),
         "wall": _merge_wall(data.get("wall")),
         "docs": _merge_docs(data.get("docs")),
@@ -486,8 +462,6 @@ def _parse_set_value(dotted: str, raw: Any) -> Any:
         if parsed > MTR_HARD_CEILING:
             return MTR_HARD_CEILING
         return parsed
-    if key == "auth.users":
-        raise ValueError("use looking-glass auth users add|remove")
     raise KeyError(key)
 
 
@@ -587,7 +561,6 @@ def known_keys() -> List[str]:
         "locale",
         "cache.ttl_days",
         "cache.gui",
-        "auth.users",
         "history.snapshots",
         "wall.challenge_ttl_days",
         "wall.challenge_bits",

@@ -32,7 +32,7 @@ class ConfigLoaderTests(unittest.TestCase):
             self.assertEqual(cfg["cache"]["ttl_days"], 7)
             self.assertFalse(cfg["cache"]["gui"])
             self.assertFalse(cfg["docs"]["enabled"])
-            self.assertEqual(cfg["auth"]["users"], [])
+            self.assertNotIn("auth", cfg)
             self.assertEqual(cfg["refresh"]["rir"], 1)
             self.assertEqual(cfg["history"]["snapshots"], -1)
             self.assertEqual(cfg["wall"]["challenge_ttl_days"], 5)
@@ -180,7 +180,7 @@ class ConfigHttpTests(unittest.TestCase):
     def test_get_and_post_config(self):
         with tempfile.TemporaryDirectory() as tmp:
             with _roots(tmp)[0], _roots(tmp)[1]:
-                token = session.create("alice")
+                token = session.create()
                 cookie = f"looking_glass_session={token}"
                 status, _, body, *_ = respond(
                     "wsgi", "127.0.0.1", "/config", {}, cookie=cookie
@@ -217,4 +217,4 @@ class ConfigHttpTests(unittest.TestCase):
                     body=b'{"auth.users":["bob"]}',
                 )
                 self.assertEqual(denied, 400)
-                self.assertIn("auth users", json.loads(raw)["error"])
+                self.assertIn("unknown key", json.loads(raw)["error"])

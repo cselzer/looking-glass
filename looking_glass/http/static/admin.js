@@ -2920,6 +2920,7 @@
 
     let pop = null;
     let form = null;
+    let authBox = null;
     let note = null;
     let z = 125;
     const WIN_ID = "config";
@@ -2951,6 +2952,7 @@
       if (pop) pop.remove();
       pop = null;
       form = null;
+      authBox = null;
       note = null;
     }
 
@@ -3024,7 +3026,6 @@
       const history = data.history || {};
       const wall = data.wall || {};
       const refresh = data.refresh || {};
-      const auth = data.auth || {};
 
       const docsSec = el("fieldset", "config-sec");
       docsSec.append(el("legend", null, t("gui.config.docs", "Documentation")));
@@ -3086,9 +3087,6 @@
 
       const meta = el("div", "config-meta");
       meta.append(el("p", "hint", t("gui.config.path", "File") + ": " + (data.path || "")));
-      const users = (auth.users || []).join(", ") || "—";
-      meta.append(el("p", "hint", t("gui.config.users", "Admin users") + ": " + users));
-      meta.append(el("p", "hint", t("gui.config.users.hint", "Use looking-glass auth users to add or remove names.")));
       form.append(meta);
 
       const actions = el("div", "config-actions");
@@ -3096,6 +3094,111 @@
       save.type = "submit";
       actions.append(save);
       form.append(actions);
+    }
+
+    function paintAuthPanel(data, onceSecret) {
+      if (!authBox) return;
+      authBox.replaceChildren();
+      const sec = el("fieldset", "config-sec");
+      sec.append(el("legend", null, t("gui.config.auth", "Admin")));
+      sec.append(el(
+        "p",
+        "hint",
+        data.password_set
+          ? t("gui.config.password.set", "Password is set.")
+          : t("gui.config.password.off", "Login is disabled until a password is set.")
+      ));
+      const pw = document.createElement("input");
+      pw.type = "password";
+      pw.autocomplete = "new-password";
+      pw.placeholder = t("gui.login.password", "Password");
+      const setBtn = el("button", "go", t("gui.config.password.save", "Set password"));
+      setBtn.type = "button";
+      setBtn.addEventListener("click", async () => {
+        try {
+          await fetchJson("/auth/password", {
+            method: "POST",
+            headers: { Accept: "application/json", "Content-Type": "application/json" },
+            body: JSON.stringify({ password: pw.value }),
+          });
+          pw.value = "";
+          if (note) note.textContent = t("gui.config.saved", "Saved");
+          loadAuth();
+        } catch (err) {
+          if (note) note.textContent = String(err.message || err);
+        }
+      });
+      const clearBtn = el("button", "ghost", t("gui.config.password.clear", "Disable login"));
+      clearBtn.type = "button";
+      clearBtn.addEventListener("click", async () => {
+        try {
+          await fetchJson("/auth/password/clear", { method: "POST" });
+          if (note) note.textContent = t("gui.config.saved", "Saved");
+          loadAuth();
+        } catch (err) {
+          if (note) note.textContent = String(err.message || err);
+        }
+      });
+      const pwRow = el("div", "config-actions");
+      pwRow.append(pw, setBtn, clearBtn);
+      sec.append(pwRow);
+      const list = el("ul", "config-keys");
+      (data.keys || []).forEach((item) => {
+        const row = el("li", "config-key");
+        row.append(el("span", null, (item.name || item.id) + " · " + item.id));
+        const rev = el("button", "ghost", t("gui.config.keys.revoke", "Revoke"));
+        rev.type = "button";
+        rev.addEventListener("click", async () => {
+          try {
+            await fetchJson("/auth/keys/" + encodeURIComponent(item.id), { method: "DELETE" });
+            loadAuth();
+          } catch (err) {
+            if (note) note.textContent = String(err.message || err);
+          }
+        });
+        row.append(rev);
+        list.append(row);
+      });
+      sec.append(list);
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.placeholder = t("gui.config.keys.name", "Key name");
+      const createBtn = el("button", "go", t("gui.config.keys.create", "Create key"));
+      createBtn.type = "button";
+      createBtn.addEventListener("click", async () => {
+        try {
+          const created = await fetchJson("/auth/keys", {
+            method: "POST",
+            headers: { Accept: "application/json", "Content-Type": "application/json" },
+            body: JSON.stringify({ name: nameInput.value || "key" }),
+          });
+          nameInput.value = "";
+          loadAuth(created.secret || "");
+        } catch (err) {
+          if (note) note.textContent = String(err.message || err);
+        }
+      });
+      const keyRow = el("div", "config-actions");
+      keyRow.append(nameInput, createBtn);
+      sec.append(keyRow);
+      if (onceSecret) {
+        sec.append(el(
+          "p",
+          "hint",
+          t("gui.config.keys.secret", "Copy this key now; it is shown once.") + " " + onceSecret
+        ));
+      }
+      authBox.append(sec);
+    }
+
+    async function loadAuth(onceSecret) {
+      if (!authBox) return;
+      try {
+        const data = await fetchJson("/auth/keys");
+        paintAuthPanel(data, onceSecret);
+      } catch (err) {
+        if (note) note.textContent = String(err.message || err);
+      }
     }
 
     async function loadConfig() {
@@ -3110,6 +3213,7 @@
           });
         }
         if (note) note.textContent = "";
+        await loadAuth();
       } catch (err) {
         if (note) note.textContent = String(err.message || err);
       }
@@ -3161,6 +3265,7 @@
         try { pop.remove(); } catch (err) {}
         pop = null;
         form = null;
+        authBox = null;
         note = null;
       }
       pop = el("div", "asn-pop inspect-pop config-pop");
@@ -3185,7 +3290,8 @@
       form = document.createElement("form");
       form.className = "config-form";
       form.addEventListener("submit", saveConfig);
-      pane.append(note, form);
+      authBox = el("div", "config-auth");
+      pane.append(note, form, authBox);
       pop.append(bar, pane);
       document.body.append(pop);
       const rect = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : { left: 24, bottom: 48 };

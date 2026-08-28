@@ -8,6 +8,7 @@ from typing import Any, Dict, Tuple
 
 from ..intel import asn as asn_mod
 from ..intel import asn_org, flags, iana, rir
+from ..net.host import parse_asn_number
 
 _MODULES = (
     ("iana", iana),
@@ -22,15 +23,21 @@ def classify_query(value: str) -> Tuple[str, str]:
     text = str(value).strip()
     if text.startswith("[") and text.endswith("]") and len(text) > 2:
         text = text[1:-1]
+    if "%" in text:
+        raise ValueError("zone-id is not an IP token")
     try:
         return "ip", str(ipaddress.ip_address(text))
     except ValueError:
         pass
-    asn = text.upper()
-    if asn.startswith("AS"):
-        asn = asn[2:].strip()
-    if asn.isdigit():
-        return "asn", asn
+    token = text.upper()
+    looks_asn = token.startswith("AS") or token.isdigit()
+    if looks_asn:
+        try:
+            return "asn", str(parse_asn_number(text))
+        except ValueError:
+            raw = token[2:].strip() if token.startswith("AS") else token
+            if raw.isdigit():
+                raise
     country = flags.canonical_country(text)
     if country:
         return "country", country

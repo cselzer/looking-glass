@@ -11,8 +11,8 @@
       "en": "Look up an autonomous system (same as GET /AS<number>)."
     },
     "cli.auth.help": {
-      "text": "Manage GUI admin users and file sessions.\n\nThe first successful PAM login (never root) is added automatically.\nLater logins must be on the allowlist. Passwords stay in PAM.\n\n\b\nlooking-glass auth users\nlooking-glass auth users add alice\nlooking-glass auth users remove alice\nlooking-glass auth sessions clear",
-      "en": "Manage GUI admin users and file sessions.\n\nThe first successful PAM login (never root) is added automatically.\nLater logins must be on the allowlist. Passwords stay in PAM.\n\n\b\nlooking-glass auth users\nlooking-glass auth users add alice\nlooking-glass auth users remove alice\nlooking-glass auth sessions clear"
+      "text": "Manage the GUI password, API keys, and file sessions.\n\nAn unset password disables login (it does not open admin). API keys\nwork independently and grant the same admin rights as a password session.\n\n\b\nlooking-glass auth password set\nlooking-glass auth keys create tokyo\nlooking-glass auth sessions clear",
+      "en": "Manage the GUI password, API keys, and file sessions.\n\nAn unset password disables login (it does not open admin). API keys\nwork independently and grant the same admin rights as a password session.\n\n\b\nlooking-glass auth password set\nlooking-glass auth keys create tokyo\nlooking-glass auth sessions clear"
     },
     "cli.auth.sessions.clear.help": {
       "text": "Delete every on-disk GUI session.",
@@ -21,18 +21,6 @@
     "cli.auth.sessions.help": {
       "text": "File sessions under ~/.looking-glass/data/sessions.",
       "en": "File sessions under ~/.looking-glass/data/sessions."
-    },
-    "cli.auth.users.add.help": {
-      "text": "Allow NAME to log in after PAM succeeds.",
-      "en": "Allow NAME to log in after PAM succeeds."
-    },
-    "cli.auth.users.help": {
-      "text": "List or edit the admin allowlist in ~/.looking-glass/config.json.",
-      "en": "List or edit the admin allowlist in ~/.looking-glass/config.json."
-    },
-    "cli.auth.users.remove.help": {
-      "text": "Remove NAME from the admin allowlist.",
-      "en": "Remove NAME from the admin allowlist."
     },
     "cli.bgp.help": {
       "text": "Prefix origin ASN and RPKI ROA status (same as GET /bgp/<ip>).",
@@ -107,8 +95,8 @@
       "en": "Print one dotted key (locale, cache.gui, refresh.rir, …)."
     },
     "cli.config.help": {
-      "text": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin users: `looking-glass auth users`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com",
-      "en": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin users: `looking-glass auth users`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com"
+      "text": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com",
+      "en": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com"
     },
     "cli.config.hostname.help": {
       "text": "Set http.hostname from the node FQDN (Python getfqdn) or NAME.",
@@ -631,8 +619,8 @@
       "en": "JSON."
     },
     "docs.http.cache.notes": {
-      "text": "401 unless a PAM admin session is present.",
-      "en": "401 unless a PAM admin session is present."
+      "text": "401 unless an admin session or API key is present.",
+      "en": "401 unless an admin session or API key is present."
     },
     "docs.http.cache.summary": {
       "text": "RDAP/BGP on-disk cache stats. Also /cache/<ns>.",
@@ -643,8 +631,8 @@
       "en": "JSON."
     },
     "docs.http.config.notes": {
-      "text": "401 without a session. auth.users cannot be set here; use looking-glass auth users.",
-      "en": "401 without a session. auth.users cannot be set here; use looking-glass auth users."
+      "text": "401 without a session or API key. Password and API keys are not stored in config.json.",
+      "en": "401 without a session or API key. Password and API keys are not stored in config.json."
     },
     "docs.http.config.summary": {
       "text": "Operator config.json. POST sets dotted keys (docs.enabled, locale, cache, refresh, wall, history).",
@@ -739,12 +727,12 @@
       "en": "JSON. Sets an HttpOnly looking_glass_session cookie (opaque file session, not a JWT)."
     },
     "docs.http.login.notes": {
-      "text": "Root is never allowed. Body is JSON or form username/password.",
-      "en": "Root is never allowed. Body is JSON or form username/password."
+      "text": "Body is JSON or form password. No username.",
+      "en": "Body is JSON or form password. No username."
     },
     "docs.http.login.summary": {
-      "text": "PAM login. First non-root user bootstraps the allowlist.",
-      "en": "PAM login. First non-root user bootstraps the allowlist."
+      "text": "Password login. An unset password disables login (it does not open admin).",
+      "en": "Password login. An unset password disables login (it does not open admin)."
     },
     "docs.http.logout.accept": {
       "text": "JSON.",
@@ -907,12 +895,12 @@
       "en": "JSON."
     },
     "docs.http.session.notes": {
-      "text": "Public. Does not leak the allowlist. Sessions are 256-bit secrets on disk; the cookie is only the id.",
-      "en": "Public. Does not leak the allowlist. Sessions are 256-bit secrets on disk; the cookie is only the id."
+      "text": "Public. Also {admin: true|false}. Sessions are 256-bit secrets on disk; the cookie is only the id. Authorization: Bearer is accepted.",
+      "en": "Public. Also {admin: true|false}. Sessions are 256-bit secrets on disk; the cookie is only the id. Authorization: Bearer is accepted."
     },
     "docs.http.session.summary": {
-      "text": "Current admin user, or user: null.",
-      "en": "Current admin user, or user: null."
+      "text": "Current admin session, or user: null.",
+      "en": "Current admin session, or user: null."
     },
     "docs.http.status.accept": {
       "text": "Always JSON (Cache-Control: no-store).",
@@ -1035,8 +1023,8 @@
       "en": "On this page"
     },
     "docs.open_lookup": {
-      "text": "This is an open lookup service: tools connect to names you pass. Lookups have no auth. Shared /history/<id> links are public. The history rail, cache, logs, and serve controls need a PAM admin session. XSS and shell injection are not the threat model; egress to private or metadata addresses is, if this host can route there.",
-      "en": "This is an open lookup service: tools connect to names you pass. Lookups have no auth. Shared /history/<id> links are public. The history rail, cache, logs, and serve controls need a PAM admin session. XSS and shell injection are not the threat model; egress to private or metadata addresses is, if this host can route there."
+      "text": "This is an open lookup service: tools connect to names you pass. Lookups have no auth. Shared /history/<id> links are public. The history rail, cache, logs, and serve controls need an admin password session or API key. XSS and shell injection are not the threat model; egress to private or metadata addresses is, if this host can route there.",
+      "en": "This is an open lookup service: tools connect to names you pass. Lookups have no auth. Shared /history/<id> links are public. The history rail, cache, logs, and serve controls need an admin password session or API key. XSS and shell injection are not the threat model; egress to private or metadata addresses is, if this host can route there."
     },
     "docs.query": {
       "text": "Query",
@@ -1322,14 +1310,6 @@
       "text": "Config",
       "en": "Config"
     },
-    "gui.config.users": {
-      "text": "Admin users",
-      "en": "Admin users"
-    },
-    "gui.config.users.hint": {
-      "text": "Use looking-glass auth users to add or remove names.",
-      "en": "Use looking-glass auth users to add or remove names."
-    },
     "gui.config.wall": {
       "text": "Firewall challenge",
       "en": "Firewall challenge"
@@ -1597,10 +1577,6 @@
     "gui.login.title": {
       "text": "Login",
       "en": "Login"
-    },
-    "gui.login.username": {
-      "text": "Username",
-      "en": "Username"
     },
     "gui.logout": {
       "text": "logout",
@@ -3213,6 +3189,66 @@
     "term.copied": {
       "text": " copied",
       "en": " copied"
+    },
+    "cli.auth.password.help": {
+      "text": "Show whether the admin password is set, or set/clear it.",
+      "en": "Show whether the admin password is set, or set/clear it."
+    },
+    "cli.auth.password.set.help": {
+      "text": "Set the GUI admin password (prompted, not on the command line).",
+      "en": "Set the GUI admin password (prompted, not on the command line)."
+    },
+    "cli.auth.password.clear.help": {
+      "text": "Disable GUI login. Existing API keys still work.",
+      "en": "Disable GUI login. Existing API keys still work."
+    },
+    "cli.auth.keys.help": {
+      "text": "List or create API keys. Secrets are shown once at create.",
+      "en": "List or create API keys. Secrets are shown once at create."
+    },
+    "cli.auth.keys.create.help": {
+      "text": "Create a key named NAME and print the secret once.",
+      "en": "Create a key named NAME and print the secret once."
+    },
+    "cli.auth.keys.revoke.help": {
+      "text": "Revoke the key with ID.",
+      "en": "Revoke the key with ID."
+    },
+    "gui.config.auth": {
+      "text": "Admin",
+      "en": "Admin"
+    },
+    "gui.config.password.set": {
+      "text": "Password is set.",
+      "en": "Password is set."
+    },
+    "gui.config.password.off": {
+      "text": "Login is disabled until a password is set.",
+      "en": "Login is disabled until a password is set."
+    },
+    "gui.config.password.save": {
+      "text": "Set password",
+      "en": "Set password"
+    },
+    "gui.config.password.clear": {
+      "text": "Disable login",
+      "en": "Disable login"
+    },
+    "gui.config.keys.create": {
+      "text": "Create key",
+      "en": "Create key"
+    },
+    "gui.config.keys.revoke": {
+      "text": "Revoke",
+      "en": "Revoke"
+    },
+    "gui.config.keys.name": {
+      "text": "Key name",
+      "en": "Key name"
+    },
+    "gui.config.keys.secret": {
+      "text": "Copy this key now; it is shown once.",
+      "en": "Copy this key now; it is shown once."
     }
   }
 }

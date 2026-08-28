@@ -14,6 +14,7 @@ import re
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
+from ..net.host import reject_bogus_ipv4
 from ..utility import (
     LogFn,
     ProgressFn,
@@ -308,6 +309,7 @@ def normalize_qname(name: str, *, qtype: Optional[str] = None) -> str:
         raise ValueError("IP names require PTR (use /dns/<ip>/PTR)")
 
     text = text.rstrip(".")
+    reject_bogus_ipv4(text)
     if not text or " " in text or ".." in text:
         raise ValueError("invalid domain name")
     labels = text.split(".")

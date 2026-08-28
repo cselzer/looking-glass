@@ -1,8 +1,9 @@
 """Server-side GUI sessions under ~/.looking-glass/data/sessions/.
 
 Tokens are 256-bit secrets stored as 0600 JSON files, not JWTs. The cookie
-carries only the id; the server holds the user and expiry, so a session can
-be revoked by deleting the file. HttpOnly + SameSite=Lax; Secure on HTTPS.
+carries only the id; the server holds expiry, so a session can be revoked by
+deleting the file. HttpOnly + SameSite=Lax; Secure on HTTPS. There is no
+username: a valid session is the admin.
 """
 
 from __future__ import annotations
@@ -65,9 +66,8 @@ def load(token: str) -> Optional[Dict[str, Any]]:
     payload = load_json_cache(_path(token))
     if not isinstance(payload, dict):
         return None
-    user = str(payload.get("user") or "").strip()
     expires = float(payload.get("expires") or 0)
-    if not user or expires <= time.time():
+    if expires <= time.time():
         delete(token)
         return None
     remaining = expires - time.time()
@@ -89,16 +89,16 @@ def user_from_cookie(header: Optional[str]) -> Optional[str]:
     rec = load(token)
     if not rec:
         return None
-    return str(rec.get("user") or "") or None
+    return "admin"
 
 
-def create(user: str) -> str:
+def create() -> str:
     token = secrets.token_hex(32)
     now = time.time()
     path = _path(token)
     if not save_json_cache(
         path,
-        {"user": user, "created": now, "expires": now + TTL_S},
+        {"created": now, "expires": now + TTL_S},
     ):
         raise OSError("could not write session")
     try:

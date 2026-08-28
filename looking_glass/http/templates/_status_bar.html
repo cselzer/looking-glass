@@ -4,8 +4,6 @@
     <button type="button" id="status-windows" hidden>{{ t("status.windows.min") }}</button>
     {% if user %}
     <span id="status-auth-user">
-      <span id="status-user">{{ user }}</span>
-      <span class="status-sep" aria-hidden="true">·</span>
       <span id="status-serve">{{ t("status.serve.down") }}</span>
       <span class="status-sep" aria-hidden="true">·</span>
       <span id="status-https">{{ t("status.https.down") }}</span>
@@ -68,9 +66,6 @@
       <button type="button" class="ghost" id="login-close">{{ t("gui.close") }}</button>
     </div>
     <form id="login-form">
-      <label>{{ t("gui.login.username") }}
-        <input name="username" autocomplete="username" required>
-      </label>
       <label>{{ t("gui.login.password") }}
         <input type="password" name="password" autocomplete="current-password" required>
       </label>

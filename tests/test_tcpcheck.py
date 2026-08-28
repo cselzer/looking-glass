@@ -22,19 +22,13 @@ class TcpCheckTests(unittest.TestCase):
             ("2606:4700:4700::1111", 443),
         )
 
-    def test_parse_strips_https_url(self):
-        self.assertEqual(
-            tcpcheck.parse_tcp_path("/tcp/https:/example.com/443"),
-            ("example.com", 443),
-        )
-        self.assertEqual(
-            tcpcheck.parse_tcp_path("/tcp/https://example.com/443"),
-            ("example.com", 443),
-        )
-        self.assertEqual(
-            tcpcheck.parse_tcp_path("/tcp/https://example.com:8443"),
-            ("example.com", 8443),
-        )
+    def test_parse_rejects_https_url(self):
+        with self.assertRaises(ValueError):
+            tcpcheck.parse_tcp_path("/tcp/https:/example.com/443")
+        with self.assertRaises(ValueError):
+            tcpcheck.parse_tcp_path("/tcp/https://example.com/443")
+        with self.assertRaises(ValueError):
+            tcpcheck.parse_tcp_path("/tcp/https://example.com:8443")
 
     def test_refused(self):
         err = ConnectionRefusedError("Connection refused")
@@ -136,14 +130,13 @@ class TcpCheckTests(unittest.TestCase):
 
 
 class TcpPlanTests(unittest.TestCase):
-    def test_collapsed_https_envelope_is_host(self):
+    def test_collapsed_https_envelope_is_rejected(self):
         from looking_glass.http.site import _plan
 
-        err, kind, value, base = _plan(
+        err, kind, value, _base = _plan(
             "wsgi", "1.1.1.1", "/tcp/https:/example.com/443", {}, ""
         )
-        self.assertIsNone(err)
-        self.assertEqual(kind, "tcp")
-        self.assertEqual(value, "example.com")
-        self.assertEqual(base["query"], "example.com")
-        self.assertEqual(base["port"], 443)
+        self.assertIsNotNone(err)
+        self.assertIsNone(kind)
+        status, _ctype, body = err
+        self.assertEqual(status, 400)

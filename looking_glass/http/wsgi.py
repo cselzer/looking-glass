@@ -53,6 +53,7 @@ def inner(environ, start_response):
         cookie=environ.get("HTTP_COOKIE"),
         body=raw_body,
         correlation_id=environ.get("HTTP_X_CORRELATION_ID"),
+        authorization=environ.get("HTTP_AUTHORIZATION"),
     )
     try:
         phrase = HTTPStatus(status).phrase

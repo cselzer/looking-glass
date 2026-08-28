@@ -6,7 +6,7 @@ import json
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs
 
-from ..auth import history, pam, session, users
+from ..auth import history, keys, password, session
 from .. import cache as query_cache
 
 _JSON = "application/json"
@@ -23,97 +23,176 @@ def _pack(status: int, payload: Dict[str, Any], headers: Optional[ExtraHeaders] 
     )
 
 
-def current_user(cookie: Optional[str]) -> Optional[str]:
+def current_user(cookie: Optional[str], authorization: Optional[str] = None) -> Optional[str]:
+    name = keys.verify_authorization(authorization)
+    if name:
+        return name
     return session.user_from_cookie(cookie)
 
 
-def _need_user(cookie: Optional[str]) -> Tuple[Optional[str], Optional[HttpOut]]:
-    user = current_user(cookie)
+def _need_user(
+    cookie: Optional[str], authorization: Optional[str] = None
+) -> Tuple[Optional[str], Optional[HttpOut]]:
+    user = current_user(cookie, authorization)
     if user:
         return user, None
     return None, _pack(401, {"ok": False, "error": "login required"})
 
 
-def _parse_login(raw: bytes) -> Tuple[str, str]:
+def _parse_password(raw: bytes) -> str:
     text = (raw or b"").decode("utf-8", "replace").strip()
     if not text:
-        return "", ""
+        return ""
     if text.startswith("{"):
         try:
             data = json.loads(text)
         except json.JSONDecodeError:
-            return "", ""
+            return ""
         if not isinstance(data, dict):
-            return "", ""
-        return str(data.get("username") or ""), str(data.get("password") or "")
+            return ""
+        return str(data.get("password") or "")
     qs = parse_qs(text, keep_blank_values=True)
-    return (qs.get("username") or [""])[0], (qs.get("password") or [""])[0]
+    return (qs.get("password") or [""])[0]
 
 
 def _record(user: str, path: str, payload: Dict[str, Any]) -> None:
     if not user or not payload.get("ok"):
         return
+    stored = {
+        key: value
+        for key, value in payload.items()
+        if key not in {"secret", "password", "password_hash"}
+    }
     history.append(
         user,
         path=path,
-        kind=str(payload.get("kind") or ""),
-        query=str(payload.get("query") or ""),
-        payload=payload,
+        kind=str(stored.get("kind") or ""),
+        query=str(stored.get("query") or ""),
+        payload=stored,
     )
 
 
 def handle_login(raw: bytes, scheme: Optional[str], visitor: Optional[str] = None) -> HttpOut:
     from . import weblog
 
-    username, password = _parse_login(raw)
-    name = users.normalize(username)
-    label = name or str(username or "").strip()
-    if not name or not password:
-        weblog.write_login(ok=False, username=label, peer=visitor, reason="username and password required")
-        return _pack(400, {"ok": False, "error": "username and password required"})
-    if users.is_forbidden(name) or not users.valid_name(name):
-        weblog.write_login(ok=False, username=name, peer=visitor, reason="forbidden")
-        return _pack(403, {"ok": False, "error": "forbidden"})
-    if not pam.authenticate(name, password):
-        weblog.write_login(ok=False, username=name, peer=visitor, reason="invalid credentials")
+    secret = _parse_password(raw)
+    if not password.is_set() or not secret:
+        weblog.write_login(ok=False, peer=visitor, reason="invalid credentials")
         return _pack(401, {"ok": False, "error": "invalid credentials"})
-    if not users.admit(name):
-        weblog.write_login(ok=False, username=name, peer=visitor, reason="not allowed")
-        return _pack(403, {"ok": False, "error": "not allowed"})
+    if not password.verify(secret):
+        weblog.write_login(ok=False, peer=visitor, reason="invalid credentials")
+        return _pack(401, {"ok": False, "error": "invalid credentials"})
     try:
-        token = session.create(name)
+        token = session.create()
     except OSError as exc:
-        weblog.write_login(ok=False, username=name, peer=visitor, reason=str(exc))
+        weblog.write_login(ok=False, peer=visitor, reason=str(exc))
         return _pack(500, {"ok": False, "error": str(exc)})
-    payload = {"ok": True, "kind": "auth", "query": "login", "user": name}
-    _record(name, "/login", payload)
-    weblog.write_login(ok=True, username=name, peer=visitor, reason="ok")
+    payload = {"ok": True, "kind": "auth", "query": "login", "user": "admin", "admin": True}
+    _record("admin", "/login", payload)
+    weblog.write_login(ok=True, peer=visitor, reason="ok")
     return _pack(200, payload, session.set_cookie_headers(token, scheme=scheme))
 
 
-def handle_logout(cookie: Optional[str], scheme: Optional[str]) -> HttpOut:
+def handle_logout(
+    cookie: Optional[str], scheme: Optional[str], authorization: Optional[str] = None
+) -> HttpOut:
     token = session.parse_token(cookie) or ""
-    user = current_user(cookie)
+    user = current_user(cookie, authorization)
     if token:
         session.delete(token)
-    payload = {"ok": True, "kind": "auth", "query": "logout", "user": user}
+    payload = {"ok": True, "kind": "auth", "query": "logout", "user": user, "admin": bool(user)}
     if user:
         _record(user, "/logout", payload)
     return _pack(200, payload, session.set_cookie_headers("", scheme=scheme, clear=True))
 
 
-def handle_session(cookie: Optional[str]) -> HttpOut:
-    user = current_user(cookie)
-    return _pack(200, {"ok": True, "user": user})
+def handle_session(cookie: Optional[str], authorization: Optional[str] = None) -> HttpOut:
+    user = current_user(cookie, authorization)
+    return _pack(200, {"ok": True, "user": user, "admin": bool(user)})
 
 
-def handle_history(method: str, token: str, cookie: Optional[str]) -> HttpOut:
+def handle_auth_keys(
+    method: str,
+    token: str,
+    cookie: Optional[str],
+    body: bytes = b"",
+    authorization: Optional[str] = None,
+) -> HttpOut:
+    user, denied = _need_user(cookie, authorization)
+    if denied:
+        return denied
+    verb = (method or "GET").upper()
+    rest = token[len("auth/keys") :].lstrip("/")
+    if verb == "GET" and not rest:
+        listed = keys.list_keys()
+        return _pack(
+            200,
+            {
+                "ok": True,
+                "kind": "auth",
+                "query": "keys",
+                "keys": listed,
+                "count": len(listed),
+                "password_set": password.is_set(),
+            },
+        )
+    if verb == "POST" and not rest:
+        data = _config_body(body)
+        try:
+            created = keys.create(str(data.get("name") or ""))
+        except ValueError as exc:
+            return _pack(400, {"ok": False, "error": str(exc)})
+        payload = {"ok": True, "kind": "auth", "query": "keys", **created}
+        _record(user or "", "/auth/keys", payload)
+        return _pack(200, payload)
+    if verb == "DELETE" and rest:
+        if not keys.revoke(rest):
+            return _pack(404, {"ok": False, "error": "not found"})
+        payload = {"ok": True, "kind": "auth", "query": "keys", "id": rest}
+        _record(user or "", "/auth/keys/" + rest, payload)
+        return _pack(200, payload)
+    if rest:
+        return _pack(404, {"ok": False, "error": "not found"})
+    return _pack(405, {"ok": False, "error": "use GET, POST, or DELETE"})
+
+
+def handle_auth_password(
+    method: str,
+    token: str,
+    cookie: Optional[str],
+    body: bytes = b"",
+    authorization: Optional[str] = None,
+) -> HttpOut:
+    user, denied = _need_user(cookie, authorization)
+    if denied:
+        return denied
+    verb = (method or "GET").upper()
+    if verb != "POST":
+        return _pack(405, {"ok": False, "error": "use POST"})
+    if token == "auth/password/clear":
+        password.clear()
+        payload = {"ok": True, "kind": "auth", "query": "password", "set": False}
+        _record(user or "", "/auth/password/clear", payload)
+        return _pack(200, payload)
+    secret = _parse_password(body)
+    try:
+        password.set_password(secret)
+    except ValueError as exc:
+        return _pack(400, {"ok": False, "error": str(exc)})
+    payload = {"ok": True, "kind": "auth", "query": "password", "set": True}
+    _record(user or "", "/auth/password", payload)
+    return _pack(200, payload)
+
+
+def handle_history(
+    method: str, token: str, cookie: Optional[str], authorization: Optional[str] = None
+) -> HttpOut:
     verb = (method or "GET").upper()
     if verb != "GET":
         return _pack(405, {"ok": False, "error": "use GET"})
     rest = token[len("history") :].lstrip("/")
     if not rest:
-        user, denied = _need_user(cookie)
+        user, denied = _need_user(cookie, authorization)
         if denied:
             return denied
         return _pack(200, {"ok": True, "files": history.list_entries(user or "")})
@@ -123,8 +202,10 @@ def handle_history(method: str, token: str, cookie: Optional[str]) -> HttpOut:
     return _pack(200, {"ok": True, **entry})
 
 
-def handle_serve(method: str, token: str, cookie: Optional[str]) -> HttpOut:
-    user, denied = _need_user(cookie)
+def handle_serve(
+    method: str, token: str, cookie: Optional[str], authorization: Optional[str] = None
+) -> HttpOut:
+    user, denied = _need_user(cookie, authorization)
     if denied:
         return denied
     verb = (method or "GET").upper()
@@ -171,8 +252,10 @@ def handle_serve(method: str, token: str, cookie: Optional[str]) -> HttpOut:
     return _pack(404, {"ok": False, "error": "not found"})
 
 
-def handle_cache(method: str, token: str, cookie: Optional[str]) -> HttpOut:
-    user, denied = _need_user(cookie)
+def handle_cache(
+    method: str, token: str, cookie: Optional[str], authorization: Optional[str] = None
+) -> HttpOut:
+    user, denied = _need_user(cookie, authorization)
     if denied:
         return denied
     verb = (method or "GET").upper()
@@ -215,8 +298,8 @@ def handle_cache(method: str, token: str, cookie: Optional[str]) -> HttpOut:
     return _pack(405, {"ok": False, "error": "use GET or DELETE"})
 
 
-def handle_docs(method: str, cookie: Optional[str]) -> HttpOut:
-    user, denied = _need_user(cookie)
+def handle_docs(method: str, cookie: Optional[str], authorization: Optional[str] = None) -> HttpOut:
+    user, denied = _need_user(cookie, authorization)
     if denied:
         return denied
     verb = (method or "GET").upper()
@@ -249,8 +332,10 @@ def _config_body(raw: bytes) -> Dict[str, Any]:
     return {str(key): value for key, value in data.items() if str(key) not in skip}
 
 
-def handle_config(method: str, cookie: Optional[str], body: bytes = b"") -> HttpOut:
-    user, denied = _need_user(cookie)
+def handle_config(
+    method: str, cookie: Optional[str], body: bytes = b"", authorization: Optional[str] = None
+) -> HttpOut:
+    user, denied = _need_user(cookie, authorization)
     if denied:
         return denied
     from .. import config as app_config
@@ -289,8 +374,14 @@ def handle_config(method: str, cookie: Optional[str], body: bytes = b"") -> Http
     return _pack(200, payload)
 
 
-def handle_logs(method: str, token: str, cookie: Optional[str], query_string: str = "") -> HttpOut:
-    user, denied = _need_user(cookie)
+def handle_logs(
+    method: str,
+    token: str,
+    cookie: Optional[str],
+    query_string: str = "",
+    authorization: Optional[str] = None,
+) -> HttpOut:
+    user, denied = _need_user(cookie, authorization)
     if denied:
         return denied
     if (method or "GET").upper() != "GET":
@@ -337,8 +428,9 @@ def handle_wall(
     cookie: Optional[str],
     body: bytes = b"",
     query_string: str = "",
+    authorization: Optional[str] = None,
 ) -> HttpOut:
-    user, denied = _need_user(cookie)
+    user, denied = _need_user(cookie, authorization)
     if denied:
         return denied
     from ..wall import lists as wall_lists
@@ -419,6 +511,7 @@ def dispatch(
     scheme: Optional[str],
     query_string: str = "",
     visitor: Optional[str] = None,
+    authorization: Optional[str] = None,
 ) -> Optional[HttpOut]:
     verb = (method or "GET").upper()
     if token == "login":
@@ -428,25 +521,29 @@ def dispatch(
     if token == "logout":
         if verb != "POST":
             return _pack(405, {"ok": False, "error": "use POST"})
-        return handle_logout(cookie, scheme)
+        return handle_logout(cookie, scheme, authorization)
     if token == "session":
         if verb != "GET":
             return _pack(405, {"ok": False, "error": "use GET"})
-        return handle_session(cookie)
+        return handle_session(cookie, authorization)
+    if token == "auth/keys" or token.startswith("auth/keys/"):
+        return handle_auth_keys(method, token, cookie, body, authorization)
+    if token in {"auth/password", "auth/password/clear"}:
+        return handle_auth_password(method, token, cookie, body, authorization)
     if token == "docs":
         if verb != "POST":
             return None
-        return handle_docs(method, cookie)
+        return handle_docs(method, cookie, authorization)
     if token == "logs" or token.startswith("logs/"):
-        return handle_logs(method, token, cookie, query_string)
+        return handle_logs(method, token, cookie, query_string, authorization)
     if token == "history" or token.startswith("history/"):
-        return handle_history(method, token, cookie)
+        return handle_history(method, token, cookie, authorization)
     if token == "serve/start" or token == "serve/stop":
-        return handle_serve(method, token, cookie)
+        return handle_serve(method, token, cookie, authorization)
     if token == "cache" or token.startswith("cache/"):
-        return handle_cache(method, token, cookie)
+        return handle_cache(method, token, cookie, authorization)
     if token == "config":
-        return handle_config(method, cookie, body)
+        return handle_config(method, cookie, body, authorization)
     if token == "wall" or token.startswith("wall/"):
-        return handle_wall(method, token, cookie, body, query_string)
+        return handle_wall(method, token, cookie, body, query_string, authorization)
     return None

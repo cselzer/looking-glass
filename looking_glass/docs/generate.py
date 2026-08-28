@@ -168,7 +168,6 @@ th { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-
 .status-win-menu .status-win {
   border-radius: 8px; border-bottom: 1px solid var(--line); box-shadow: none; max-width: 16rem;
 }
-#status-user { color: var(--fg); }
 .status-cluster {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.35rem 0.65rem;
 }

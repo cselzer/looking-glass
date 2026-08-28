@@ -223,14 +223,15 @@ def parse_label(value: str) -> str:
         raise ValueError("need a DNS label, e.g. example")
     if _looks_like_url(text) or " " in text or "/" in text or _WILDCARD.search(text):
         raise ValueError("need a DNS label, e.g. example")
+    if "." in text:
+        raise ValueError("need a DNS label, e.g. example")
     try:
         ipaddress.ip_address(text)
     except ValueError:
         pass
     else:
         raise ValueError("need a DNS label, e.g. example")
-    first = text.split(".")[0].strip()
-    ascii_label = _to_ascii_label(first)
+    ascii_label = _to_ascii_label(text)
     if len(ascii_label) < 1 or len(ascii_label) > 63:
         raise ValueError("need a DNS label, e.g. example")
     if not _LABEL_LDH.match(ascii_label):

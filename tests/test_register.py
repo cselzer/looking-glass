@@ -34,11 +34,14 @@ class ParseTldsTests(unittest.TestCase):
 
 
 class ParseLabelTests(unittest.TestCase):
-    def test_strips_to_first_label(self):
-        self.assertEqual(tlds.parse_label("example.com"), "example")
+    def test_rejects_dotted_names(self):
         self.assertEqual(tlds.parse_label("Example"), "example")
         self.assertEqual(tlds.parse_label("münchen"), "münchen")
         self.assertEqual(tlds.parse_label("xn--mnchen-3ya"), "münchen")
+        with self.assertRaises(ValueError):
+            tlds.parse_label("example.com")
+        with self.assertRaises(ValueError):
+            tlds.parse_label("999.999.999.999")
 
     def test_rejects_urls(self):
         with self.assertRaises(ValueError) as caught:
@@ -93,7 +96,7 @@ class CheckRegisterTests(unittest.IsolatedAsyncioTestCase):
             patch("looking_glass.dns.register._apply_rdap", new=AsyncMock()),
         ):
             payload = await tlds.check_register_async(
-                "example.com",
+                "example",
                 tlds=["com", "test", "org", "xyz"],
             )
         self.assertTrue(payload["ok"])
@@ -180,12 +183,17 @@ class RegisterHttpCliTests(unittest.TestCase):
         self.assertEqual(payload["kind"], "register")
         self.assertIn("label", payload["error"])
 
-    def test_plan_keeps_first_label(self):
-        err, kind, value, base = _plan("wsgi", "127.0.0.1", "/register/example.com", {}, "")
+    def test_plan_rejects_dotted_names(self):
+        err, kind, value, _base = _plan("wsgi", "127.0.0.1", "/register/example.com", {}, "")
+        self.assertIsNotNone(err)
+        self.assertIsNone(kind)
+        status, _ctype, body = err
+        self.assertEqual(status, 400)
+        err, kind, value, base = _plan("wsgi", "127.0.0.1", "/register/google", {}, "")
         self.assertIsNone(err)
         self.assertEqual(kind, "register")
-        self.assertEqual(value, "example")
-        self.assertEqual(base["query"], "example")
+        self.assertEqual(value, "google")
+        self.assertEqual(base["query"], "google")
 
     def test_plan_url_is_not_a_label(self):
         err, kind, value, _base = _plan("wsgi", "127.0.0.1", "/register/http://google.com", {}, "")

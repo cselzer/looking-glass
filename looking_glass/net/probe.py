@@ -38,7 +38,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Protocol, Tuple
 from urllib.parse import unquote
 
-from .host import dns_public_host, public_from_addrinfo, public_ip_from_addrinfo, unbracket_host
+from .host import dns_public_host, public_from_addrinfo, public_ip_from_addrinfo, reject_probe_target, unbracket_host
 
 TOOLS = ("ping", "traceroute", "mtr")
 _UDP_BASE_PORT = 33434
@@ -112,7 +112,9 @@ def parse_probe_path(path: str) -> Tuple[str, str]:
                 raise ValueError(f"{tool} path needs a host, e.g. /{tool}/1.1.1.1")
             if "/" in rest and not (rest.startswith("[") and "]" in rest):
                 raise ValueError(f"{tool} path needs a host, e.g. /{tool}/1.1.1.1")
-            return tool, unbracket_host(rest)
+            host = unbracket_host(rest)
+            reject_probe_target(host)
+            return tool, host
     raise ValueError("not a ping, traceroute, or mtr path")
 
 
@@ -141,6 +143,7 @@ def parse_tcp_trace_path(path: str) -> Tuple[str, int]:
         raise ValueError("tcptraceroute port must be 1–65535")
     if not host:
         raise ValueError("tcptraceroute path needs a host, e.g. /tcptraceroute/1.1.1.1/443")
+    reject_probe_target(host)
     return host, port
 
 
@@ -1679,6 +1682,27 @@ async def traceroute_async(
         result["port"] = int(port)
     await _finalize_result(result, "traceroute", enrich)
     return {"ok": True, "result": result, "error": None, "total_ms": _ms(start)}
+
+
+def parse_mtr_query_cycles(raw: Any) -> int:
+    """Strict ?cycles=: integer in 1..max_cycles. Do not coerce."""
+    try:
+        from ..config import load
+
+        cap = int((load().get("mtr") or {}).get("max_cycles") or 30)
+    except Exception:
+        cap = 30
+    cap = max(1, min(cap, MTR_HARD_CEILING))
+    if raw is None or isinstance(raw, bool):
+        raise ValueError("cycles must be an integer")
+    text = str(raw).strip()
+    try:
+        n = int(text)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("cycles must be an integer") from exc
+    if n < 1 or n > cap:
+        raise ValueError(f"cycles must be 1–{cap}")
+    return n
 
 
 def clamp_mtr_cycles(raw: Any = None) -> int:

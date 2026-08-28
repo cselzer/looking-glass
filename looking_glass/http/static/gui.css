@@ -297,7 +297,6 @@
       box-shadow: none;
       max-width: 16rem;
     }
-    #status-user { color: var(--fg); }
     .status-cluster {
       display: flex;
       flex-wrap: wrap;

@@ -429,7 +429,6 @@ def write_error(
 def write_login(
     *,
     ok: bool,
-    username: str,
     peer: Optional[str] = None,
     reason: str = "",
 ) -> None:
@@ -438,7 +437,6 @@ def write_login(
         {
             "ts": time.time(),
             "ok": bool(ok),
-            "user": str(username or ""),
             "peer": peer,
             "reason": str(reason or ("ok" if ok else "failed")),
             "intel": _row_intel(peer),

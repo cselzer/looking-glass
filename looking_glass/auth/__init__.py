@@ -1,6 +1,5 @@
-"""PAM admin sessions, allowlist, and replay history."""
+"""Admin password, API keys, file sessions, and replay history."""
 
-from . import history, session, users
-from .pam import authenticate
+from . import history, keys, password, session
 
-__all__ = ["authenticate", "history", "session", "users"]
+__all__ = ["history", "keys", "password", "session"]

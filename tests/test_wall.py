@@ -1838,16 +1838,17 @@ class HttpDemoTests(unittest.TestCase):
                 app, remote="127.0.0.1", path="/mtr/1.1.1.1", query="cycles=3"
             )
             omit, _, _ = _wsgi_get(app, remote="127.0.0.1", path="/mtr/1.1.1.1")
-            garbage, _, _ = _wsgi_get(
+            garbage, _, garbage_body = _wsgi_get(
                 app, remote="127.0.0.1", path="/mtr/1.1.1.1", query="cycles=foo"
             )
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(body)["kind"], "mtr")
-        self.assertEqual(run.call_args_list[0].kwargs.get("cycles"), "3")
+        self.assertEqual(run.call_args_list[0].kwargs.get("cycles"), 3)
         self.assertIsNone(run.call_args_list[1].kwargs.get("cycles"))
-        self.assertEqual(run.call_args_list[2].kwargs.get("cycles"), "foo")
+        self.assertEqual(len(run.call_args_list), 2)
         self.assertEqual(omit, 200)
-        self.assertEqual(garbage, 200)
+        self.assertEqual(garbage, 400)
+        self.assertFalse(json.loads(garbage_body)["ok"])
 
     def test_ping_needs_a_host(self):
         app = self._demo_app("wsgi")

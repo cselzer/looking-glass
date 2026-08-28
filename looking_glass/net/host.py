@@ -8,6 +8,8 @@ import socket
 from typing import Any, List, Optional, Sequence, Tuple
 
 _COLLAPSED_SLASH = re.compile(r"([a-z][a-z0-9+.-]*):/(?!/)", re.I)
+_SCHEME_PREFIX = re.compile(r"^[a-z][a-z0-9+.-]*:", re.I)
+_ASN_MAX = 4294967295
 
 
 def restore_collapsed_slashes(text: str) -> str:
@@ -21,6 +23,64 @@ def unbracket_host(value: str) -> str:
     if text.startswith("[") and text.endswith("]") and len(text) > 2:
         return text[1:-1]
     return text
+
+
+def reject_bogus_ipv4(text: str) -> None:
+    """Four decimal labels that are not a valid IPv4 are not a domain."""
+    raw = unbracket_host(text).strip().rstrip(".")
+    labels = raw.split(".")
+    if len(labels) != 4 or not all(part.isdigit() for part in labels):
+        return
+    try:
+        ipaddress.IPv4Address(raw)
+    except ValueError as exc:
+        raise ValueError("not a valid IPv4 address") from exc
+
+
+def reject_url_as_host(text: str) -> None:
+    """Host fields are hosts, not URLs."""
+    raw = str(text or "").strip()
+    if "://" in raw or raw.lower().startswith("//"):
+        raise ValueError("host is not a URL")
+    match = _SCHEME_PREFIX.match(raw)
+    if not match:
+        return
+    rest = raw[match.end() :]
+    if rest.isdigit():
+        return
+    try:
+        ipaddress.ip_address(unbracket_host(raw.split("%", 1)[0]))
+    except ValueError as exc:
+        raise ValueError("host is not a URL") from exc
+
+
+def reject_probe_target(host: str) -> None:
+    """Probes do not take zone-ids, link-local, or IPv4 lookalikes."""
+    text = unbracket_host(host).strip()
+    if not text:
+        raise ValueError("host is required")
+    if "%" in text:
+        raise ValueError("zone-id is not a probe target")
+    reject_url_as_host(text)
+    reject_bogus_ipv4(text)
+    try:
+        ip = ipaddress.ip_address(text)
+    except ValueError:
+        return
+    if ip.is_link_local:
+        raise ValueError("link-local is not a probe target")
+
+
+def parse_asn_number(text: str) -> int:
+    raw = str(text or "").strip()
+    if raw.upper().startswith("AS"):
+        raw = raw[2:].strip()
+    if not raw.isdigit():
+        raise ValueError("ASN must be 1–4294967295")
+    number = int(raw)
+    if not 1 <= number <= _ASN_MAX:
+        raise ValueError("ASN must be 1–4294967295")
+    return number
 
 
 def _port_int(raw: str) -> int:
