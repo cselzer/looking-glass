@@ -27,6 +27,7 @@ def config_group(ctx: click.Context) -> None:
     looking-glass config set refresh.rir 2
     looking-glass config set history.snapshots -1
     looking-glass config set wall.challenge_ttl_days 5
+    looking-glass config set http.controller_origins https://monitor.example
     looking-glass config hostname
     looking-glass config hostname s1.example.com
     """
@@ -60,7 +61,10 @@ def config_get_cmd(key: str) -> None:
 @click.argument("key")
 @click.argument("value")
 def config_set_cmd(key: str, value: str) -> None:
-    """Set one dotted key and write ~/.looking-glass/config.json."""
+    """Set one dotted key and write ~/.looking-glass/config.json.
+
+    List keys (http.controller_origins) accept CSV or a JSON list string.
+    """
     try:
         cfg = set_value(key, value)
     except KeyError:

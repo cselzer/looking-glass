@@ -3120,8 +3120,12 @@
       httpSec.append(field("http.hostname", t("gui.config.http.hostname", "Hostname (FQDN)"), "text", http.hostname || ""));
       httpSec.append(field("http.email", t("gui.config.http.email", "Let's Encrypt email"), "text", http.email || ""));
       httpSec.append(field("http.port", t("gui.config.http.port", "TLS port"), "number", http.port, { min: "1", max: "65535", step: "1" }));
+      httpSec.append(field("http.acme_port", t("gui.config.http.acme_port", "ACME HTTP-01 port"), "number", http.acme_port, { min: "1", max: "65535", step: "1" }));
+      httpSec.append(field("http.bind", t("gui.config.http.bind", "Bind address (* for both families)"), "text", http.bind || "*"));
       httpSec.append(field("http.workers", t("gui.config.http.workers", "Uvicorn workers"), "number", http.workers, { min: "1", max: "32", step: "1" }));
       httpSec.append(field("http.staging", t("gui.config.http.staging", "Use Let's Encrypt staging"), "checkbox", http.staging));
+      const origins = Array.isArray(http.controller_origins) ? http.controller_origins.join(", ") : (http.controller_origins || "");
+      httpSec.append(field("http.controller_origins", t("gui.config.http.controller_origins", "Controller origins (CORS, comma-separated)"), "text", origins));
       form.append(httpSec);
 
       const refSec = el("fieldset", "config-sec config-span");

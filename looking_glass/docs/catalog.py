@@ -319,11 +319,11 @@ HTTP_ROUTES: List[Dict[str, Any]] = [
         "id": "config",
         "method": "GET",
         "path": "/config",
-        "summary": "Operator config.json. POST sets dotted keys (docs.enabled, locale, cache, refresh, wall, history).",
+        "summary": "Operator config.json. POST sets dotted keys (locale, cache, refresh, wall, history, logs, mtr, docs, http).",
         "query": [],
         "cli": "looking-glass config [get|set]",
         "accept": "JSON.",
-        "notes": "401 without a session or API key. Password and API keys are not stored in config.json.",
+        "notes": "401 without a session or API key. GET includes keys (every DEFAULTS leaf). POST dotted keys or {\"values\": {…}}. Password and API keys are not stored in config.json.",
     },
     {
         "id": "logs",

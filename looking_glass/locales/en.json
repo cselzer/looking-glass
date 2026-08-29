@@ -131,16 +131,16 @@
       "en": "Print one dotted key (locale, cache.gui, refresh.rir, …)."
     },
     "cli.config.help": {
-      "text": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com",
-      "en": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com"
+      "text": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config set http.controller_origins https://monitor.example\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com",
+      "en": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config set http.controller_origins https://monitor.example\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com"
     },
     "cli.config.hostname.help": {
       "text": "Set http.hostname from the node FQDN (Python getfqdn) or NAME.",
       "en": "Set http.hostname from the node FQDN (Python getfqdn) or NAME."
     },
     "cli.config.set.help": {
-      "text": "Set one dotted key and write ~/.looking-glass/config.json.",
-      "en": "Set one dotted key and write ~/.looking-glass/config.json."
+      "text": "Set one dotted key and write ~/.looking-glass/config.json.\n\nList keys (http.controller_origins) accept CSV or a JSON list string.",
+      "en": "Set one dotted key and write ~/.looking-glass/config.json.\n\nList keys (http.controller_origins) accept CSV or a JSON list string."
     },
     "cli.config.show.help": {
       "text": "Print the operator config file.",
@@ -675,12 +675,12 @@
       "en": "JSON."
     },
     "docs.http.config.notes": {
-      "text": "401 without a session or API key. Password and API keys are not stored in config.json.",
-      "en": "401 without a session or API key. Password and API keys are not stored in config.json."
+      "text": "401 without a session or API key. GET includes keys (every DEFAULTS leaf). POST dotted keys or {\"values\": {…}}. Password and API keys are not stored in config.json.",
+      "en": "401 without a session or API key. GET includes keys (every DEFAULTS leaf). POST dotted keys or {\"values\": {…}}. Password and API keys are not stored in config.json."
     },
     "docs.http.config.summary": {
-      "text": "Operator config.json. POST sets dotted keys (docs.enabled, locale, cache, refresh, wall, history).",
-      "en": "Operator config.json. POST sets dotted keys (docs.enabled, locale, cache, refresh, wall, history)."
+      "text": "Operator config.json. POST sets dotted keys (locale, cache, refresh, wall, history, logs, mtr, docs, http).",
+      "en": "Operator config.json. POST sets dotted keys (locale, cache, refresh, wall, history, logs, mtr, docs, http)."
     },
     "docs.http.dns.accept": {
       "text": "JSON or HTML report.",
@@ -951,12 +951,12 @@
       "en": "Always JSON (Cache-Control: no-store)."
     },
     "docs.http.status.notes": {
-      "text": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user, serve (intel running/ready/uptime plus pid and socket), and https (tls running/uptime/port plus cert fields when present). The services window reads this payload.",
-      "en": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user, serve (intel running/ready/uptime plus pid and socket), and https (tls running/uptime/port plus cert fields when present). The services window reads this payload."
+      "text": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. `version` is the installed looking-glass package (PEP 440). Logged-in responses add user, serve (intel running/ready/uptime plus pid and socket), and https (tls running/uptime/port plus cert fields when present). The services window reads this payload.",
+      "en": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. `version` is the installed looking-glass package (PEP 440). Logged-in responses add user, serve (intel running/ready/uptime plus pid and socket), and https (tls running/uptime/port plus cert fields when present). The services window reads this payload."
     },
     "docs.http.status.summary": {
-      "text": "Hostname, IPv4 and/or IPv6, clock, uptime, load, WSGI/ASGI.",
-      "en": "Hostname, IPv4 and/or IPv6, clock, uptime, load, WSGI/ASGI."
+      "text": "Hostname, IPv4 and/or IPv6, clock, uptime, load, WSGI/ASGI, package version.",
+      "en": "Hostname, IPv4 and/or IPv6, clock, uptime, load, WSGI/ASGI, package version."
     },
     "docs.http.tcp.accept": {
       "text": "JSON or HTML report.",
@@ -1269,6 +1269,18 @@
     "gui.config.http": {
       "text": "HTTPS",
       "en": "HTTPS"
+    },
+    "gui.config.http.acme_port": {
+      "text": "ACME HTTP-01 port",
+      "en": "ACME HTTP-01 port"
+    },
+    "gui.config.http.bind": {
+      "text": "Bind address (* for both families)",
+      "en": "Bind address (* for both families)"
+    },
+    "gui.config.http.controller_origins": {
+      "text": "Controller origins (CORS, comma-separated)",
+      "en": "Controller origins (CORS, comma-separated)"
     },
     "gui.config.http.email": {
       "text": "Let's Encrypt email",

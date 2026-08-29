@@ -647,29 +647,16 @@ def refresh_policy() -> Dict[str, Any]:
     }
 
 
+def flatten_keys(tree: Any, prefix: str = "") -> List[str]:
+    """Leaf dotted paths for a nested dict (lists and scalars are leaves)."""
+    if isinstance(tree, dict):
+        keys: List[str] = []
+        for name, value in tree.items():
+            dotted = f"{prefix}.{name}" if prefix else str(name)
+            keys.extend(flatten_keys(value, dotted))
+        return keys
+    return [prefix] if prefix else []
+
+
 def known_keys() -> List[str]:
-    keys = [
-        "locale",
-        "cache.ttl_days",
-        "cache.gui",
-        "history.snapshots",
-        "wall.challenge_ttl_days",
-        "wall.challenge_bits",
-        "wall.default",
-        "logs.max_bytes",
-        "logs.keep",
-        "docs.enabled",
-        "mtr.cycles",
-        "mtr.max_cycles",
-        "http.enabled",
-        "http.hostname",
-        "http.email",
-        "http.port",
-        "http.acme_port",
-        "http.workers",
-        "http.bind",
-        "http.staging",
-    ]
-    keys.extend(f"refresh.{name}" for name in DEFAULT_REFRESH)
-    keys.extend(f"wall.headers.{name}" for name in WALL_HEADER_NAMES)
-    return keys
+    return flatten_keys(DEFAULTS)

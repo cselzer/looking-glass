@@ -1,14 +1,24 @@
 import json
 import os
+import re
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from click.testing import CliRunner
 
 from looking_glass.auth import session
 from looking_glass.cli.entry import cli
-from looking_glass.config import load, path, set_value
+from looking_glass.config import (
+    DEFAULTS,
+    _parse_set_value,
+    flatten_keys,
+    known_keys,
+    load,
+    path,
+    set_value,
+)
 from looking_glass.http.site import respond
 from looking_glass.i18n import set_locale
 
@@ -228,3 +238,97 @@ class ConfigHttpTests(unittest.TestCase):
                 )
                 self.assertEqual(denied, 400)
                 self.assertIn("unknown key", json.loads(raw)["error"])
+                replay, _, replay_body, *_ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/config",
+                    {},
+                    method="POST",
+                    cookie=cookie,
+                    body=json.dumps({"ok": True, "keys": ["locale"], "docs.enabled": False}).encode(
+                        "utf-8"
+                    ),
+                )
+                self.assertEqual(replay, 200)
+                self.assertFalse(json.loads(replay_body)["docs"]["enabled"])
+
+
+class KnownKeysTests(unittest.TestCase):
+    def test_known_keys_match_defaults(self):
+        self.assertEqual(known_keys(), flatten_keys(DEFAULTS))
+        self.assertIn("http.controller_origins", known_keys())
+
+    def test_every_known_key_parses_its_default(self):
+        with tempfile.TemporaryDirectory() as tmp, _root(tmp):
+            cfg = load()
+            for key in known_keys():
+                parts = key.split(".")
+                cur = cfg
+                for part in parts:
+                    cur = cur[part]
+                parsed = _parse_set_value(key, cur)
+                self.assertIsNotNone(parsed)
+
+    def test_admin_form_fields_match_known_keys(self):
+        src = (
+            Path(__file__).resolve().parents[1]
+            / "looking_glass"
+            / "http"
+            / "static"
+            / "admin.js"
+        ).read_text(encoding="utf-8")
+        start = src.index("function paintConfig")
+        end = src.index("function paintAuthPanel")
+        chunk = src[start:end]
+        names = {
+            key
+            for key in re.findall(r'field\(\s*"([a-z][a-z0-9_.]+)"', chunk)
+            if not key.endswith(".")
+        }
+        headers = re.search(r'headerNames = \[([^\]]+)\]', chunk)
+        self.assertIsNotNone(headers)
+        for raw in headers.group(1).split(","):
+            name = raw.strip().strip('"').strip("'")
+            if name:
+                names.add(f"wall.headers.{name}")
+        refresh = re.search(r'\["iana".*?\]', chunk)
+        self.assertIsNotNone(refresh)
+        for raw in json.loads(refresh.group(0)):
+            names.add(f"refresh.{raw}")
+        self.assertEqual(names, set(known_keys()))
+
+    def test_get_config_includes_keys(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with _roots(tmp)[0], _roots(tmp)[1]:
+                token = session.create()
+                cookie = f"looking_glass_session={token}"
+                status, _, body, *_ = respond(
+                    "wsgi", "127.0.0.1", "/config", {}, cookie=cookie
+                )
+        self.assertEqual(status, 200)
+        payload = json.loads(body)
+        self.assertEqual(payload["keys"], known_keys())
+
+    def test_cli_set_controller_origins_csv(self):
+        runner = CliRunner()
+        with tempfile.TemporaryDirectory() as tmp:
+            with _root(tmp), patch("looking_glass.utility.get_root", return_value=tmp):
+                result = runner.invoke(
+                    cli,
+                    [
+                        "--json",
+                        "config",
+                        "set",
+                        "http.controller_origins",
+                        "https://ctrl.example,https://other.example",
+                    ],
+                )
+                self.assertEqual(result.exit_code, 0, result.output)
+                cfg = json.loads(result.output)
+                self.assertEqual(
+                    cfg["http"]["controller_origins"],
+                    ["https://ctrl.example", "https://other.example"],
+                )
+                bad = runner.invoke(cli, ["--json", "config", "set", "not.a.key", "1"])
+                self.assertEqual(bad.exit_code, 2)
+                self.assertIn("unknown key", (bad.output or bad.stderr or "").lower() + str(bad.exception or ""))

@@ -328,7 +328,7 @@ def _config_body(raw: bytes) -> Dict[str, Any]:
         return {}
     if isinstance(data.get("values"), dict):
         return dict(data["values"])
-    skip = {"ok", "path", "docs_generated", "kind", "query"}
+    skip = {"ok", "path", "docs_generated", "kind", "query", "keys"}
     return {str(key): value for key, value in data.items() if str(key) not in skip}
 
 
@@ -349,6 +349,7 @@ def handle_config(
             "path": app_config.path(),
             "docs_generated": app_config.docs_generated(),
             **cfg,
+            "keys": app_config.known_keys(),
         }
         return _pack(200, payload)
     if verb != "POST":
@@ -369,6 +370,7 @@ def handle_config(
         "path": app_config.path(),
         "docs_generated": app_config.docs_generated(),
         **cfg,
+        "keys": app_config.known_keys(),
     }
     _record(user or "", "/config", payload)
     return _pack(200, payload)
