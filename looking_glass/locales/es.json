@@ -11,8 +11,36 @@
       "en": "Look up an autonomous system (same as GET /AS<number>)."
     },
     "cli.auth.help": {
-      "text": "Gestionar la contraseña de la GUI, las claves API y las sesiones en archivo.\n\nSin contraseña, el inicio de sesión queda deshabilitado (no abre el admin). Las claves API funcionan de forma independiente.\n\n\b\nlooking-glass auth password set\nlooking-glass auth keys create tokyo\nlooking-glass auth sessions clear",
+      "text": "Administrar la contraseña de la GUI, las claves API y las sesiones en archivo.\n\nSi no hay una contraseña configurada, el inicio de sesión queda deshabilitado (no abre el acceso de administrador). Las claves API\nfuncionan de forma independiente y otorgan los mismos derechos de administrador que una sesión con contraseña.\n\n\b\nlooking-glass auth password set\nlooking-glass auth keys create tokyo\nlooking-glass auth sessions clear",
       "en": "Manage the GUI password, API keys, and file sessions.\n\nAn unset password disables login (it does not open admin). API keys\nwork independently and grant the same admin rights as a password session.\n\n\b\nlooking-glass auth password set\nlooking-glass auth keys create tokyo\nlooking-glass auth sessions clear"
+    },
+    "cli.auth.keys.create.help": {
+      "text": "Crear una clave llamada NAME e imprimir el secreto una sola vez.",
+      "en": "Create a key named NAME and print the secret once."
+    },
+    "cli.auth.keys.help": {
+      "text": "Listar o crear claves de API. Los secretos se muestran una sola vez al crearlas.",
+      "en": "List or create API keys. Secrets are shown once at create."
+    },
+    "cli.auth.keys.revoke.help": {
+      "text": "Revocar la clave con ID.",
+      "en": "Revoke the key with ID."
+    },
+    "cli.auth.password.clear.help": {
+      "text": "Desactivar el inicio de sesión de GUI. Las claves de API existentes siguen funcionando.",
+      "en": "Disable GUI login. Existing API keys still work."
+    },
+    "cli.auth.password.help": {
+      "text": "Mostrar si la contraseña de administrador está establecida, o establecerla/borrarla.",
+      "en": "Show whether the admin password is set, or set/clear it."
+    },
+    "cli.auth.password.set.help": {
+      "text": "Establecer la contraseña de administrador de GUI (se solicita, no en la línea de comandos).",
+      "en": "Set the GUI admin password (prompted, not on the command line)."
+    },
+    "cli.auth.password.set.opt.random_password": {
+      "text": "Generar una contraseña e imprimirla una sola vez.",
+      "en": "Generate a password and print it once."
     },
     "cli.auth.sessions.clear.help": {
       "text": "Eliminar todas las sesiones GUI en disco.",
@@ -62,6 +90,10 @@
       "text": "Solo rangos de uso especial de IANA.",
       "en": "IANA special-use ranges only."
     },
+    "cli.build.opt.do_rdap_dns": {
+      "text": "Solo el bootstrap de IANA RDAP DNS.",
+      "en": "IANA RDAP DNS bootstrap only."
+    },
     "cli.build.opt.do_rir": {
       "text": "Solo asignaciones por país de RIR.",
       "en": "RIR country allocations only."
@@ -95,7 +127,7 @@
       "en": "Print one dotted key (locale, cache.gui, refresh.rir, …)."
     },
     "cli.config.help": {
-      "text": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com",
+      "text": "Mostrar y editar ~/.looking-glass/config.json (locale, caché TTL/GUI, actualización de datasets).\n\nLos catálogos de locale se guardan en ~/.looking-glass/locales. Los datasets se guardan en ~/.looking-glass/data.\nLas cachés de consulta se guardan en ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com",
       "en": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com"
     },
     "cli.config.hostname.help": {
@@ -159,8 +191,8 @@
       "en": "Inspect HTTP status chain, redirects, headers, and TTFB."
     },
     "cli.https.help": {
-      "text": "Inicia, detiene, inspecciona o renueva el supervisor HTTPS de looking-glass.\n\nTLS escucha en http.port (por defecto 5555) para IPv4 e IPv6 (http.bind por defecto *).\nFije una familia con `looking-glass config set http.bind 0.0.0.0` o `::`.\nLet's Encrypt HTTP-01 usa http.acme_port (por defecto 80). Habilítelo con\n`looking-glass config set http.enabled true` después de definir hostname (el email es opcional).\nEl servidor de intel es un socket Unix aparte.",
-      "en": "Start, stop, inspect, or renew the looking-glass HTTPS supervisor.\n\nTLS listens on http.port (default 5555) for IPv4 and IPv6 (http.bind default *).\nPin one family with `looking-glass config set http.bind 0.0.0.0` or `::`.\nLet's Encrypt HTTP-01 uses http.acme_port (default 80). Enable with\n`looking-glass config set http.enabled true` after setting hostname (email is optional).\nThe intel server is a separate Unix socket."
+      "text": "Iniciar, detener, inspeccionar o renovar el supervisor HTTPS de looking-glass.\n\nTLS escucha en http.port (por defecto 5555) para IPv4 e IPv6 (http.bind por defecto *).\nFijar una familia con `looking-glass config set http.bind 0.0.0.0` o `::`.\nLet's Encrypt HTTP-01 usa http.acme_port (por defecto 80). Habilitar con\n`looking-glass config set http.enabled true` después de configurar el hostname\n(el correo electrónico es opcional).\nEl servidor intel es un socket Unix independiente.",
+      "en": "Start, stop, inspect, or renew the looking-glass HTTPS supervisor.\n\nTLS listens on http.port (default 5555) for IPv4 and IPv6 (http.bind default *).\nPin one family with `looking-glass config set http.bind 0.0.0.0` or `::`.\nLet's Encrypt HTTP-01 uses http.acme_port (default 80). Enable with\n`looking-glass config set http.enabled true` after setting hostname\n(email is optional).\nThe intel server is a separate Unix socket."
     },
     "cli.https.logs.help": {
       "text": "Muestra las últimas líneas de stdout y stderr del supervisor HTTPS.",
@@ -631,7 +663,7 @@
       "en": "JSON."
     },
     "docs.http.config.notes": {
-      "text": "401 sin sesión o clave API. La contraseña y las claves API no se guardan en config.json.",
+      "text": "401 sin una sesión o clave API. La contraseña y las claves API no se almacenan en config.json.",
       "en": "401 without a session or API key. Password and API keys are not stored in config.json."
     },
     "docs.http.config.summary": {
@@ -715,8 +747,8 @@
       "en": "JSON or HTML report."
     },
     "docs.http.http.notes": {
-      "text": "Se conecta al host indicado (consulta abierta / SSRF si el servidor puede alcanzar redes privadas).",
-      "en": "Connects to the named host (open lookup / SSRF if the server can reach private nets)."
+      "text": "/http/<host>/<path> es la ruta de la solicitud en el esquema por defecto (https, o http para :80). Las URL completas van en ?url=.",
+      "en": "/http/<host>/<path> is the request path on the default scheme (https, or http for :80). Full URLs belong in ?url=."
     },
     "docs.http.http.summary": {
       "text": "Sigue redirecciones; cabeceras, versión HTTP, TTFB.",
@@ -727,11 +759,11 @@
       "en": "JSON. Sets an HttpOnly looking_glass_session cookie (opaque file session, not a JWT)."
     },
     "docs.http.login.notes": {
-      "text": "El cuerpo es JSON o formulario con password. Sin nombre de usuario.",
+      "text": "El cuerpo es JSON o una contraseña de formulario. Sin nombre de usuario.",
       "en": "Body is JSON or form password. No username."
     },
     "docs.http.login.summary": {
-      "text": "Inicio de sesión con contraseña. Sin contraseña, el login queda deshabilitado.",
+      "text": "Inicio de sesión con contraseña. Si no hay una contraseña configurada, el inicio de sesión queda deshabilitado (no abre el acceso de administrador).",
       "en": "Password login. An unset password disables login (it does not open admin)."
     },
     "docs.http.logout.accept": {
@@ -895,11 +927,11 @@
       "en": "JSON."
     },
     "docs.http.session.notes": {
-      "text": "Public. Also {admin: true|false}. Sessions are 256-bit secrets on disk; the cookie is only the id. Authorization: Bearer is accepted.",
+      "text": "Público. También {admin: true|false}. Las sesiones son secretos de 256 bits en disco; la cookie es solo el id. Se acepta Authorization: Bearer.",
       "en": "Public. Also {admin: true|false}. Sessions are 256-bit secrets on disk; the cookie is only the id. Authorization: Bearer is accepted."
     },
     "docs.http.session.summary": {
-      "text": "Current admin session, or user: null.",
+      "text": "Sesión de administrador actual, o user: null.",
       "en": "Current admin session, or user: null."
     },
     "docs.http.status.accept": {
@@ -1023,7 +1055,7 @@
       "en": "On this page"
     },
     "docs.open_lookup": {
-      "text": "Este es un servicio de consulta abierto: las herramientas se conectan a los nombres que se indican. Las consultas no tienen autenticación. Los enlaces compartidos /history/<id> son públicos. La barra de historial, la caché, los registros y los controles de serve requieren una sesión de administrador o una clave API. XSS y la inyección de shell no son el modelo de amenaza; el egreso a direcciones privadas o de metadatos sí lo es, si este host puede enrutar hacia allí.",
+      "text": "Este es un servicio de consulta abierto: las herramientas se conectan a los nombres que se indican. Las consultas no tienen autenticación. Los enlaces compartidos /history/<id> son públicos. El panel de historial, la caché, los registros y los controles de serve requieren una sesión con contraseña de administrador o una clave API. XSS y shell injection no son el modelo de amenazas; el egreso hacia direcciones privadas o de metadatos sí lo es, si este host puede enrutar hacia ellas.",
       "en": "This is an open lookup service: tools connect to names you pass. Lookups have no auth. Shared /history/<id> links are public. The history rail, cache, logs, and serve controls need an admin password session or API key. XSS and shell injection are not the threat model; egress to private or metadata addresses is, if this host can route there."
     },
     "docs.query": {
@@ -1190,6 +1222,10 @@
       "text": "Configuración",
       "en": "Config"
     },
+    "gui.config.auth": {
+      "text": "Administración",
+      "en": "Admin"
+    },
     "gui.config.cache": {
       "text": "Caché",
       "en": "Cache"
@@ -1246,6 +1282,22 @@
       "text": "Workers de Uvicorn",
       "en": "Uvicorn workers"
     },
+    "gui.config.keys.create": {
+      "text": "Crear clave",
+      "en": "Create key"
+    },
+    "gui.config.keys.name": {
+      "text": "Nombre de la clave",
+      "en": "Key name"
+    },
+    "gui.config.keys.revoke": {
+      "text": "Revocar",
+      "en": "Revoke"
+    },
+    "gui.config.keys.secret": {
+      "text": "Copien esta clave ahora; se muestra una sola vez.",
+      "en": "Copy this key now; it is shown once."
+    },
     "gui.config.loading": {
       "text": "Cargando…",
       "en": "Loading…"
@@ -1253,6 +1305,18 @@
     "gui.config.locale": {
       "text": "Configuración regional",
       "en": "Locale"
+    },
+    "gui.config.logs": {
+      "text": "Registros",
+      "en": "Logs"
+    },
+    "gui.config.logs.keep": {
+      "text": "Conservar archivos rotados (−1 para siempre)",
+      "en": "Keep rotated files (−1 forever)"
+    },
+    "gui.config.logs.max_bytes": {
+      "text": "Rotar en (bytes)",
+      "en": "Rotate at (bytes)"
     },
     "gui.config.mtr": {
       "text": "MTR",
@@ -1265,6 +1329,22 @@
     "gui.config.mtr.max_cycles": {
       "text": "Pases máximos",
       "en": "Max passes"
+    },
+    "gui.config.password.clear": {
+      "text": "Deshabilitar inicio de sesión",
+      "en": "Disable login"
+    },
+    "gui.config.password.off": {
+      "text": "El inicio de sesión está deshabilitado hasta que se configure una contraseña.",
+      "en": "Login is disabled until a password is set."
+    },
+    "gui.config.password.save": {
+      "text": "Establecer contraseña",
+      "en": "Set password"
+    },
+    "gui.config.password.set": {
+      "text": "La contraseña está establecida.",
+      "en": "Password is set."
     },
     "gui.config.path": {
       "text": "Archivo",
@@ -1290,6 +1370,10 @@
       "text": "IANA",
       "en": "IANA"
     },
+    "gui.config.refresh.rdap_dns": {
+      "text": "RDAP DNS",
+      "en": "RDAP DNS"
+    },
     "gui.config.refresh.rir": {
       "text": "RIR",
       "en": "RIR"
@@ -1311,8 +1395,8 @@
       "en": "Config"
     },
     "gui.config.wall": {
-      "text": "Desafío de firewall",
-      "en": "Firewall challenge"
+      "text": "Firewall",
+      "en": "Firewall"
     },
     "gui.config.wall.challenge_bits": {
       "text": "Bits del puzzle (8–24)",
@@ -1321,6 +1405,54 @@
     "gui.config.wall.challenge_ttl_days": {
       "text": "TTL de la cookie de paso (días)",
       "en": "Pass cookie TTL (days)"
+    },
+    "gui.config.wall.default": {
+      "text": "Tráfico no coincidente",
+      "en": "Unmatched traffic"
+    },
+    "gui.config.wall.default.allow": {
+      "text": "Permitir",
+      "en": "Allow"
+    },
+    "gui.config.wall.default.block": {
+      "text": "Bloquear",
+      "en": "Block"
+    },
+    "gui.config.wall.headers.asn": {
+      "text": "X-Wall-ASN",
+      "en": "X-Wall-ASN"
+    },
+    "gui.config.wall.headers.country": {
+      "text": "X-Wall-Country",
+      "en": "X-Wall-Country"
+    },
+    "gui.config.wall.headers.decision": {
+      "text": "X-Wall-Decision",
+      "en": "X-Wall-Decision"
+    },
+    "gui.config.wall.headers.flag_url": {
+      "text": "X-Wall-Flag-Url",
+      "en": "X-Wall-Flag-Url"
+    },
+    "gui.config.wall.headers.iana": {
+      "text": "X-Wall-IANA",
+      "en": "X-Wall-IANA"
+    },
+    "gui.config.wall.headers.org": {
+      "text": "X-Wall-Org",
+      "en": "X-Wall-Org"
+    },
+    "gui.config.wall.headers.prefix": {
+      "text": "X-Wall-Prefix",
+      "en": "X-Wall-Prefix"
+    },
+    "gui.config.wall.headers.reason": {
+      "text": "X-Wall-Reason",
+      "en": "X-Wall-Reason"
+    },
+    "gui.config.wall.headers.timings": {
+      "text": "X-Wall-Timings",
+      "en": "X-Wall-Timings"
     },
     "gui.dns.filter": {
       "text": "Filtrar tipos",
@@ -1519,8 +1651,8 @@
       "en": "HTTPie"
     },
     "gui.http.hint": {
-      "text": "Siga la cadena de estado: redirecciones, encabezados de respuesta, versión HTTP / ALPN, TTFB, HSTS y tiempos.",
-      "en": "Follow the status chain: redirects, response headers, HTTP version / ALPN, TTFB, HSTS, and timing."
+      "text": "Sigan la cadena de estado: redirecciones, encabezados de respuesta, versión HTTP / ALPN, TTFB, HSTS y tiempos. /http/<host>/<path> es la ruta de la solicitud en el esquema por defecto; las URL completas van en ?url=.",
+      "en": "Follow the status chain: redirects, response headers, HTTP version / ALPN, TTFB, HSTS, and timing. /http/<host>/<path> is the request path on the default scheme; full URLs belong in ?url=."
     },
     "gui.http.label": {
       "text": "Host o URL",
@@ -1586,6 +1718,10 @@
       "text": "acceso",
       "en": "access"
     },
+    "gui.logs.acme": {
+      "text": "acme",
+      "en": "acme"
+    },
     "gui.logs.all": {
       "text": "todos",
       "en": "all"
@@ -1633,6 +1769,14 @@
     "gui.logs.hits": {
       "text": "aciertos",
       "en": "hits"
+    },
+    "gui.logs.https_err": {
+      "text": "error https",
+      "en": "https err"
+    },
+    "gui.logs.https_out": {
+      "text": "salida https",
+      "en": "https out"
     },
     "gui.logs.kinds": {
       "text": "tipos",
@@ -3189,66 +3333,6 @@
     "term.copied": {
       "text": " copiado",
       "en": " copied"
-    },
-    "cli.auth.password.help": {
-      "text": "Show whether the admin password is set, or set/clear it.",
-      "en": "Show whether the admin password is set, or set/clear it."
-    },
-    "cli.auth.password.set.help": {
-      "text": "Set the GUI admin password (prompted, not on the command line).",
-      "en": "Set the GUI admin password (prompted, not on the command line)."
-    },
-    "cli.auth.password.clear.help": {
-      "text": "Disable GUI login. Existing API keys still work.",
-      "en": "Disable GUI login. Existing API keys still work."
-    },
-    "cli.auth.keys.help": {
-      "text": "List or create API keys. Secrets are shown once at create.",
-      "en": "List or create API keys. Secrets are shown once at create."
-    },
-    "cli.auth.keys.create.help": {
-      "text": "Create a key named NAME and print the secret once.",
-      "en": "Create a key named NAME and print the secret once."
-    },
-    "cli.auth.keys.revoke.help": {
-      "text": "Revoke the key with ID.",
-      "en": "Revoke the key with ID."
-    },
-    "gui.config.auth": {
-      "text": "Admin",
-      "en": "Admin"
-    },
-    "gui.config.password.set": {
-      "text": "La contraseña está definida.",
-      "en": "Password is set."
-    },
-    "gui.config.password.off": {
-      "text": "El inicio de sesión está deshabilitado hasta que se defina una contraseña.",
-      "en": "Login is disabled until a password is set."
-    },
-    "gui.config.password.save": {
-      "text": "Definir contraseña",
-      "en": "Set password"
-    },
-    "gui.config.password.clear": {
-      "text": "Deshabilitar login",
-      "en": "Disable login"
-    },
-    "gui.config.keys.create": {
-      "text": "Crear clave",
-      "en": "Create key"
-    },
-    "gui.config.keys.revoke": {
-      "text": "Revocar",
-      "en": "Revoke"
-    },
-    "gui.config.keys.name": {
-      "text": "Nombre de clave",
-      "en": "Key name"
-    },
-    "gui.config.keys.secret": {
-      "text": "Copie esta clave ahora; se muestra una sola vez.",
-      "en": "Copy this key now; it is shown once."
     }
   }
 }

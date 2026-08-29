@@ -38,6 +38,10 @@
       "text": "Set the GUI admin password (prompted, not on the command line).",
       "en": "Set the GUI admin password (prompted, not on the command line)."
     },
+    "cli.auth.password.set.opt.random_password": {
+      "text": "Generate a password and print it once.",
+      "en": "Generate a password and print it once."
+    },
     "cli.auth.sessions.clear.help": {
       "text": "Delete every on-disk GUI session.",
       "en": "Delete every on-disk GUI session."
@@ -85,6 +89,10 @@
     "cli.build.opt.do_iana": {
       "text": "IANA special-use ranges only.",
       "en": "IANA special-use ranges only."
+    },
+    "cli.build.opt.do_rdap_dns": {
+      "text": "IANA RDAP DNS bootstrap only.",
+      "en": "IANA RDAP DNS bootstrap only."
     },
     "cli.build.opt.do_rir": {
       "text": "RIR country allocations only.",
@@ -183,8 +191,8 @@
       "en": "Inspect HTTP status chain, redirects, headers, and TTFB."
     },
     "cli.https.help": {
-      "text": "Start, stop, inspect, or renew the looking-glass HTTPS supervisor.\n\nTLS listens on http.port (default 5555) for IPv4 and IPv6 (http.bind default *).\nPin one family with `looking-glass config set http.bind 0.0.0.0` or `::`.\nLet's Encrypt HTTP-01 uses http.acme_port (default 80). Enable with\n`looking-glass config set http.enabled true` after setting hostname (email is optional).\nThe intel server is a separate Unix socket.",
-      "en": "Start, stop, inspect, or renew the looking-glass HTTPS supervisor.\n\nTLS listens on http.port (default 5555) for IPv4 and IPv6 (http.bind default *).\nPin one family with `looking-glass config set http.bind 0.0.0.0` or `::`.\nLet's Encrypt HTTP-01 uses http.acme_port (default 80). Enable with\n`looking-glass config set http.enabled true` after setting hostname (email is optional).\nThe intel server is a separate Unix socket."
+      "text": "Start, stop, inspect, or renew the looking-glass HTTPS supervisor.\n\nTLS listens on http.port (default 5555) for IPv4 and IPv6 (http.bind default *).\nPin one family with `looking-glass config set http.bind 0.0.0.0` or `::`.\nLet's Encrypt HTTP-01 uses http.acme_port (default 80). Enable with\n`looking-glass config set http.enabled true` after setting hostname\n(email is optional).\nThe intel server is a separate Unix socket.",
+      "en": "Start, stop, inspect, or renew the looking-glass HTTPS supervisor.\n\nTLS listens on http.port (default 5555) for IPv4 and IPv6 (http.bind default *).\nPin one family with `looking-glass config set http.bind 0.0.0.0` or `::`.\nLet's Encrypt HTTP-01 uses http.acme_port (default 80). Enable with\n`looking-glass config set http.enabled true` after setting hostname\n(email is optional).\nThe intel server is a separate Unix socket."
     },
     "cli.https.logs.help": {
       "text": "Show the HTTPS supervisor stdout and stderr tails.",
@@ -739,8 +747,8 @@
       "en": "JSON or HTML report."
     },
     "docs.http.http.notes": {
-      "text": "Connects to the named host (open lookup / SSRF if the server can reach private nets).",
-      "en": "Connects to the named host (open lookup / SSRF if the server can reach private nets)."
+      "text": "/http/<host>/<path> is the request path on the default scheme (https, or http for :80). Full URLs belong in ?url=.",
+      "en": "/http/<host>/<path> is the request path on the default scheme (https, or http for :80). Full URLs belong in ?url=."
     },
     "docs.http.http.summary": {
       "text": "Follow redirects; headers, HTTP version, TTFB.",
