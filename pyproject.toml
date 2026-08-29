@@ -41,7 +41,6 @@ looking-glass = "looking_glass.cli:main"
 
 [tool.setuptools_scm]
 version_file = "looking_glass/_version.py"
-local_scheme = "node-and-hash"
 
 [tool.setuptools.packages.find]
 include = ["looking_glass*"]
