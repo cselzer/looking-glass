@@ -467,22 +467,55 @@ class HumanModeTests(unittest.TestCase):
         self.assertIn("wrote /tmp/docs.html", human.stdout)
 
     def test_validate_one_line_no_wrap(self):
+        ipv6 = "fc03:3b85:794c:2737:c204:ec3c:ce08:3744"
         report = {
             "ok": False,
             "failed": 1,
             "warned": 0,
             "checks": [
                 {
+                    "status": "ok",
+                    "check": f"IANA {ipv6}",
+                    "detail": "unique-local [rfc4193] [rfc8190]",
+                },
+                {
+                    "status": "ok",
+                    "check": "IANA 203.0.113.206",
+                    "detail": "documentation (test-net-3) [rfc5737] 203.0.113.0/24",
+                },
+                {
                     "status": "failed",
                     "check": "ASN origin prefixes",
                     "detail": "missing 2001:67c:22e8:0000:0000:0000:0000:0000/48",
-                }
+                },
             ],
         }
+        from rich.console import Console as RichConsole
+
         with patch("looking_glass.cli.entry._run_validate", return_value=report):
             with patch.dict(os.environ, {"COLUMNS": "80"}, clear=False):
-                human = self.runner.invoke(cli, ["validate"])
-        self.assertIn("ASN origin prefixes  FAIL", human.stdout)
+                with patch(
+                    "looking_glass.cli.render._console",
+                    lambda: RichConsole(width=80, highlight=False, soft_wrap=True, emoji=True),
+                ):
+                    human = self.runner.invoke(cli, ["validate"])
+        self.assertEqual(human.exit_code, 2, human.output)
+        lines = [ln.rstrip("\n") for ln in human.stdout.splitlines() if ln.strip()]
+        for ln in lines:
+            self.assertLessEqual(len(ln), 80, repr(ln))
+        self.assertNotIn(ipv6, human.stdout)
+        self.assertIn("IANA fc03:3b85:794c:2737:", human.stdout)
+        self.assertIn("…", human.stdout)
+        rfc_lines = [ln for ln in lines if "rfc8190" in ln]
+        self.assertTrue(rfc_lines, human.stdout)
+        self.assertTrue(any("[rfc8190]" in ln for ln in rfc_lines), rfc_lines)
+        ipv4_lines = [ln for ln in human.stdout.splitlines() if "IANA 203.0.113.206" in ln]
+        self.assertTrue(ipv4_lines, human.stdout)
+        self.assertFalse(ipv4_lines[0].startswith(" "), ipv4_lines[0])
+        fail = [ln for ln in lines if "ASN origin prefixes" in ln]
+        self.assertTrue(fail, human.stdout)
+        self.assertIn("ASN origin prefixes  FAIL", fail[0])
+        self.assertEqual(len(fail), 1)
         self.assertNotIn("ok true", human.stdout)
 
     def test_apex_prints_immediately(self):

@@ -1072,9 +1072,69 @@ def _render_auth(payload: Any) -> None:
 
 def _truncate(text: Any, limit: int = 36) -> str:
     raw = str(text or "")
+    if limit <= 0:
+        return ""
     if len(raw) <= limit:
         return raw
+    if limit == 1:
+        return "…"
     return raw[: limit - 1] + "…"
+
+
+def _compress_ipv6(addr: str, limit: int) -> str:
+    if limit <= 0:
+        return ""
+    if len(addr) <= limit:
+        return addr
+    parts = addr.split(":")
+    kept: List[str] = []
+    for part in parts:
+        trial = ":".join(kept + [part]) + ":…"
+        if kept and len(trial) > limit:
+            break
+        kept.append(part)
+    if not kept:
+        return _truncate(addr, limit)
+    out = ":".join(kept) + ":…"
+    if len(out) > limit:
+        return _truncate(addr, limit)
+    return out
+
+
+def _compress_check_name(name: str, limit: int) -> str:
+    if limit <= 0:
+        return ""
+    if len(name) <= limit:
+        return name
+    prefix, sep, addr = name.partition(" ")
+    if not sep or ":" not in addr:
+        return _truncate(name, limit)
+    addr_limit = limit - len(prefix) - 1
+    if addr_limit < 3:
+        return _truncate(name, limit)
+    return f"{prefix} {_compress_ipv6(addr, addr_limit)}"
+
+
+def _fit_validate_line(name: str, mark: str, detail: str, width: int) -> str:
+    sep = f"  {mark}  "
+    name = str(name or "")
+    detail = str(detail or "")
+    width = max(8, int(width))
+
+    def pack(n: str, d: str) -> str:
+        return f"{n}{sep}{d}".rstrip()
+
+    line = pack(name, detail)
+    if len(line) <= width:
+        return line
+    name_budget = width - len(sep) - len(detail)
+    if name_budget < len(name):
+        name = _compress_check_name(name, max(8, name_budget))
+    line = pack(name, detail)
+    if len(line) <= width:
+        return line
+    remain = width - len(name) - len(sep)
+    return pack(name, _truncate(detail, remain))
 
 
 def _render_validate(payload: Any) -> None:
@@ -1082,20 +1142,26 @@ def _render_validate(payload: Any) -> None:
         _render_pretty(payload)
         return
     con = _console()
+    width = 80
+    try:
+        width = max(40, int(con.size.width or 80))
+    except Exception:
+        pass
     failed = payload.get("failed")
     warned = payload.get("warned")
     head = f"validate  failed {failed}  warned {warned}"
     style = "green" if payload.get("ok") else "red"
-    con.print(Text(head, style=style))
+    con.print(Text(head, style=style), overflow="ignore", no_wrap=True)
     for row in payload.get("checks") or []:
         if not isinstance(row, dict):
             continue
         status = str(row.get("status") or "")
         mark = {"ok": "ok", "failed": "FAIL", "warn": "WARN", "warning": "WARN"}.get(status, status.upper() or "?")
         name = str(row.get("check") or row.get("id") or "")
-        detail = _truncate(row.get("detail") or row.get("message") or "", 40)
+        detail = str(row.get("detail") or row.get("message") or "")
         color = "green" if status == "ok" else ("yellow" if "warn" in status else "red")
-        con.print(Text(f"{name}  {mark}  {detail}".rstrip(), style=color))
+        line = _fit_validate_line(name, mark, detail, width)
+        con.print(Text(line, style=color), overflow="ignore", no_wrap=True)
 
 
 def _render_build(payload: Any) -> None:
