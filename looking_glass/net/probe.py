@@ -120,25 +120,29 @@ def parse_probe_path(path: str) -> Tuple[str, str]:
 
 def parse_tcp_trace_path(path: str) -> Tuple[str, int]:
     """Parse /tcptraceroute/<host> or /tcptraceroute/<host>/<port>."""
-    text = unquote(str(path or "")).strip()
+    text = str(path or "")
     if text.startswith("/"):
         text = text[1:]
-    text = text.rstrip("/")
-    if text != "tcptraceroute" and not text.startswith("tcptraceroute/"):
+    segs = text.split("/")
+    if segs and segs[-1] == "":
+        segs = segs[:-1]
+    if not segs or segs[0] != "tcptraceroute":
         raise ValueError("not a tcptraceroute path")
-    rest = "" if text == "tcptraceroute" else text[len("tcptraceroute/") :]
+    rest = segs[1:]
     if not rest:
         raise ValueError("tcptraceroute path needs a host, e.g. /tcptraceroute/1.1.1.1/443")
-    parts = rest.split("/")
-    host = unbracket_host(parts[0])
+    if len(rest) > 2:
+        raise ValueError("tcptraceroute path is /tcptraceroute/<host> or /tcptraceroute/<host>/<port>")
+    host = unquote(rest[0])
+    if "/" in host:
+        raise ValueError("tcptraceroute path needs a host, e.g. /tcptraceroute/1.1.1.1/443")
+    host = unbracket_host(host)
     port = 443
-    if len(parts) == 2:
+    if len(rest) == 2:
         try:
-            port = int(parts[1])
+            port = int(unquote(rest[1]))
         except ValueError as exc:
             raise ValueError("tcptraceroute port must be an integer") from exc
-    elif len(parts) > 2:
-        raise ValueError("tcptraceroute path is /tcptraceroute/<host> or /tcptraceroute/<host>/<port>")
     if not 1 <= port <= 65535:
         raise ValueError("tcptraceroute port must be 1–65535")
     if not host:

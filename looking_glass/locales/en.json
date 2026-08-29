@@ -1519,8 +1519,8 @@
       "en": "HTTPie"
     },
     "gui.http.hint": {
-      "text": "Follow the status chain: redirects, response headers, HTTP version / ALPN, TTFB, HSTS, and timing.",
-      "en": "Follow the status chain: redirects, response headers, HTTP version / ALPN, TTFB, HSTS, and timing."
+      "text": "Follow the status chain: redirects, response headers, HTTP version / ALPN, TTFB, HSTS, and timing. /http/<host>/<path> is the request path on the default scheme; full URLs belong in ?url=.",
+      "en": "Follow the status chain: redirects, response headers, HTTP version / ALPN, TTFB, HSTS, and timing. /http/<host>/<path> is the request path on the default scheme; full URLs belong in ?url=."
     },
     "gui.http.label": {
       "text": "Host or URL",

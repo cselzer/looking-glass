@@ -28,7 +28,7 @@ from ..dns.resolve import (
     parse_nameserver,
 )
 from ..intel.bgp import check_bgp, check_bgp_async, parse_bgp_path
-from ..intel.rdap import lookup_rdap, lookup_rdap_async, parse_rdap_path
+from ..intel.rdap import _is_rdap_domain, lookup_rdap, lookup_rdap_async, parse_rdap_path
 from ..intel.whois import lookup_whois, lookup_whois_async, parse_whois_path
 from ..dns.ptr import check_ptr, check_ptr_async, parse_ptr_path
 from ..dns.trace import trace_dns, trace_dns_async, parse_dnstrace_path
@@ -247,15 +247,31 @@ def path_token(path: str) -> str:
     return text.rstrip("/")
 
 
+def _is_root_path(path: str) -> bool:
+    return unquote(str(path or "")) in ("", "/")
+
+
+def _intel_token(path: str) -> str:
+    """Path token for classify_query: no strip, no trailing-slash collapse."""
+    text = restore_collapsed_slashes(unquote(str(path or "")))
+    if text.startswith("/"):
+        text = text[1:]
+    return text
+
+
 def _intel_client_error(query: str) -> bool:
     from ..net.host import parse_asn_number, unbracket_host
 
-    text = unbracket_host(str(query or "")).strip()
+    raw = str(query or "")
+    if raw != raw.strip() or raw.endswith("/"):
+        return True
+    text = unbracket_host(raw).strip()
     if "%" in text:
         return True
     token = text.upper()
-    raw = token[2:].strip() if token.startswith("AS") else token
-    if not raw.isdigit():
+    if token.startswith("AS"):
+        return True
+    if not token.isdigit():
         return False
     try:
         parse_asn_number(text)
@@ -1108,6 +1124,10 @@ def _plan(
 
                 value = str(ipaddress.ip_address(unbracket_host(name)))
             except ValueError:
+                if not _is_rdap_domain(name):
+                    raise ValueError(
+                        "reputation path needs a domain or IP, e.g. /reputation/example.com"
+                    )
                 value = normalize_qname(name, qtype="A").rstrip(".")
         except ValueError as e:
             return (
@@ -1281,7 +1301,7 @@ def _plan(
     if token == "tcptraceroute" or token.startswith("tcptraceroute/"):
         base = {"protocol": protocol, "visitor": visitor, "query": token}
         try:
-            value, port = parse_tcp_trace_http_path("/" + token)
+            value, port = parse_tcp_trace_http_path(path)
         except ValueError as e:
             return (
                 _error_body(
@@ -1355,7 +1375,28 @@ def _plan(
                         base,
                     )
         return None, kind, value, base
-    query = token or visitor
+    if not token:
+        if not _is_root_path(path):
+            intel = _intel_token(path)
+            return (
+                _error_body(
+                    400,
+                    _envelope(
+                        ok=False,
+                        protocol=protocol,
+                        visitor=visitor,
+                        query=intel,
+                        error="not an IP address, ASN, or country code",
+                        include_result=False,
+                    ),
+                ),
+                None,
+                None,
+                {"protocol": protocol, "visitor": visitor, "query": intel},
+            )
+        query = visitor
+    else:
+        query = _intel_token(path)
     base = {
         "protocol": protocol,
         "visitor": visitor,
@@ -1639,7 +1680,7 @@ def _respond_impl(
         return _from3(_status_http(protocol, user))
     if token == "docs":
         return _from3(_docs_http(user), [("Cache-Control", "no-store")])
-    if html and not token:
+    if html and not token and _is_root_path(path):
         return _from3(_encode_index(visitor, host, scheme, user=user, csp_nonce_value=csp_nonce_value))
     err, kind, value, base = _plan(protocol, visitor, path, wall_hdrs, query_string)
     if err is not None:
@@ -1744,7 +1785,7 @@ async def _respond_async_impl(
         return _from3(_status_http(protocol, user))
     if token == "docs":
         return _from3(_docs_http(user), [("Cache-Control", "no-store")])
-    if html and not token:
+    if html and not token and _is_root_path(path):
         return _from3(_encode_index(visitor, host, scheme, user=user, csp_nonce_value=csp_nonce_value))
     err, kind, value, base = _plan(protocol, visitor, path, wall_hdrs, query_string)
     if err is not None:

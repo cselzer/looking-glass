@@ -40,6 +40,12 @@ class ProbePathTests(unittest.TestCase):
             probe.parse_tcp_trace_path("/tcptraceroute")
         with self.assertRaises(ValueError):
             probe.parse_tcp_trace_path("/tcptraceroute/1.1.1.1/70000")
+        with self.assertRaises(ValueError):
+            probe.parse_tcp_trace_path("/tcptraceroute/1.1.1.1%2F32")
+        self.assertEqual(
+            probe.parse_tcp_trace_path("/tcptraceroute/1.1.1.1/443"),
+            ("1.1.1.1", 443),
+        )
 
     def test_guard_ip(self):
         self.assertEqual(probe.guard_ip("8.8.8.8"), "8.8.8.8")

@@ -263,3 +263,139 @@ class RdapAsnTests(unittest.TestCase):
             classify_query("4294967296")
         self.assertEqual(classify_query("AS13335"), ("asn", "13335"))
         self.assertEqual(classify_query("13335"), ("asn", "13335"))
+
+
+class LeftoverCoercionTests(unittest.TestCase):
+    def test_nul_host_is_400(self):
+        for path in (
+            "/tcp/1.1.1.1%00.evil/443",
+            "/tls/1.1.1.1%00.evil",
+            "/ping/1.1.1.1%00.evil",
+            "/http/1.1.1.1%00.evil",
+        ):
+            with (
+                patch("looking_glass.http.site.check_tcp") as tcp,
+                patch("looking_glass.http.site.inspect_tls") as tls,
+                patch("looking_glass.http.site.run_probe") as probe,
+                patch("looking_glass.http.site.inspect_http") as http,
+            ):
+                status, payload = _json(path)
+            tcp.assert_not_called()
+            tls.assert_not_called()
+            probe.assert_not_called()
+            http.assert_not_called()
+            self.assertEqual(status, 400, path)
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["error"], "host is not a URL")
+            self.assertNotIn("result", payload)
+
+    def test_tcptraceroute_cidr_is_400_port_path_ok(self):
+        with patch("looking_glass.http.site.run_probe") as run:
+            status, payload = _json("/tcptraceroute/1.1.1.1%2F32")
+        run.assert_not_called()
+        self.assertEqual(status, 400)
+        self.assertFalse(payload["ok"])
+        self.assertNotIn("result", payload)
+        fake = {"ok": True, "result": {"target": "1.1.1.1", "port": 443}, "error": None}
+        with patch("looking_glass.http.site.run_probe", return_value=fake) as run:
+            status, payload = _json("/tcptraceroute/1.1.1.1/443")
+        self.assertEqual(status, 200)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(run.call_args.kwargs.get("port"), 443)
+
+    def test_ptr_zone_id_is_400(self):
+        with patch("looking_glass.http.site.check_ptr") as check:
+            status, payload = _json("/ptr/fe80::1%eth0")
+        check.assert_not_called()
+        self.assertEqual(status, 400)
+        self.assertNotEqual(status, 502)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"], "zone-id is not a probe target")
+        self.assertNotIn("result", payload)
+
+    def test_pmtu_multicast_is_400(self):
+        with patch("looking_glass.http.site.check_pmtu") as check:
+            status, payload = _json("/pmtu/224.0.0.1")
+        check.assert_not_called()
+        self.assertEqual(status, 400)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"], "multicast is not a probe target")
+        self.assertNotIn("result", payload)
+
+    def test_empty_and_trailing_junk_ip_are_400(self):
+        for path in ("//", "/%20", "/8.8.8.8%20"):
+            status, payload = _json(path)
+            self.assertEqual(status, 400, path)
+            self.assertFalse(payload["ok"])
+            self.assertNotIn("result", payload)
+            self.assertNotEqual(payload.get("kind"), "ip")
+
+    def test_asn_junk_is_400_country_stays(self):
+        from looking_glass.http.site import _plan
+
+        for path in ("/AS", "/AS%2013335", "/AS13335/"):
+            status, payload = _json(path)
+            self.assertEqual(status, 400, path)
+            self.assertFalse(payload["ok"])
+            self.assertNotEqual(payload.get("kind"), "country")
+            self.assertNotIn("result", payload)
+        err, kind, value, _base = _plan("wsgi", "127.0.0.1", "/AU", {}, "")
+        self.assertIsNone(err)
+        self.assertEqual(kind, "country")
+        self.assertEqual(value, "AU")
+
+    def test_reputation_junk_is_400(self):
+        for path in (
+            "/reputation/notanip",
+            "/reputation/1.2.3",
+            "/reputation/1.2.3.4.5",
+            "/reputation/AS13335",
+        ):
+            with patch("looking_glass.http.site._reputation_sync") as rep:
+                status, payload = _json(path)
+            rep.assert_not_called()
+            self.assertEqual(status, 400, path)
+            self.assertFalse(payload["ok"])
+            self.assertNotIn("result", payload)
+
+    def test_bare_wildcard_is_400(self):
+        for path in ("/apex/%2A", "/dns/%2A"):
+            with (
+                patch("looking_glass.http.site.check_apex") as apex,
+                patch("looking_glass.http.site.lookup_dns") as dns,
+            ):
+                status, payload = _json(path)
+            apex.assert_not_called()
+            dns.assert_not_called()
+            self.assertEqual(status, 400, path)
+            self.assertFalse(payload["ok"])
+            self.assertNotIn("result", payload)
+
+    def test_keep_http_example_link_local_loopback_register(self):
+        fake_http = {
+            "ok": True,
+            "result": {"status": 200, "chain": [{"status": 200}], "ttfb_ms": 1},
+            "error": None,
+        }
+        with patch("looking_glass.http.site.inspect_http", return_value=fake_http):
+            status, payload = _json("/http", "url=https://example.com/")
+        self.assertEqual(status, 200)
+        self.assertTrue(payload["ok"])
+        with patch("looking_glass.http.site.inspect_http") as inspect:
+            status, payload = _json("/http", "url=http://169.254.169.254/")
+        inspect.assert_not_called()
+        self.assertEqual(status, 400)
+        self.assertEqual(payload["error"], "link-local is not a probe target")
+        fake_ping = {"ok": True, "result": {"target": "127.0.0.1"}, "error": None}
+        with patch("looking_glass.http.site.run_probe", return_value=fake_ping) as run:
+            status, payload = _json("/ping/127.0.0.1")
+        self.assertEqual(status, 200)
+        self.assertTrue(payload["ok"])
+        run.assert_called_once()
+        fake_reg = {"ok": True, "result": {"label": "example"}, "error": None}
+        with patch("looking_glass.http.site.check_register", return_value=fake_reg):
+            status, payload = _json("/register/example")
+        self.assertEqual(status, 200)
+        self.assertTrue(payload["ok"])
+        status, payload = _json("/register/example.com")
+        self.assertEqual(status, 400)

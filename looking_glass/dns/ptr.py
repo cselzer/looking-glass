@@ -8,7 +8,7 @@ import time
 import urllib.parse
 from typing import Any, Dict, List
 
-from ..net.host import unbracket_host
+from ..net.host import reject_probe_target, unbracket_host
 
 
 def parse_ptr_path(path: str) -> str:
@@ -21,8 +21,10 @@ def parse_ptr_path(path: str) -> str:
     rest = "" if text == "ptr" else text[len("ptr/") :]
     if not rest:
         raise ValueError("ptr path needs an IP, e.g. /ptr/1.1.1.1")
+    host = unbracket_host(rest)
+    reject_probe_target(host)
     try:
-        return str(ipaddress.ip_address(unbracket_host(rest)))
+        return str(ipaddress.ip_address(host))
     except ValueError as exc:
         raise ValueError("ptr path needs an IP, e.g. /ptr/1.1.1.1") from exc
 

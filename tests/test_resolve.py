@@ -136,6 +136,11 @@ class QnameTests(unittest.TestCase):
             resolve.normalize_qname("has space.com")
         with self.assertRaises(ValueError):
             resolve.normalize_qname("")
+        with self.assertRaises(ValueError):
+            resolve.normalize_qname("*")
+        with self.assertRaises(ValueError):
+            resolve.normalize_qname("foo\x00bar")
+        self.assertEqual(resolve.normalize_qname("*.example.com"), "*.example.com.")
 
 
 class DnsPathTests(unittest.TestCase):

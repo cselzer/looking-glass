@@ -133,7 +133,7 @@ HTTP_ROUTES: List[Dict[str, Any]] = [
         "query": ["scheme=http|https"],
         "cli": "looking-glass http <host-or-url>",
         "accept": "JSON or HTML report.",
-        "notes": "Connects to the named host (open lookup / SSRF if the server can reach private nets).",
+        "notes": "/http/<host>/<path> is the request path on the default scheme (https, or http for :80). Full URLs belong in ?url=.",
     },
     {
         "id": "ptr",

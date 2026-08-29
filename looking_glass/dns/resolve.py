@@ -296,6 +296,8 @@ def normalize_qname(name: str, *, qtype: Optional[str] = None) -> str:
         text = text[1:-1]
     if not text:
         raise ValueError("empty name")
+    if "\x00" in text:
+        raise ValueError("invalid domain name")
     try:
         ip = ipaddress.ip_address(text)
     except ValueError:
@@ -313,6 +315,8 @@ def normalize_qname(name: str, *, qtype: Optional[str] = None) -> str:
     if not text or " " in text or ".." in text:
         raise ValueError("invalid domain name")
     labels = text.split(".")
+    if labels == ["*"]:
+        raise ValueError("invalid domain name")
     ascii_labels: List[str] = []
     for label in labels:
         if not label:

@@ -20,7 +20,9 @@ _MODULES = (
 
 def classify_query(value: str) -> Tuple[str, str]:
     """Detect IP, ASN, or country from a single token. No kind argument."""
-    text = str(value).strip()
+    text = str(value)
+    if not text or text != text.strip():
+        raise ValueError(f"{value!r} is not an IP address, ASN, or country code")
     if text.startswith("[") and text.endswith("]") and len(text) > 2:
         text = text[1:-1]
     if "%" in text:
@@ -35,8 +37,7 @@ def classify_query(value: str) -> Tuple[str, str]:
         try:
             return "asn", str(parse_asn_number(text))
         except ValueError:
-            raw = token[2:].strip() if token.startswith("AS") else token
-            if raw.isdigit():
+            if token.startswith("AS") or token.isdigit():
                 raise
     country = flags.canonical_country(text)
     if country:

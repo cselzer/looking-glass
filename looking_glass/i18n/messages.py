@@ -301,7 +301,7 @@ INVENTORY: Dict[str, str] = {
     "gui.tls.submit": "Inspect TLS",
     "gui.http.tab": "HTTP",
     "gui.http.title": "HTTP inspector",
-    "gui.http.hint": "Follow the status chain: redirects, response headers, HTTP version / ALPN, TTFB, HSTS, and timing.",
+    "gui.http.hint": "Follow the status chain: redirects, response headers, HTTP version / ALPN, TTFB, HSTS, and timing. /http/<host>/<path> is the request path on the default scheme; full URLs belong in ?url=.",
     "gui.http.label": "Host or URL",
     "gui.http.submit": "Inspect HTTP",
     "gui.apex.tab": "Apex",

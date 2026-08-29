@@ -55,7 +55,9 @@ def reject_url_as_host(text: str) -> None:
 
 
 def reject_probe_target(host: str) -> None:
-    """Probes do not take zone-ids, link-local, or IPv4 lookalikes."""
+    """Probes do not take NULs, zone-ids, link-local, multicast, or IPv4 lookalikes."""
+    if "\x00" in str(host or ""):
+        raise ValueError("host is not a URL")
     text = unbracket_host(host).strip()
     if not text:
         raise ValueError("host is required")
@@ -69,12 +71,16 @@ def reject_probe_target(host: str) -> None:
         return
     if ip.is_link_local:
         raise ValueError("link-local is not a probe target")
+    if ip.is_multicast:
+        raise ValueError("multicast is not a probe target")
 
 
 def parse_asn_number(text: str) -> int:
-    raw = str(text or "").strip()
+    raw = str(text or "")
+    if raw != raw.strip():
+        raise ValueError("ASN must be 1–4294967295")
     if raw.upper().startswith("AS"):
-        raw = raw[2:].strip()
+        raw = raw[2:]
     if not raw.isdigit():
         raise ValueError("ASN must be 1–4294967295")
     number = int(raw)
