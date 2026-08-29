@@ -423,12 +423,12 @@
       min-height: 0;
       padding: 0.65rem 1rem 1rem;
     }
-    .log-pop {
+    .asn-pop.log-pop {
       width: min(96vw, 110rem);
       height: min(85vh, 56rem);
       max-height: none;
     }
-    .wall-pop { width: min(96vw, 110rem); height: min(85vh, 48rem); }
+    .asn-pop.wall-pop { width: min(96vw, 110rem); height: min(85vh, 48rem); }
     .wall-pop .inspect-pop-body { position: relative; }
     .wall-add {
       display: flex;
@@ -563,14 +563,14 @@
     }
     .wall-tree-branch { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .wall-tree-count { color: var(--muted); font-size: 0.78rem; margin-left: 0.35rem; }
-    .cache-pop {
+    .asn-pop.cache-pop {
       width: min(96vw, 72rem);
       height: min(80vh, 42rem);
       max-height: none;
     }
-    .config-pop {
-      width: min(96vw, 72rem);
-      height: min(85vh, 48rem);
+    .asn-pop.config-pop {
+      width: min(96vw, 110rem);
+      height: min(85vh, 56rem);
       max-height: none;
     }
     .config-form {
@@ -578,6 +578,10 @@
       grid-template-columns: 1fr 1fr;
       gap: 0.75rem;
       align-items: start;
+    }
+    @media (max-width: 640px) {
+      .config-form,
+      .config-headers { grid-template-columns: 1fr; }
     }
     .config-sec {
       margin: 0;
@@ -786,7 +790,7 @@
     }
     .login-error { margin: 0; color: var(--bad); font-size: 0.85rem; }
     .login-error[hidden] { display: none; }
-    .history-pop { width: min(96vw, 110rem); height: min(80vh, 42rem); }
+    .asn-pop.history-pop { width: min(96vw, 110rem); height: min(80vh, 42rem); }
     .history-pop .hist-search {
       width: 100%;
       appearance: none;
@@ -1624,8 +1628,6 @@
       position: absolute;
       z-index: 80;
       min-width: 22rem;
-      width: min(36rem, calc(100vw - 1.5rem));
-      height: min(70vh, 36rem);
       overflow: hidden;
       padding: 0;
       border-radius: 12px;

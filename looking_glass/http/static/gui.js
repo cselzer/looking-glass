@@ -147,12 +147,21 @@
       persist();
     }
 
+    function geomPx(value) {
+      const n = parseFloat(value);
+      if (!Number.isFinite(n) || n <= 0) return 0;
+      if (String(value).indexOf("rem") >= 0) return n * 16;
+      return n;
+    }
+
     function applyGeom(node, state) {
       if (!node || !state) return;
       if (state.left) node.style.left = state.left;
       if (state.top) node.style.top = state.top;
-      if (state.width) node.style.width = state.width;
-      if (state.height) node.style.height = state.height;
+      const config = (node.classList && node.classList.contains("config-pop")) || state.kind === "config";
+      const tiny = config && geomPx(state.width) > 0 && geomPx(state.width) < 640;
+      if (state.width && !tiny) node.style.width = state.width;
+      if (state.height && !tiny) node.style.height = state.height;
     }
 
     const GAP = 8;

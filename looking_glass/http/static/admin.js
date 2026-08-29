@@ -2968,10 +2968,10 @@
       note = null;
     }
 
-    function lockPopSize(node) {
+    function lockPopSize(node, opts) {
       const rect = node.getBoundingClientRect();
-      if (rect.width) node.style.width = rect.width + "px";
-      if (rect.height) node.style.height = rect.height + "px";
+      if ((!opts || opts.width !== false) && rect.width) node.style.width = rect.width + "px";
+      if ((!opts || opts.height !== false) && rect.height) node.style.height = rect.height + "px";
     }
 
     function makeDraggable(node) {
@@ -3351,7 +3351,7 @@
       pop.style.top = Math.max(8, window.scrollY + 48) + "px";
       if (window.lookingGlassWindows && window.lookingGlassWindows.place) window.lookingGlassWindows.place(pop, anchor || configBtn);
       makeDraggable(pop);
-      lockPopSize(pop);
+      lockPopSize(pop, { width: false, height: false });
       if (window.lookingGlassWindows) {
         window.lookingGlassWindows.adopt(pop, {
           id: WIN_ID,
