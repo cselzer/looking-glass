@@ -3102,6 +3102,9 @@ class HttpDemoTests(unittest.TestCase):
         self.assertEqual(payload["utc_offset"], -14400)
         self.assertEqual(payload["tz"], "EDT")
         self.assertIsNone(payload.get("user"))
+        self.assertIn("os", payload)
+        self.assertIn("os_version", payload)
+        self.assertIn("os_codename", payload)
 
     def test_status_json_asgi(self):
         app = self._demo_app("asgi")
@@ -3139,6 +3142,9 @@ class HttpDemoTests(unittest.TestCase):
         self.assertEqual(payload["utc_offset"], -14400)
         self.assertEqual(payload["tz"], "EDT")
         self.assertIsNone(payload.get("user"))
+        self.assertIn("os", payload)
+        self.assertIn("os_version", payload)
+        self.assertIn("os_codename", payload)
 
     def test_status_json_dual_stack(self):
         app = self._demo_app("wsgi")

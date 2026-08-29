@@ -84,6 +84,7 @@ class StaticFilesTests(unittest.TestCase):
         self.assertNotIn("String(https.subject)", text)
         self.assertIn("gui.services.system", text)
         self.assertIn("gui.services.service", text)
+        self.assertIn("data.locales", text)
         self.assertNotIn("/serve/stop", text)
         _, _, css, _ = respond("wsgi", "127.0.0.1", "/static/gui.css", {})
         css_text = css.decode("utf-8")

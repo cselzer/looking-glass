@@ -472,7 +472,13 @@ def get(dotted: str) -> Any:
 def _parse_set_value(dotted: str, raw: Any) -> Any:
     key = (dotted or "").strip()
     if key == "locale":
-        return _normalize_locale(raw)
+        lang = _normalize_locale(raw)
+        from .i18n.catalog import available_locales
+
+        allowed = set(available_locales())
+        if lang not in allowed:
+            raise ValueError("locale must be one of " + ", ".join(sorted(allowed)))
+        return lang
     if key == "cache.gui" or key == "docs.enabled":
         return _parse_bool(raw, key)
     if key in {"http.enabled", "http.staging"}:

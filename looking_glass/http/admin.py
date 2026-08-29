@@ -328,7 +328,7 @@ def _config_body(raw: bytes) -> Dict[str, Any]:
         return {}
     if isinstance(data.get("values"), dict):
         return dict(data["values"])
-    skip = {"ok", "path", "docs_generated", "kind", "query", "keys"}
+    skip = {"ok", "path", "docs_generated", "kind", "query", "keys", "locales"}
     return {str(key): value for key, value in data.items() if str(key) not in skip}
 
 
@@ -342,6 +342,8 @@ def handle_config(
 
     verb = (method or "GET").upper()
     if verb == "GET":
+        from ..i18n import available_locales
+
         cfg = app_config.load()
         payload = {
             "ok": True,
@@ -349,6 +351,7 @@ def handle_config(
             "path": app_config.path(),
             "docs_generated": app_config.docs_generated(),
             **cfg,
+            "locales": available_locales(),
             "keys": app_config.known_keys(),
         }
         return _pack(200, payload)
@@ -363,6 +366,8 @@ def handle_config(
         return _pack(400, {"ok": False, "error": f"unknown key {exc.args[0]!r}"})
     except ValueError as exc:
         return _pack(400, {"ok": False, "error": str(exc)})
+    from ..i18n import available_locales
+
     payload = {
         "ok": True,
         "kind": "config",
@@ -370,6 +375,7 @@ def handle_config(
         "path": app_config.path(),
         "docs_generated": app_config.docs_generated(),
         **cfg,
+        "locales": available_locales(),
         "keys": app_config.known_keys(),
     }
     _record(user or "", "/config", payload)

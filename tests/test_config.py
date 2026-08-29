@@ -117,8 +117,10 @@ class ConfigCliTests(unittest.TestCase):
             self.assertTrue(json.loads(shown2.output)["cache"]["gui"])
             rir = runner.invoke(cli, ["--json", "config", "set", "refresh.rir", "2"])
             self.assertEqual(json.loads(rir.output)["refresh"]["rir"], 2)
-            lang = runner.invoke(cli, ["--json", "config", "set", "locale", "fr"])
-            self.assertEqual(json.loads(lang.output)["locale"], "fr")
+            lang = runner.invoke(cli, ["--json", "config", "set", "locale", "es"])
+            self.assertEqual(json.loads(lang.output)["locale"], "es")
+            nope = runner.invoke(cli, ["--json", "config", "set", "locale", "zz"])
+            self.assertNotEqual(nope.exit_code, 0, nope.output)
             snaps = runner.invoke(cli, ["--json", "config", "set", "history.snapshots", "-1"])
             self.assertEqual(snaps.exit_code, 0, snaps.output)
             self.assertEqual(json.loads(snaps.output)["history"]["snapshots"], -1)
@@ -175,7 +177,7 @@ class ConfigHtmlTests(unittest.TestCase):
     def test_json_dns_error_stays_english(self):
         with tempfile.TemporaryDirectory() as tmp, _root(tmp):
             runner = CliRunner()
-            runner.invoke(cli, ["--json", "config", "set", "locale", "fr"])
+            runner.invoke(cli, ["--json", "config", "set", "locale", "es"])
             status, ctype, body, *_ = respond(
                 "wsgi",
                 "127.0.0.1",
@@ -208,6 +210,7 @@ class ConfigHttpTests(unittest.TestCase):
                 self.assertEqual(status, 200)
                 payload = json.loads(body)
                 self.assertTrue(payload["ok"])
+                self.assertIn("en", payload["locales"])
                 self.assertFalse(payload["docs"]["enabled"])
                 self.assertEqual(payload["wall"]["challenge_bits"], 16)
                 self.assertEqual(payload["mtr"]["cycles"], 10)
@@ -251,6 +254,18 @@ class ConfigHttpTests(unittest.TestCase):
                 )
                 self.assertEqual(replay, 200)
                 self.assertFalse(json.loads(replay_body)["docs"]["enabled"])
+                bad, _, raw_zz, *_ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/config",
+                    {},
+                    method="POST",
+                    cookie=cookie,
+                    body=b'{"locale":"zz"}',
+                )
+                self.assertEqual(bad, 400)
+                self.assertIn("locale", json.loads(raw_zz)["error"])
+                self.assertIn("es", payload["locales"])
 
 
 class KnownKeysTests(unittest.TestCase):
@@ -308,6 +323,7 @@ class KnownKeysTests(unittest.TestCase):
         self.assertEqual(status, 200)
         payload = json.loads(body)
         self.assertEqual(payload["keys"], known_keys())
+        self.assertIn("en", payload["locales"])
 
     def test_cli_set_controller_origins_csv(self):
         runner = CliRunner()

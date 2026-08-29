@@ -454,6 +454,9 @@ def _status_http(protocol: str, user: Optional[str] = None) -> Tuple[int, str, b
     from ..config import docs_enabled, docs_generated
 
     payload["docs"] = {"enabled": docs_enabled(), "generated": docs_generated()}
+    from ..observe import host_os
+
+    payload.update(host_os())
     if user:
         from ..intel_server import app as lookup_mod
 

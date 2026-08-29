@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import ipaddress
+import platform
 import socket
+import subprocess
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 
@@ -21,6 +24,83 @@ def hostname() -> str:
         return (socket.gethostname() or "").strip()
     names.sort(key=lambda name: (name.count("."), len(name)), reverse=True)
     return names[0]
+
+
+_DARWIN_CODENAMES = {
+    "11": "Big Sur",
+    "12": "Monterey",
+    "13": "Ventura",
+    "14": "Sonoma",
+    "15": "Sequoia",
+    "16": "Tahoe",
+    "26": "Tahoe",
+}
+
+
+def _unquote_os(value: str) -> str:
+    text = (value or "").strip()
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in {'"', "'"}:
+        return text[1:-1].strip()
+    return text
+
+
+def _os_release() -> Dict[str, str]:
+    path = Path("/etc/os-release")
+    if not path.is_file():
+        return {}
+    out: Dict[str, str] = {}
+    try:
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, raw = line.split("=", 1)
+            out[key.strip()] = _unquote_os(raw)
+    except OSError:
+        return {}
+    return out
+
+
+def _darwin_os() -> Dict[str, Optional[str]]:
+    name = "macOS"
+    version = None
+    try:
+        name = subprocess.check_output(
+            ["sw_vers", "-productName"], text=True, timeout=2
+        ).strip() or "macOS"
+        version = subprocess.check_output(
+            ["sw_vers", "-productVersion"], text=True, timeout=2
+        ).strip() or None
+    except (OSError, subprocess.SubprocessError):
+        version = platform.mac_ver()[0] or None
+    major = (version or "").split(".", 1)[0]
+    return {
+        "os": name or "macOS",
+        "os_version": version,
+        "os_codename": _DARWIN_CODENAMES.get(major),
+    }
+
+
+def host_os() -> Dict[str, Optional[str]]:
+    """Operating system, version, and codename for GET /status. Never raises."""
+    empty: Dict[str, Optional[str]] = {"os": None, "os_version": None, "os_codename": None}
+    try:
+        system = platform.system()
+        if system == "Linux":
+            info = _os_release()
+            return {
+                "os": info.get("NAME") or "Linux",
+                "os_version": info.get("VERSION_ID") or None,
+                "os_codename": info.get("VERSION_CODENAME") or info.get("UBUNTU_CODENAME") or None,
+            }
+        if system == "Darwin":
+            return _darwin_os()
+        return {
+            "os": system or None,
+            "os_version": platform.release() or None,
+            "os_codename": None,
+        }
+    except Exception:
+        return empty
 
 
 def _usable_ip(ip: str, *, allow_link_local: bool) -> bool:

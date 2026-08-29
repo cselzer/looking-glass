@@ -3076,7 +3076,13 @@ function rawTextField(node, kind) {
 
       const locSec = el("fieldset", "config-sec");
       locSec.append(el("legend", null, t("gui.config.locale", "Locale")));
-      locSec.append(field("locale", t("gui.config.locale", "Locale"), "text", data.locale || "en"));
+      locSec.append(field(
+        "locale",
+        t("gui.config.locale", "Locale"),
+        "select",
+        data.locale || "en",
+        { options: (data.locales || ["en"]).map(function (lang) { return [lang, lang]; }) }
+      ));
       form.append(locSec);
 
       const cacheSec = el("fieldset", "config-sec");
