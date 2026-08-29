@@ -476,7 +476,7 @@ class HumanModeTests(unittest.TestCase):
                 {
                     "status": "ok",
                     "check": f"IANA {ipv6}",
-                    "detail": "unique-local [rfc4193] [rfc8190]",
+                    "detail": "unique-local [rfc4193]\n        [rfc8190] fc00::/7",
                 },
                 {
                     "status": "ok",
@@ -499,16 +499,21 @@ class HumanModeTests(unittest.TestCase):
                     lambda: RichConsole(width=80, highlight=False, soft_wrap=True, emoji=True),
                 ):
                     human = self.runner.invoke(cli, ["validate"])
+                    blob = self.runner.invoke(cli, ["--json", "validate"])
         self.assertEqual(human.exit_code, 2, human.output)
+        self.assertIn("\\n", blob.stdout)
+        self.assertIn("\n        [rfc8190]", json.loads(blob.stdout)["checks"][0]["detail"])
         lines = [ln.rstrip("\n") for ln in human.stdout.splitlines() if ln.strip()]
         for ln in lines:
             self.assertLessEqual(len(ln), 80, repr(ln))
+            self.assertFalse(ln.lstrip() != ln and "[rfc8190]" in ln, repr(ln))
         self.assertNotIn(ipv6, human.stdout)
         self.assertIn("IANA fc03:3b85:794c:2737:", human.stdout)
         self.assertIn("…", human.stdout)
         rfc_lines = [ln for ln in lines if "rfc8190" in ln]
-        self.assertTrue(rfc_lines, human.stdout)
-        self.assertTrue(any("[rfc8190]" in ln for ln in rfc_lines), rfc_lines)
+        self.assertEqual(len(rfc_lines), 1, human.stdout)
+        self.assertIn("unique-local [rfc4193] [rfc8190]", rfc_lines[0])
+        self.assertFalse(rfc_lines[0].startswith(" "), rfc_lines[0])
         ipv4_lines = [ln for ln in human.stdout.splitlines() if "IANA 203.0.113.206" in ln]
         self.assertTrue(ipv4_lines, human.stdout)
         self.assertFalse(ipv4_lines[0].startswith(" "), ipv4_lines[0])

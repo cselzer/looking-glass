@@ -1118,7 +1118,7 @@ def _compress_check_name(name: str, limit: int) -> str:
 def _fit_validate_line(name: str, mark: str, detail: str, width: int) -> str:
     sep = f"  {mark}  "
     name = str(name or "")
-    detail = str(detail or "")
+    detail = " ".join(str(detail or "").split())
     width = max(8, int(width))
 
     def pack(n: str, d: str) -> str:
