@@ -1,13 +1,16 @@
 import asyncio
 import json
+import socket
 import ssl
 import unittest
 from http.client import BadStatusLine
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from looking_glass.http.cli_text import wall_cli
 from looking_glass.http.site import _finish, _kind_plan, _plan, path_token
 from looking_glass.net.httpinspect import (
+    _dial,
+    _probe_error,
     _split_target,
     http_envelope_query,
     inspect_http,
@@ -327,11 +330,137 @@ class InspectHttpErrorTests(unittest.TestCase):
                 "looking_glass.net.httpinspect.resolve_probe_host",
                 return_value=_PUBLIC_SOCKADDR,
             ),
-            patch("looking_glass.net.httpinspect.socket.create_connection", return_value=object()),
+            patch("looking_glass.net.httpinspect.socket.socket", return_value=Mock()),
             patch("looking_glass.net.httpinspect._read_response", side_effect=OSError("stop")),
         ):
             inspect_http("example.com")
         self.assertEqual(captured.get("alpn"), ["http/1.1"])
+
+
+class ProbeErrorTests(unittest.TestCase):
+    def test_unpack_is_inspect_failed(self):
+        self.assertEqual(
+            _probe_error(ValueError("too many values to unpack (expected 2)")),
+            "inspect failed",
+        )
+        self.assertEqual(_probe_error(TypeError("expected 2")), "inspect failed")
+
+    def test_timeout_h2_oserror_unchanged(self):
+        self.assertEqual(_probe_error(TimeoutError()), "timeout")
+        self.assertEqual(_probe_error(BadStatusLine(_SETTINGS)), "http2_handshake_failed")
+        self.assertEqual(_probe_error(OSError("connection refused")), "connection refused")
+
+
+class _FakeSock:
+    def __init__(self, connected):
+        self._connected = connected
+
+    def settimeout(self, _timeout):
+        return None
+
+    def connect(self, addr):
+        self._connected.append(addr)
+
+    def close(self):
+        return None
+
+
+_IPV6_SA = ("2606:4700:4700::1111", 443, 0, 0)
+_HOP_OK = {
+    "status": 200,
+    "reason": "OK",
+    "http_version": "HTTP/1.1",
+    "headers": {},
+    "location": None,
+    "ttfb_ms": 1.0,
+    "elapsed_ms": 1.0,
+    "hsts": None,
+    "body_len": 0,
+}
+_HOP_301 = {
+    "status": 301,
+    "reason": "Moved Permanently",
+    "http_version": "HTTP/1.1",
+    "headers": {"Location": "https://one.one.one.one/"},
+    "location": "https://one.one.one.one/",
+    "ttfb_ms": 1.0,
+    "elapsed_ms": 1.0,
+    "hsts": None,
+    "body_len": 0,
+}
+
+
+class InspectHttpDialTests(unittest.TestCase):
+    def test_dial_connects_ipv6_4tuple(self):
+        connected = []
+        with (
+            patch(
+                "looking_glass.net.httpinspect.socket.socket",
+                return_value=_FakeSock(connected),
+            ),
+            patch("looking_glass.net.httpinspect.socket.create_connection") as create,
+        ):
+            _dial("http", "example.com", 80, socket.AF_INET6, _IPV6_SA, 8.0)
+        create.assert_not_called()
+        self.assertEqual(connected, [_IPV6_SA])
+
+    def test_inspect_aaaa_does_not_unpack(self):
+        connected = []
+
+        def fake_dial(scheme, host, port, family, sockaddr, timeout):
+            self.assertEqual(family, socket.AF_INET6)
+            connected.append(sockaddr)
+            return _FakeHttpConn(), None
+
+        with (
+            patch(
+                "looking_glass.net.httpinspect.resolve_probe_host",
+                return_value=("2606:4700:4700::1111", socket.AF_INET6, _IPV6_SA),
+            ),
+            patch("looking_glass.net.httpinspect._dial", side_effect=fake_dial),
+            patch("looking_glass.net.httpinspect.socket.create_connection") as create,
+            patch("looking_glass.net.httpinspect._read_response", return_value=dict(_HOP_OK)),
+        ):
+            out = inspect_http("https://example.com/")
+        create.assert_not_called()
+        self.assertEqual(connected, [_IPV6_SA])
+        self.assertTrue(out["ok"])
+        self.assertIsNone(out["error"])
+        self.assertNotIn("unpack", json.dumps(out))
+        self.assertIn("chain", out["result"])
+
+    def test_ipv4_redirect_then_aaaa(self):
+        connected = []
+        resolves = [
+            ("1.1.1.1", socket.AF_INET, ("1.1.1.1", 80)),
+            ("2606:4700:4700::1111", socket.AF_INET6, _IPV6_SA),
+        ]
+        reads = [dict(_HOP_301), dict(_HOP_OK)]
+
+        def fake_dial(scheme, host, port, family, sockaddr, timeout):
+            connected.append(sockaddr)
+            return _FakeHttpConn(), None
+
+        with (
+            patch(
+                "looking_glass.net.httpinspect._resolve_http_hop",
+                side_effect=lambda host, port: resolves.pop(0),
+            ),
+            patch("looking_glass.net.httpinspect._dial", side_effect=fake_dial),
+            patch("looking_glass.net.httpinspect.socket.create_connection") as create,
+            patch(
+                "looking_glass.net.httpinspect._read_response",
+                side_effect=lambda *a, **k: reads.pop(0),
+            ),
+        ):
+            out = inspect_http("http://1.1.1.1/")
+        create.assert_not_called()
+        self.assertEqual(connected[0], ("1.1.1.1", 80))
+        self.assertEqual(connected[1], _IPV6_SA)
+        self.assertTrue(out["ok"])
+        self.assertIsNone(out["error"])
+        self.assertEqual(len(out["result"]["chain"]), 2)
+        self.assertNotIn("unpack", json.dumps(out))
 
 
 class InspectHttpDestPolicyTests(unittest.TestCase):
@@ -381,7 +510,7 @@ class InspectHttpDestPolicyTests(unittest.TestCase):
         }
         dials = []
 
-        def fake_dial(scheme, host, port, sockaddr, timeout):
+        def fake_dial(scheme, host, port, *rest):
             dials.append(host)
             return _FakeHttpConn(), None
 

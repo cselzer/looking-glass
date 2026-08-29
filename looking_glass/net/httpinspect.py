@@ -42,6 +42,8 @@ def _probe_error(exc: BaseException) -> str:
         return "timeout"
     if isinstance(exc, BadStatusLine):
         return _H2_ERROR
+    if isinstance(exc, (ValueError, TypeError)):
+        return "inspect failed"
     text = str(exc) or type(exc).__name__
     if _looks_binary(text):
         return _H2_ERROR
@@ -249,6 +251,7 @@ def _dial(
     scheme: str,
     host: str,
     port: int,
+    family: int,
     sockaddr: Any,
     timeout: float,
 ) -> Tuple[HTTPConnection, Optional[str]]:
@@ -262,15 +265,24 @@ def _dial(
         conn: HTTPConnection = HTTPSConnection(host, port=port, timeout=timeout, context=ctx)
     else:
         conn = HTTPConnection(host, port=port, timeout=timeout)
-    sock = socket.create_connection(sockaddr, timeout)
-    alpn = None
-    if scheme == "https":
-        sock = ctx.wrap_socket(sock, server_hostname=host)
-        getter = getattr(sock, "selected_alpn_protocol", None)
-        if callable(getter):
-            alpn = getter() or None
-    conn.sock = sock
-    return conn, alpn
+    sock = socket.socket(family, socket.SOCK_STREAM)
+    sock.settimeout(timeout)
+    try:
+        sock.connect(sockaddr)
+        alpn = None
+        if scheme == "https":
+            sock = ctx.wrap_socket(sock, server_hostname=host)
+            getter = getattr(sock, "selected_alpn_protocol", None)
+            if callable(getter):
+                alpn = getter() or None
+        conn.sock = sock
+        return conn, alpn
+    except Exception:
+        try:
+            sock.close()
+        except OSError:
+            pass
+        raise
 
 
 def _read_response(conn: HTTPConnection, path: str, host: str) -> Dict[str, Any]:
@@ -326,12 +338,12 @@ def inspect_http(target: str, timeout: float = 8.0, max_redirects: int = 8) -> D
                 break
             seen.add(key)
             try:
-                _dest_ip, _family, sockaddr = _resolve_http_hop(host, port)
+                _dest_ip, family, sockaddr = _resolve_http_hop(host, port)
             except ValueError as exc:
                 return _denied(exc)
             hop_start = time.perf_counter()
             hop_host = bracket_host(host)
-            conn, hop_alpn = _dial(scheme, host, port, sockaddr, timeout)
+            conn, hop_alpn = _dial(scheme, host, port, family, sockaddr, timeout)
             if hop_alpn:
                 alpn = hop_alpn
             try:

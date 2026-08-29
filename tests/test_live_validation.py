@@ -155,7 +155,7 @@ class LinkLocalTests(unittest.TestCase):
         }
         dials = []
 
-        def fake_dial(scheme, host, port, sockaddr, timeout):
+        def fake_dial(scheme, host, port, *rest):
             dials.append(host)
             return type("Conn", (), {"close": lambda self: None})(), None
 
