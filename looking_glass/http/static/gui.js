@@ -3289,6 +3289,7 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
     const uptimeEl = document.getElementById("status-uptime");
     const loadEl = document.getElementById("status-load");
     const modeEl = document.getElementById("status-mode");
+    const verEl = document.getElementById("status-ver");
     const servicesBtn = document.getElementById("status-services");
     const authedEl = document.getElementById("status-auth-user");
     const regenBtn = document.getElementById("status-docs-regen");
@@ -3434,6 +3435,7 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
       uptimeEl.textContent = window.t ? window.t("status.up", { value: dash }) : ("up " + dash);
       loadEl.textContent = window.t ? window.t("status.load", { value: dash }) : ("load " + dash);
       modeEl.textContent = dash;
+      if (verEl) verEl.textContent = dash;
       paintServe(false, false);
       paintHttps(false);
     }
@@ -3476,6 +3478,7 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
         }
         const mode = String(data.mode || "").toUpperCase();
         modeEl.textContent = mode === "ASGI" || mode === "WSGI" ? mode : dash;
+        if (verEl) verEl.textContent = data.version || dash;
         if (data.serve) paintServe(data.serve.running, data.serve.ready, data.serve.uptime);
         if (data.https) paintHttps(data.https.running, data.https.uptime);
         window.lookingGlassStatus = data;

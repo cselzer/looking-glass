@@ -8,6 +8,7 @@ import threading
 import unittest
 from unittest.mock import AsyncMock, patch
 
+from looking_glass import package_version
 from looking_glass.intel_server.client import IPContext
 from looking_glass.wall import Decision, WallASGI, WallWSGI, wall
 from looking_glass.wall import lists as wall_lists
@@ -1954,6 +1955,7 @@ class HttpDemoTests(unittest.TestCase):
         self.assertIn('id="status-ip"', text)
         self.assertIn('id="status-time"', text)
         self.assertIn('id="status-uptime"', text)
+        self.assertIn('id="status-ver"', text)
         self.assertIn('fetch("/status"', text)
         self.assertIn("data.ipv4", text)
         self.assertIn("data.ipv6", text)
@@ -2691,6 +2693,7 @@ class HttpDemoTests(unittest.TestCase):
         self.assertIn('id="status-ip"', text)
         self.assertIn('id="status-time"', text)
         self.assertIn('id="status-uptime"', text)
+        self.assertIn('id="status-ver"', text)
         self.assertIn('id="status-docs"', text)
         self.assertIn('id="status-locale"', text)
         self.assertIn('href="/docs"', text)
@@ -3094,6 +3097,7 @@ class HttpDemoTests(unittest.TestCase):
         self.assertEqual(payload["uptime"], 93784.0)
         self.assertEqual(payload["load"], [0.12, 0.34, 0.56])
         self.assertEqual(payload["mode"], "wsgi")
+        self.assertEqual(payload["version"], package_version())
         self.assertEqual(payload["time_epoch"], 1756067372.0)
         self.assertEqual(payload["utc_offset"], -14400)
         self.assertEqual(payload["tz"], "EDT")
@@ -3130,6 +3134,7 @@ class HttpDemoTests(unittest.TestCase):
         self.assertEqual(payload["uptime"], 93784.0)
         self.assertEqual(payload["load"], [0.12, 0.34, 0.56])
         self.assertEqual(payload["mode"], "asgi")
+        self.assertEqual(payload["version"], package_version())
         self.assertEqual(payload["time_epoch"], 1756067372.0)
         self.assertEqual(payload["utc_offset"], -14400)
         self.assertEqual(payload["tz"], "EDT")

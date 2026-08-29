@@ -1,4 +1,4 @@
-"""looking-glass HTTP: GET / looks up the TCP peer; GET /<token> auto-detects IP, ASN, or country; GET /dns/<name> and GET /dns/<name>/<type> query DNS; GET /reputation/<name> checks domain or IP blocklists; GET /apex/<domain> is zone and mail health; GET /register/<name> is a TLD chessboard; GET /dnssec/<domain> walks the DNSSEC chain; GET /tls/<host> inspects a certificate; GET /rdap/<token> is RDAP; GET /ping/<host>, /traceroute/<host>, /mtr/<host>, and /tcptraceroute/<host>/<port> are Python path probes; GET /status is hostname, IP, time, uptime, load, and ASGI/WSGI."""
+"""looking-glass HTTP: GET / looks up the TCP peer; GET /<token> auto-detects IP, ASN, or country; GET /dns/<name> and GET /dns/<name>/<type> query DNS; GET /reputation/<name> checks domain or IP blocklists; GET /apex/<domain> is zone and mail health; GET /register/<name> is a TLD chessboard; GET /dnssec/<domain> walks the DNSSEC chain; GET /tls/<host> inspects a certificate; GET /rdap/<token> is RDAP; GET /ping/<host>, /traceroute/<host>, /mtr/<host>, and /tcptraceroute/<host>/<port> are Python path probes; GET /status is hostname, IP, time, uptime, load, ASGI/WSGI, and package version."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 from urllib.parse import parse_qs, quote, unquote
 
+from .. import package_version
 from ..intel import asn_org, flags
 from ..net.host import restore_collapsed_slashes
 from ..intel_server.pipeline import classify_query
@@ -446,6 +447,7 @@ def _status_http(protocol: str, user: Optional[str] = None) -> Tuple[int, str, b
         "uptime": _status_uptime(),
         "load": load,
         "mode": "asgi" if str(protocol or "").lower() == "asgi" else "wsgi",
+        "version": package_version(),
         "user": user,
         **_status_clock(),
     }
