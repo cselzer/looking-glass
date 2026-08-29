@@ -14,6 +14,11 @@ _IANA_FIXTURE = [
     [["de"], ["https://rdap.denic.de/"]],
     [["com", "net"], ["https://rdap.verisign.com/com/v1/"]],
     [["jprs"], ["https://rdap.nic.jprs/rdap/"]],
+    [["uk"], ["https://rdap.nominet.uk/uk/"]],
+    [["tw"], ["https://ccrdap.twnic.tw/tw/"]],
+    [["fr"], ["https://rdap.nic.fr/"]],
+    [["ar"], ["https://rdap.nic.ar/"]],
+    [["shop"], ["https://rdap.gmoregistry.net/rdap/"]],
 ]
 _IANA_COM_ONLY = [
     [["com", "net"], ["https://rdap.verisign.com/com/v1/"]],
@@ -23,6 +28,8 @@ _IANA_COM_ONLY = [
 def _reset_bootstrap() -> None:
     rdap._DNS_BOOTSTRAP = None
     rdap._DNS_BOOTSTRAP_LOADED = 0.0
+    rdap._ORIGIN_LOCKS.clear()
+    rdap._ORIGIN_READY.clear()
 
 
 def _write_iana(tmp: str, services) -> None:
@@ -43,11 +50,14 @@ def _tmp_cache(tmp: str):
     )
 
 
-def _json_resp(payload, status=200, url=""):
+def _json_resp(payload, status=200, url="", headers=None):
     resp = MagicMock()
     resp.status_code = status
     resp.url = url
-    resp.headers = {"Content-Type": "application/rdap+json"}
+    hdrs = {"Content-Type": "application/rdap+json"}
+    if headers:
+        hdrs.update(headers)
+    resp.headers = hdrs
     resp.json.return_value = payload
     resp.text = json.dumps(payload)
     return resp
@@ -229,7 +239,7 @@ class RdapCacheTests(unittest.TestCase):
     def test_fetch_uses_shared_cache(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
-                with patch("requests.get") as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get") as get:
                     resp = MagicMock()
                     resp.status_code = 200
                     resp.json.return_value = {"handle": "NET"}
@@ -243,7 +253,7 @@ class RdapCacheTests(unittest.TestCase):
     def test_ipv6_keeps_colons_in_rdap_url(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
-                with patch("requests.get") as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get") as get:
                     resp = MagicMock()
                     resp.status_code = 200
                     resp.json.return_value = {"handle": "NET6"}
@@ -256,7 +266,7 @@ class RdapCacheTests(unittest.TestCase):
     def test_rir_fallback_after_rdap_org_404(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch("looking_glass.cache.get_cache_path", side_effect=lambda name: os.path.join(tmp, name)):
-                with patch("requests.get") as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get") as get:
                     miss = MagicMock()
                     miss.status_code = 404
                     hit = MagicMock()
@@ -273,7 +283,7 @@ class RdapCacheTests(unittest.TestCase):
                 self.assertIn("2001:db8::1", second)
 
     def test_junk_does_not_fetch(self):
-        with patch("requests.get") as get:
+        with patch("looking_glass.intel.rdap._rdap_http_get") as get:
             self.assertIsNone(rdap.fetch_rdap("notanip"))
             payload = rdap.lookup_rdap("notanip")
             self.assertFalse(payload["ok"])
@@ -287,7 +297,7 @@ class RdapCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get", return_value=hit) as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get", return_value=hit) as get:
                     data = rdap.fetch_rdap("bücher.de")
                     again = rdap.fetch_rdap("xn--bcher-kva.de")
         self.assertEqual(data["handle"], "BUECHER")
@@ -302,7 +312,7 @@ class RdapCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get") as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get") as get:
                     data = rdap.fetch_rdap("例.jp")
                     looked = rdap.lookup_rdap("例.jp")
                     puny = rdap.lookup_rdap("xn--fsq.jp")
@@ -328,7 +338,7 @@ class RdapCacheTests(unittest.TestCase):
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
                 with patch("looking_glass.intel.rdap.query_cache.put") as put:
-                    with patch("requests.get", return_value=html) as get:
+                    with patch("looking_glass.intel.rdap._rdap_http_get", return_value=html) as get:
                         data = rdap.fetch_rdap("example.com")
         self.assertIsNone(data)
         get.assert_called()
@@ -342,7 +352,7 @@ class RdapCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get", return_value=miss) as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get", return_value=miss) as get:
                     data = rdap.fetch_rdap("example.com")
         self.assertIsNone(data)
         self.assertEqual(get.call_count, 1)
@@ -370,11 +380,40 @@ class RdapCacheTests(unittest.TestCase):
         self.assertFalse(any("rdap.org" in url for url in de + com + gtld))
         self.assertFalse(any("rdap.jprs.jp" in url for url in de + com + gtld))
 
+    def test_extension_bootstrap_urls(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                uk = rdap.domain_rdap_urls("bbc.co.uk")
+                tw = rdap.domain_rdap_urls("google.com.tw")
+                fr = rdap.domain_rdap_urls("google.fr")
+                ar = rdap.domain_rdap_urls("google.com.ar")
+                shop = rdap.domain_rdap_urls("google.shop")
+                io = rdap.domain_rdap_urls("github.io")
+        self.assertEqual(uk, ["https://rdap.nominet.uk/uk/domain/bbc.co.uk"])
+        self.assertEqual(tw, ["https://ccrdap.twnic.tw/tw/domain/google.com.tw"])
+        self.assertEqual(fr, ["https://rdap.nic.fr/domain/google.fr"])
+        self.assertEqual(ar, ["https://rdap.nic.ar/domain/google.com.ar"])
+        self.assertEqual(shop, ["https://rdap.gmoregistry.net/rdap/domain/google.shop"])
+        self.assertEqual(io, [])
+
+    def test_io_in_fixture_is_used(self):
+        hit = _json_resp({"ldhName": "github.io"})
+        services = _IANA_FIXTURE + [[["io"], ["https://rdap.identitydigital.services/rdap/"]]]
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, services)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("looking_glass.intel.rdap._rdap_http_get", return_value=hit) as get:
+                    payload = rdap.lookup_rdap("github.io")
+        self.assertTrue(payload["ok"])
+        self.assertIn("rdap.identitydigital.services", get.call_args[0][0])
+        self.assertIn("github.io", get.call_args[0][0])
+
     def test_bootstrap_reads_disk_cache(self):
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, [[["com"], ["https://rdap.verisign.com/com/v1/"]]])
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get") as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get") as get:
                     urls = rdap.domain_rdap_urls("example.com")
                     jp = rdap.domain_rdap_urls("jprs.jp")
             get.assert_not_called()
@@ -386,7 +425,7 @@ class RdapCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get", return_value=hit) as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get", return_value=hit) as get:
                     missing = rdap.fetch_rdap("jprs.jp")
                     looked = rdap.lookup_rdap("例.jp")
                     nic = rdap.lookup_rdap("nic.jp")
@@ -415,7 +454,7 @@ class RdapCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get", return_value=hit) as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get", return_value=hit) as get:
                     data = rdap.fetch_rdap("foo.jprs")
                     jp = rdap.lookup_rdap("jprs.jp")
         self.assertEqual(data["ldhName"], "foo.jprs")
@@ -430,7 +469,7 @@ class RdapCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get", return_value=miss) as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get", return_value=miss) as get:
                     payload = rdap.lookup_rdap("missing.de")
         self.assertFalse(payload["ok"])
         self.assertEqual(payload["status"], 404)
@@ -452,19 +491,23 @@ class RdapCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get", return_value=html):
+                with patch("looking_glass.intel.rdap._rdap_http_get", return_value=html):
                     html_fail = rdap.lookup_rdap("example.com")
-                with patch("requests.get", side_effect=TimeoutError("timed out")) as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get", side_effect=TimeoutError("timed out")) as get:
                     timed = rdap.lookup_rdap("verisign.com")
         self.assertFalse(html_fail["ok"])
         self.assertEqual(html_fail["status"], 502)
-        self.assertIn("rdap.verisign.com", html_fail["error"])
+        self.assertIn("rdap.verisign.com", html_fail.get("url") or "")
         self.assertNotIn("rdap.org", html_fail["url"])
-        self.assertNotEqual(html_fail["error"], "rdap lookup failed")
+        self.assertNotIn("rdap lookup failed", html_fail["error"])
+        self.assertNotIn("HTTPSConnectionPool", html_fail["error"])
         self.assertFalse(timed["ok"])
-        self.assertEqual(timed["status"], 502)
+        self.assertEqual(timed["status"], 504)
+        self.assertEqual(timed["error"], "RDAP upstream timeout")
+        self.assertNotIn("HTTPSConnectionPool", timed["error"])
         self.assertNotIn("rdap.org", timed["error"])
         self.assertIn("verisign.com", get.call_args[0][0])
+        self.assertEqual(get.call_count, 2)
         timeout = get.call_args[1]["timeout"]
         self.assertEqual(timeout, (3, 8))
 
@@ -473,7 +516,7 @@ class RdapCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_COM_ONLY)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get", return_value=hit) as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get", return_value=hit) as get:
                     de = rdap.lookup_rdap("bücher.de")
                     jp = rdap.lookup_rdap("jprs.jp")
         self.assertTrue(de["ok"])
@@ -492,7 +535,7 @@ class RdapCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _reset_bootstrap()
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get") as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get") as get:
                     payload = rdap.lookup_rdap("example.com")
         get.assert_not_called()
         self.assertFalse(payload["ok"])
@@ -511,7 +554,7 @@ class RdapCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _write_iana(tmp, _IANA_FIXTURE)
             with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
-                with patch("requests.get", return_value=hit) as get:
+                with patch("looking_glass.intel.rdap._rdap_http_get", return_value=hit) as get:
                     payload = rdap.lookup_rdap("xn--bcher-kva.de")
         self.assertTrue(payload["ok"])
         self.assertEqual(payload["url"], "https://rdap.denic.de/domain/xn--bcher-kva.de")
@@ -642,3 +685,160 @@ class RdapCacheTests(unittest.TestCase):
         self.assertNotEqual(payload["error"], "rdap lookup failed")
         self.assertEqual(payload["http_status"], 404)
         self.assertEqual(payload["url"], "https://rdap.denic.de/domain/missing.de")
+
+    def test_github_io_is_501_without_iana_io(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("looking_glass.intel.rdap._rdap_http_get") as get:
+                    payload = rdap.lookup_rdap("github.io")
+        get.assert_not_called()
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["status"], 501)
+        self.assertEqual(payload["error"], "no RDAP for this TLD")
+
+    def test_twnic_426_is_not_502(self):
+        miss = _json_resp({}, status=426)
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("looking_glass.intel.rdap._rdap_http_get", return_value=miss):
+                    payload = rdap.lookup_rdap("google.com.tw")
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["status"], 426)
+        self.assertEqual(payload["http_status"], 426)
+        self.assertEqual(payload["error"], "RDAP upgrade required")
+        self.assertIn("ccrdap.twnic.tw", payload["url"])
+        self.assertNotIn("rdap lookup failed", payload["error"])
+        self.assertNotIn("HTTPSConnectionPool", payload["error"])
+
+    def test_gmo_429_is_rate_limited(self):
+        miss = _json_resp({}, status=429, headers={"Retry-After": "120"})
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("looking_glass.intel.rdap.time.sleep") as slept:
+                    with patch("looking_glass.intel.rdap._rdap_http_get", return_value=miss) as get:
+                        payload = rdap.lookup_rdap("google.shop")
+        slept.assert_not_called()
+        self.assertEqual(get.call_count, 1)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["status"], 429)
+        self.assertEqual(payload["http_status"], 429)
+        self.assertEqual(payload["error"], "RDAP rate limited")
+        self.assertEqual(payload["retry_after"], 120.0)
+        self.assertIn("gmoregistry", payload["url"])
+        self.assertNotIn("rdap lookup failed", payload["error"])
+
+    def test_short_retry_after_retries_once(self):
+        limited = _json_resp({}, status=429, headers={"Retry-After": "1"})
+        hit = _json_resp({"ldhName": "google.shop", "handle": "SHOP"})
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("looking_glass.intel.rdap.time.sleep") as slept:
+                    with patch(
+                        "looking_glass.intel.rdap._rdap_http_get",
+                        side_effect=[limited, hit],
+                    ) as get:
+                        payload = rdap.lookup_rdap("google.shop")
+        slept.assert_called_once_with(1.0)
+        self.assertEqual(get.call_count, 2)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["result"]["query"], "google.shop")
+
+    def test_nic_ar_timeout_is_504(self):
+        pool = TimeoutError(
+            "HTTPSConnectionPool(host='rdap.nic.ar', port=443): Read timed out (read timeout=8)"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("looking_glass.intel.rdap._rdap_http_get", side_effect=pool) as get:
+                    payload = rdap.lookup_rdap("google.com.ar")
+        self.assertEqual(get.call_count, 2)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["status"], 504)
+        self.assertEqual(payload["error"], "RDAP upstream timeout")
+        self.assertIn("rdap.nic.ar", payload.get("url") or "")
+        self.assertNotIn("HTTPSConnectionPool", payload["error"])
+        self.assertNotIn("rdap lookup failed", payload["error"])
+
+    def test_same_host_bucket_serializes(self):
+        import threading
+
+        order = []
+
+        def slow_get(url, timeout=None):
+            order.append("start")
+            time.sleep(0.04)
+            order.append("end")
+            return _json_resp({"ldhName": "a.shop"})
+
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("looking_glass.intel.rdap._rdap_http_get", side_effect=slow_get):
+                    threads = [
+                        threading.Thread(target=rdap.lookup_rdap, args=("one.shop",)),
+                        threading.Thread(target=rdap.lookup_rdap, args=("two.shop",)),
+                    ]
+                    for thread in threads:
+                        thread.start()
+                    for thread in threads:
+                        thread.join(timeout=5)
+        self.assertEqual(order, ["start", "end", "start", "end"])
+
+    def test_different_hosts_do_not_share_bucket(self):
+        self.assertEqual(
+            rdap._rdap_origin("https://rdap.gmoregistry.net/rdap/domain/a.shop"),
+            "https://rdap.gmoregistry.net",
+        )
+        self.assertEqual(
+            rdap._rdap_origin("https://rdap.denic.de/domain/x.de"),
+            "https://rdap.denic.de",
+        )
+        self.assertNotEqual(
+            rdap._rdap_origin("https://rdap.gmoregistry.net/rdap/domain/a.shop"),
+            rdap._rdap_origin("https://rdap.denic.de/domain/x.de"),
+        )
+
+    def test_json_http_429_and_426(self):
+        limited = {
+            "ok": False,
+            "result": None,
+            "error": "RDAP rate limited",
+            "url": "https://rdap.gmoregistry.net/rdap/domain/google.shop",
+            "http_status": 429,
+            "retry_after": 120.0,
+            "status": 429,
+            "total_ms": 1,
+        }
+        with patch("looking_glass.http.site.lookup_rdap", return_value=limited):
+            status, _, body, *_ = respond(
+                "wsgi", "127.0.0.1", "/rdap/google.shop", {}, accept="application/json"
+            )
+        self.assertEqual(status, 429)
+        payload = json.loads(body)
+        self.assertEqual(payload["error"], "RDAP rate limited")
+        self.assertEqual(payload["http_status"], 429)
+        self.assertEqual(payload["retry_after"], 120.0)
+        self.assertNotIn("rdap lookup failed", payload["error"])
+
+        upgrade = {
+            "ok": False,
+            "result": None,
+            "error": "RDAP upgrade required",
+            "url": "https://ccrdap.twnic.tw/tw/domain/google.com.tw",
+            "http_status": 426,
+            "status": 426,
+            "total_ms": 1,
+        }
+        with patch("looking_glass.http.site.lookup_rdap", return_value=upgrade):
+            status, _, body, *_ = respond(
+                "wsgi", "127.0.0.1", "/rdap/google.com.tw", {}, accept="application/json"
+            )
+        self.assertEqual(status, 426)
+        payload = json.loads(body)
+        self.assertEqual(payload["error"], "RDAP upgrade required")
+        self.assertEqual(payload["http_status"], 426)

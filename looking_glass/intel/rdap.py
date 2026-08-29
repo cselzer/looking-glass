@@ -13,10 +13,13 @@ import asyncio
 import ipaddress
 import json
 import re
+import threading
 import time
 import urllib.parse
+from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from email.utils import parsedate_to_datetime
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from .. import cache as query_cache
 from ..net.host import parse_asn_number
@@ -654,13 +657,24 @@ _RIR_RDAP = (
 )
 _DNS_BOOTSTRAP_URL = "https://data.iana.org/rdap/dns.json"
 _FETCH_TIMEOUT = (3, 8)
+_RETRY_AFTER_MAX = 10.0
+_RDAP_HEADERS = {
+    "User-Agent": "looking-glass/0.1.0",
+    "Accept": "application/rdap+json",
+}
 _DNS_BOOTSTRAP: Optional[List[Tuple[Tuple[str, ...], Tuple[str, ...]]]] = None
 _DNS_BOOTSTRAP_LOADED = 0.0
 _NO_RDAP_TLD = "no RDAP for this TLD"
+_RATE_LIMITED = "RDAP rate limited"
+_UPSTREAM_TIMEOUT = "RDAP upstream timeout"
 # IANA dns.json (2026-07-23) has no "de" service. Live DENIC RDAP was verified.
 _DENIC_OVERRIDE: Tuple[Tuple[Tuple[str, ...], Tuple[str, ...]], ...] = (
     (("de",), ("https://rdap.denic.de/",)),
 )
+_ORIGIN_LOCKS: Dict[str, threading.Lock] = {}
+_ORIGIN_READY: Dict[str, float] = {}
+_ORIGIN_GUARD = threading.Lock()
+_HTTP_CLIENT: Any = None
 
 
 def _rdap_json_body(resp: Any) -> Optional[dict]:
@@ -717,6 +731,150 @@ def _fail_message(url: Optional[str], status: Optional[int], detail: Optional[st
     if detail:
         parts.append(str(detail))
     return " ".join(parts)
+
+
+def _rdap_origin(url: str) -> str:
+    parts = urllib.parse.urlsplit(str(url or ""))
+    host = (parts.netloc or "").lower()
+    scheme = (parts.scheme or "https").lower()
+    return f"{scheme}://{host}" if host else ""
+
+
+def _origin_lock(origin: str) -> threading.Lock:
+    with _ORIGIN_GUARD:
+        lock = _ORIGIN_LOCKS.get(origin)
+        if lock is None:
+            lock = threading.Lock()
+            _ORIGIN_LOCKS[origin] = lock
+        return lock
+
+
+@contextmanager
+def _origin_gate(origin: str) -> Iterator[None]:
+    if not origin:
+        yield
+        return
+    lock = _origin_lock(origin)
+    lock.acquire()
+    try:
+        ready = _ORIGIN_READY.get(origin, 0.0)
+        delay = ready - time.monotonic()
+        if delay > 0:
+            time.sleep(delay)
+        yield
+    finally:
+        lock.release()
+
+
+def _pause_origin(origin: str, seconds: float) -> None:
+    if not origin:
+        return
+    until = time.monotonic() + max(0.0, float(seconds))
+    with _ORIGIN_GUARD:
+        _ORIGIN_READY[origin] = max(_ORIGIN_READY.get(origin, 0.0), until)
+
+
+def _httpx_timeout(timeout: Any) -> Any:
+    import httpx
+
+    if timeout is None:
+        connect, read = _FETCH_TIMEOUT
+    elif isinstance(timeout, tuple) and len(timeout) >= 2:
+        connect, read = float(timeout[0]), float(timeout[1])
+    else:
+        connect, read = _FETCH_TIMEOUT[0], float(timeout)
+    return httpx.Timeout(read, connect=connect)
+
+
+def _rdap_client() -> Any:
+    global _HTTP_CLIENT
+    if _HTTP_CLIENT is None:
+        import httpx
+
+        _HTTP_CLIENT = httpx.Client(
+            http2=True,
+            follow_redirects=True,
+            headers=dict(_RDAP_HEADERS),
+        )
+    return _HTTP_CLIENT
+
+
+def _rdap_http_get(url: str, timeout: Any = None) -> Any:
+    """GET one RDAP URL. Tests patch this, not the HTTP library."""
+    return _rdap_client().get(
+        url,
+        timeout=_httpx_timeout(timeout),
+        headers=dict(_RDAP_HEADERS),
+    )
+
+
+def _header(resp: Any, name: str) -> str:
+    headers = getattr(resp, "headers", None)
+    if headers is None:
+        return ""
+    getter = getattr(headers, "get", None)
+    if not callable(getter):
+        return ""
+    raw = getter(name)
+    if raw is None and name != name.lower():
+        raw = getter(name.lower())
+    return str(raw).strip() if raw is not None else ""
+
+
+def _parse_retry_after(resp: Any) -> Optional[float]:
+    text = _header(resp, "Retry-After")
+    if not text:
+        return None
+    try:
+        return max(0.0, float(int(text)))
+    except (TypeError, ValueError):
+        pass
+    try:
+        when = parsedate_to_datetime(text)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    return max(0.0, (when - datetime.now(timezone.utc)).total_seconds())
+
+
+def _is_timeout_exc(exc: BaseException) -> bool:
+    name = type(exc).__name__.lower()
+    if "timeout" in name:
+        return True
+    try:
+        import httpx
+
+        if isinstance(exc, httpx.TimeoutException):
+            return True
+    except Exception:
+        pass
+    text = str(exc).lower()
+    return "timed out" in text or "timeout" in text
+
+
+def _short_exc(exc: BaseException) -> str:
+    if _is_timeout_exc(exc):
+        return _UPSTREAM_TIMEOUT
+    text = str(exc) or type(exc).__name__
+    if any(
+        marker in text
+        for marker in ("HTTPSConnectionPool", "MaxRetryError", "ConnectionPool", "ConnectError")
+    ):
+        return "RDAP upstream error"
+    if len(text) > 80:
+        return "RDAP upstream error"
+    return text
+
+
+def _status_error(status: int) -> str:
+    if status == 429:
+        return _RATE_LIMITED
+    if status == 426:
+        return "RDAP upgrade required"
+    if status == 200:
+        return "RDAP upstream not json"
+    return f"RDAP upstream {status}"
 
 
 def _parse_dns_services(payload: Any) -> List[Tuple[Tuple[str, ...], Tuple[str, ...]]]:
@@ -898,14 +1056,13 @@ def _fetch_rdap_result(
             return {
                 "data": hit,
                 "not_found": False,
+                "no_service": False,
                 "url": None,
                 "http_status": 200,
                 "error": None,
                 "kind": kind,
                 "lookup": lookup,
             }
-
-    import requests
 
     urls = _rdap_urls(kind, lookup)
     if kind == "domain" and not urls:
@@ -922,56 +1079,117 @@ def _fetch_rdap_result(
     last_url = urls[0] if urls else None
     last_status: Optional[int] = None
     last_error = "rdap lookup failed"
+    last_retry_after: Optional[float] = None
+    wait = timeout if timeout is not None else _FETCH_TIMEOUT
     for url in urls:
         last_url = url
-        try:
-            resp = requests.get(
-                url,
-                timeout=timeout if timeout is not None else _FETCH_TIMEOUT,
-                allow_redirects=True,
-                headers={"Accept": "application/rdap+json, application/json"},
-            )
-            last_url = _response_url(resp, url)
-            last_status = int(getattr(resp, "status_code", 0) or 0)
-            rdap_data = _rdap_json_body(resp)
-            if _is_not_found(resp, rdap_data):
-                if kind in {"ip", "autnum"}:
-                    last_error = _fail_message(last_url, last_status)
-                    continue
-                return {
-                    "data": None,
-                    "not_found": True,
-                    "url": last_url,
-                    "http_status": last_status or 404,
-                    "error": "not found",
-                    "kind": kind,
-                    "lookup": lookup,
-                }
-            if last_status == 200 and rdap_data is not None:
-                query_cache.put("rdap", key, rdap_data)
-                return {
-                    "data": rdap_data,
-                    "not_found": False,
-                    "url": last_url,
-                    "http_status": 200,
-                    "error": None,
-                    "kind": kind,
-                    "lookup": lookup,
-                }
-            last_error = _fail_message(
-                last_url,
-                last_status,
-                "not json" if last_status == 200 else None,
-            )
-        except Exception as exc:
-            last_status = None
-            last_error = _fail_message(url, None, str(exc) or "timeout")
-            continue
+        origin = _rdap_origin(url)
+        retried_timeout = False
+        retried_429 = False
+        with _origin_gate(origin):
+            while True:
+                try:
+                    resp = _rdap_http_get(url, timeout=wait)
+                except Exception as exc:
+                    last_url = url
+                    last_status = None
+                    if _is_timeout_exc(exc) and not retried_timeout:
+                        retried_timeout = True
+                        continue
+                    last_error = _short_exc(exc)
+                    break
+                last_url = _response_url(resp, url)
+                last_status = int(getattr(resp, "status_code", 0) or 0)
+                rdap_data = _rdap_json_body(resp)
+                if last_status == 429:
+                    retry_after = _parse_retry_after(resp)
+                    last_retry_after = retry_after
+                    if (
+                        retry_after is not None
+                        and retry_after <= _RETRY_AFTER_MAX
+                        and not retried_429
+                    ):
+                        retried_429 = True
+                        _pause_origin(origin, retry_after)
+                        time.sleep(retry_after)
+                        continue
+                    last_error = _RATE_LIMITED
+                    break
+                if _is_not_found(resp, rdap_data):
+                    if kind in {"ip", "autnum"}:
+                        last_error = _status_error(last_status or 404)
+                        break
+                    return {
+                        "data": None,
+                        "not_found": True,
+                        "no_service": False,
+                        "url": last_url,
+                        "http_status": last_status or 404,
+                        "error": "not found",
+                        "kind": kind,
+                        "lookup": lookup,
+                    }
+                if last_status == 200 and rdap_data is not None:
+                    query_cache.put("rdap", key, rdap_data)
+                    return {
+                        "data": rdap_data,
+                        "not_found": False,
+                        "no_service": False,
+                        "url": last_url,
+                        "http_status": 200,
+                        "error": None,
+                        "kind": kind,
+                        "lookup": lookup,
+                    }
+                last_error = _status_error(last_status)
+                break
+        if last_error == _UPSTREAM_TIMEOUT:
+            out = {
+                "data": None,
+                "not_found": False,
+                "no_service": False,
+                "url": last_url,
+                "http_status": None,
+                "error": _UPSTREAM_TIMEOUT,
+                "kind": kind,
+                "lookup": lookup,
+            }
+            cached = query_cache.get_any("rdap", key)
+            if cached is not None:
+                out["data"] = cached
+                out["error"] = None
+            return out
+        if last_status == 429:
+            result = {
+                "data": None,
+                "not_found": False,
+                "no_service": False,
+                "url": last_url,
+                "http_status": 429,
+                "error": _RATE_LIMITED,
+                "kind": kind,
+                "lookup": lookup,
+            }
+            if last_retry_after is not None:
+                result["retry_after"] = last_retry_after
+            return result
+        if last_status is not None and last_status >= 400 and kind == "domain":
+            return {
+                "data": None,
+                "not_found": False,
+                "no_service": False,
+                "url": last_url,
+                "http_status": last_status,
+                "error": last_error,
+                "kind": kind,
+                "lookup": lookup,
+            }
     cached = query_cache.get_any("rdap", key)
     if cached is not None:
         return {
             "data": cached,
             "not_found": False,
+            "no_service": False,
             "url": last_url,
             "http_status": last_status,
             "error": None,
@@ -981,6 +1199,7 @@ def _fetch_rdap_result(
     return {
         "data": None,
         "not_found": False,
+        "no_service": False,
         "url": last_url,
         "http_status": last_status,
         "error": last_error,
@@ -1046,12 +1265,14 @@ def lookup_rdap(target: str, *, force: bool = False) -> Dict[str, Any]:
         "result": None,
         "error": str(fetched.get("error") or "rdap lookup failed"),
         "total_ms": elapsed,
-        "status": 404 if fetched.get("not_found") else 502,
+        "status": 502,
     }
     if fetched.get("url"):
         out["url"] = fetched["url"]
     if fetched.get("http_status") is not None:
         out["http_status"] = fetched["http_status"]
+    if fetched.get("retry_after") is not None:
+        out["retry_after"] = fetched["retry_after"]
     if fetched.get("not_found"):
         out["error"] = "not found"
         out["status"] = 404
@@ -1059,6 +1280,18 @@ def lookup_rdap(target: str, *, force: bool = False) -> Dict[str, Any]:
         out["error"] = _NO_RDAP_TLD
         out["status"] = 501
         out.pop("url", None)
+    elif fetched.get("error") == _UPSTREAM_TIMEOUT:
+        out["error"] = _UPSTREAM_TIMEOUT
+        out["status"] = 504
+    elif fetched.get("error") == _RATE_LIMITED or fetched.get("http_status") == 429:
+        out["error"] = _RATE_LIMITED
+        out["status"] = 429
+    elif fetched.get("http_status") is not None:
+        status = int(fetched["http_status"])
+        if 400 <= status <= 599:
+            out["status"] = status
+            if out["error"] == "rdap lookup failed":
+                out["error"] = _status_error(status)
     elif out["error"] == "rdap lookup failed":
         out["error"] = _fail_message(fetched.get("url"), fetched.get("http_status"))
     return out

@@ -988,6 +988,7 @@ def _envelope(
         "qtype",
         "url",
         "http_status",
+        "retry_after",
     ):
         if key in extra:
             out[key] = extra[key]
@@ -1400,6 +1401,7 @@ def _finish(
             "qtype",
             "url",
             "http_status",
+            "retry_after",
         )
         if key in payload
     }
