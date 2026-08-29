@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ site }}{% endblock %}</title>
   <script src="/i18n/{{ locale|default('en') }}.js"></script>
-  <script>
+  <script nonce="{{ csp_nonce }}">
     window.t = function (id, vars) {
       var text = (window.__i18n && window.__i18n[id]) || id;
       if (vars) {

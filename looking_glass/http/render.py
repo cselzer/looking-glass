@@ -44,4 +44,5 @@ def render(name: str, **context: object) -> str:
 
     context.setdefault("docs_enabled", docs_enabled())
     context.setdefault("docs_generated", docs_generated())
+    context.setdefault("csp_nonce", "")
     return env.get_template(name).render(**context)

@@ -29,7 +29,7 @@ _HTML = """<!DOCTYPE html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Checking your browser</title>
-  <style>
+  <style nonce="__NONCE__">
     :root { color-scheme: dark; --bg:#0b0d10; --fg:#e8edf2; --muted:#8b98a5; --line:#243040; --accent:#7eb8ff; --ok:#8ee29a; }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--fg);
@@ -49,7 +49,7 @@ _HTML = """<!DOCTYPE html>
     <p id="msg">Solve a short puzzle to continue. This takes a moment.</p>
     <div class="bar" id="bar"><span></span></div>
   </main>
-  <script>
+  <script nonce="__NONCE__">
     const payload = __PAYLOAD__;
     const bar = document.getElementById("bar");
     const fill = bar.firstElementChild;
@@ -305,7 +305,7 @@ def parse_body(raw: bytes, content_type: str = "") -> Dict[str, Any]:
     return {key: (vals[0] if vals else "") for key, vals in qs.items()}
 
 
-def page_html(ticket: Dict[str, Any], nxt: str) -> bytes:
+def page_html(ticket: Dict[str, Any], nxt: str, nonce: str = "") -> bytes:
     payload = {
         "ticket": ticket["ticket"],
         "bits": ticket["bits"],
@@ -313,7 +313,11 @@ def page_html(ticket: Dict[str, Any], nxt: str) -> bytes:
         "next": _safe_next(nxt),
     }
     blob = json.dumps(payload, ensure_ascii=False).replace("<", "\\u003c")
-    return _HTML.replace("__PAYLOAD__", blob).encode("utf-8")
+    return (
+        _HTML.replace("__PAYLOAD__", blob)
+        .replace("__NONCE__", nonce or "")
+        .encode("utf-8")
+    )
 
 
 def deny_json(meta: Dict[str, Any], nxt: str) -> Dict[str, Any]:

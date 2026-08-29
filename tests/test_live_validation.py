@@ -96,11 +96,92 @@ class LinkLocalTests(unittest.TestCase):
             "/pmtu/fe80::1%eth0",
             "/traceroute/fe80::1",
             "/mtr/169.254.0.1",
+            "/http/169.254.1.1",
+            "/http/fe80::1",
         ):
-            status, payload = _json(path)
+            with patch("looking_glass.http.site.inspect_http") as inspect:
+                status, payload = _json(path)
+            inspect.assert_not_called()
             self.assertEqual(status, 400, path)
             self.assertFalse(payload["ok"])
             self.assertNotIn("result", payload)
+
+    def test_http_link_local_url_matches_ping(self):
+        ping_status, ping_payload = _json("/ping/169.254.169.254")
+        with patch("looking_glass.http.site.inspect_http") as inspect:
+            status, payload = _json("/http", "url=http://169.254.169.254/")
+        inspect.assert_not_called()
+        self.assertEqual(status, 400)
+        self.assertEqual(ping_status, 400)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"], ping_payload["error"])
+        self.assertEqual(payload["error"], "link-local is not a probe target")
+        self.assertNotIn("result", payload)
+
+    def test_http_fe80_url_is_400(self):
+        with patch("looking_glass.http.site.inspect_http") as inspect:
+            status, payload = _json("/http", "url=http://[fe80::1]/")
+        inspect.assert_not_called()
+        self.assertEqual(status, 400)
+        self.assertEqual(payload["error"], "link-local is not a probe target")
+        self.assertNotIn("result", payload)
+
+    def test_http_resolved_link_local_is_400(self):
+        with (
+            patch(
+                "looking_glass.net.httpinspect.resolve_probe_host",
+                return_value=("169.254.169.254", 2, ("169.254.169.254", 80)),
+            ),
+            patch("looking_glass.net.httpinspect.socket.create_connection") as conn,
+        ):
+            status, payload = _json("/http", "url=http://metadata.google.internal/")
+        conn.assert_not_called()
+        self.assertEqual(status, 400)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"], "link-local is not a probe target")
+        self.assertNotIn("result", payload)
+
+    def test_http_redirect_to_link_local_is_400(self):
+        hop = {
+            "status": 302,
+            "reason": "Found",
+            "http_version": "HTTP/1.1",
+            "headers": {"Location": "http://169.254.169.254/"},
+            "location": "http://169.254.169.254/",
+            "ttfb_ms": 1.0,
+            "elapsed_ms": 1.0,
+            "hsts": None,
+            "body_len": 0,
+        }
+        dials = []
+
+        def fake_dial(scheme, host, port, sockaddr, timeout):
+            dials.append(host)
+            return type("Conn", (), {"close": lambda self: None})(), None
+
+        with (
+            patch(
+                "looking_glass.net.httpinspect._resolve_http_hop",
+                return_value=("93.184.216.34", 2, ("93.184.216.34", 80)),
+            ),
+            patch("looking_glass.net.httpinspect._dial", side_effect=fake_dial),
+            patch("looking_glass.net.httpinspect._read_response", return_value=hop),
+        ):
+            status, payload = _json("/http", "url=http://example.com/")
+        self.assertEqual(dials, ["example.com"])
+        self.assertEqual(status, 400)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"], "link-local is not a probe target")
+        self.assertNotIn("result", payload)
+
+    def test_http_loopback_and_rfc1918_are_not_policy_400(self):
+        fake = {"ok": True, "result": {"status": 200, "chain": []}, "error": None}
+        for query in ("url=http://127.0.0.1/", "url=http://10.0.0.1/"):
+            with patch("looking_glass.http.site.inspect_http", return_value=fake) as inspect:
+                status, payload = _json("/http", query)
+            inspect.assert_called_once()
+            self.assertEqual(status, 200, query)
+            self.assertNotEqual(payload.get("error"), "link-local is not a probe target")
 
     def test_intel_zone_id_is_400(self):
         status, payload = _json("/fe80::1%eth0")
@@ -113,6 +194,25 @@ class LinkLocalTests(unittest.TestCase):
         self.assertEqual(status, 400)
         self.assertFalse(payload["ok"])
         self.assertNotIn("result", payload)
+
+
+class MethodNotAllowedTests(unittest.TestCase):
+    def test_trace_put_delete_are_405(self):
+        for method in ("TRACE", "PUT", "DELETE", "PATCH", "OPTIONS"):
+            status, ctype, body, extra = respond(
+                "wsgi",
+                "127.0.0.1",
+                "/",
+                {},
+                accept="application/json",
+                method=method,
+            )
+            payload = json.loads(body.decode("utf-8"))
+            self.assertEqual(status, 405, method)
+            self.assertIn("json", ctype)
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["error"], "method not allowed")
+            self.assertIn(("Allow", "GET, HEAD, POST"), extra)
 
 
 class HttpSchemeTests(unittest.TestCase):

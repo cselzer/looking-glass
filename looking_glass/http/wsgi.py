@@ -54,6 +54,7 @@ def inner(environ, start_response):
         body=raw_body,
         correlation_id=environ.get("HTTP_X_CORRELATION_ID"),
         authorization=environ.get("HTTP_AUTHORIZATION"),
+        origin=environ.get("HTTP_ORIGIN"),
     )
     try:
         phrase = HTTPStatus(status).phrase

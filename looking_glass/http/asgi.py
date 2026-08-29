@@ -62,6 +62,7 @@ async def inner(scope, receive, send):
         body=raw_body,
         correlation_id=headers.get("x-correlation-id"),
         authorization=headers.get("authorization"),
+        origin=headers.get("origin"),
     )
     out_headers = [
         (b"content-type", content_type.encode("latin-1")),

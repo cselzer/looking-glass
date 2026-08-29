@@ -11,7 +11,7 @@
   <script type="application/json" id="report-payload">{{ payload | tojson }}</script>
 {% endblock %}
 {% block extra_js %}
-  <script>
+  <script nonce="{{ csp_nonce }}">
     (function () {
       const node = document.getElementById("report-payload");
       const host = document.getElementById("report-body");

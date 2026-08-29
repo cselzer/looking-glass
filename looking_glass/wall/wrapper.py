@@ -607,21 +607,51 @@ class Wall:
         except Exception:
             pass
 
+    def _secure_headers(
+        self,
+        headers: List[Tuple[str, str]],
+        scheme: Optional[str],
+        origin: Optional[str],
+        nonce: Optional[str] = None,
+    ) -> Tuple[List[Tuple[str, str]], str]:
+        from ..http.security import csp_nonce, merge_security_headers
+
+        token = nonce if nonce is not None else csp_nonce()
+        return merge_security_headers(list(headers or []), scheme, token, origin=origin), token
+
     def _issue_challenge(
         self,
         ip: Optional[str],
         nxt: str,
         accept: Optional[str],
         meta: Optional[Dict[str, Any]] = None,
+        *,
+        scheme: Optional[str] = None,
+        origin: Optional[str] = None,
     ) -> Tuple[int, List[Tuple[str, str]], bytes]:
+        from ..http.security import csp_nonce
+
         ticket = wall_challenge.issue_ticket(ip or "", self._secret(), self.challenge_bits)
+        nonce = csp_nonce()
         if _wants_html(accept):
-            body = wall_challenge.page_html(ticket, nxt)
-            return self.challenge_status, [("Content-Type", "text/html; charset=utf-8")], body
+            body = wall_challenge.page_html(ticket, nxt, nonce=nonce)
+            headers, _ = self._secure_headers(
+                [("Content-Type", "text/html; charset=utf-8")],
+                scheme,
+                origin,
+                nonce=nonce,
+            )
+            return self.challenge_status, headers, body
         payload = wall_challenge.deny_json(meta or {}, nxt)
         payload["ticket"] = ticket["ticket"]
         payload["bits"] = ticket["bits"]
-        return self.challenge_status, [("Content-Type", "application/json")], _JSON(payload).encode("utf-8")
+        headers, _ = self._secure_headers(
+            [("Content-Type", "application/json")],
+            scheme,
+            origin,
+            nonce=nonce,
+        )
+        return self.challenge_status, headers, _JSON(payload).encode("utf-8")
 
     def _handle_challenge_endpoint(
         self,
@@ -635,6 +665,7 @@ class Wall:
         raw: bytes,
         decision: Decision,
         meta: Dict[str, Any],
+        origin: Optional[str] = None,
     ) -> Optional[Tuple[int, List[Tuple[str, str]], bytes]]:
         if decision == Decision.BLOCK:
             return None
@@ -642,22 +673,35 @@ class Wall:
         nxt = wall_challenge._safe_next((qs.get("next") or ["/"])[0])
         verb = (method or "GET").upper()
         if verb == "GET":
-            code, headers, body = self._issue_challenge(ip, nxt, accept, meta)
-            return code, headers, body
+            return self._issue_challenge(ip, nxt, accept, meta, scheme=scheme, origin=origin)
         if verb != "POST":
-            return 405, [("Content-Type", "application/json")], _JSON({"ok": False, "error": "use GET or POST"}).encode("utf-8")
+            headers, _ = self._secure_headers(
+                [("Content-Type", "application/json")],
+                scheme,
+                origin,
+            )
+            return 405, headers, _JSON({"ok": False, "error": "use GET or POST"}).encode("utf-8")
         data = wall_challenge.parse_body(raw, content_type)
         nxt = wall_challenge._safe_next(data.get("next") or nxt)
         ticket = str(data.get("ticket") or "")
         if not ip or not wall_challenge.verify_solution(ticket, data.get("counter"), ip, self._secret()):
             payload = {"ok": False, "error": "challenge failed"}
-            return 403, [("Content-Type", "application/json")], _JSON(payload).encode("utf-8")
+            headers, _ = self._secure_headers(
+                [("Content-Type", "application/json")],
+                scheme,
+                origin,
+            )
+            return 403, headers, _JSON(payload).encode("utf-8")
         ttl = wall_challenge.ttl_seconds(self.challenge_ttl_days)
         token = wall_challenge.cookie_value(ip, self._secret(), ttl)
-        headers = [
-            ("Content-Type", "application/json"),
-            ("Set-Cookie", wall_challenge.set_cookie_header(token, ttl, scheme=scheme)),
-        ]
+        headers, _ = self._secure_headers(
+            [
+                ("Content-Type", "application/json"),
+                ("Set-Cookie", wall_challenge.set_cookie_header(token, ttl, scheme=scheme)),
+            ],
+            scheme,
+            origin,
+        )
         body = _JSON({"ok": True, "decision": "allow", "next": nxt}).encode("utf-8")
         return 200, headers, body
 
@@ -674,6 +718,7 @@ class Wall:
             environ.get("wsgi.url_scheme"),
             environ.get("HTTP_X_FORWARDED_PROTO"),
         )
+        origin = environ.get("HTTP_ORIGIN")
         corr = _correlation_id()
         decision, meta, ctx = self._finish_sync(ip)
         decision, meta = self._soften_challenge(decision, meta, ip, cookie)
@@ -695,6 +740,7 @@ class Wall:
                 raw=raw,
                 decision=decision,
                 meta=meta,
+                origin=origin,
             )
             if handled is not None:
                 code, extra, body = handled
@@ -724,7 +770,9 @@ class Wall:
                 return [body]
         if decision == Decision.CHALLENGE:
             nxt = path if path.startswith("/") else "/"
-            code, extra, body = self._issue_challenge(ip, nxt, accept, meta)
+            code, extra, body = self._issue_challenge(
+                ip, nxt, accept, meta, scheme=scheme, origin=origin
+            )
             headers = [("Content-Length", str(len(body)))]
             headers.extend(extra)
             headers.extend(items)
@@ -739,10 +787,14 @@ class Wall:
             return [body]
         if decision == Decision.BLOCK:
             body = self._deny_payload(decision, meta)
-            headers = [
-                ("Content-Type", "application/json"),
-                ("Content-Length", str(len(body))),
-            ]
+            headers, _ = self._secure_headers(
+                [
+                    ("Content-Type", "application/json"),
+                    ("Content-Length", str(len(body))),
+                ],
+                scheme,
+                origin,
+            )
             headers.extend(items)
             self._record(
                 corr=corr, ip=ip, method=method, path=path, decision=decision,
@@ -799,6 +851,7 @@ class Wall:
             scope.get("scheme"),
             _header_value(scope.get("headers"), "x-forwarded-proto"),
         )
+        origin = _header_value(scope.get("headers"), "origin")
         corr = _correlation_id()
         decision, meta, ctx = await self._finish_async(ip)
         decision, meta = self._soften_challenge(decision, meta, ip, cookie)
@@ -863,6 +916,7 @@ class Wall:
                 raw=raw,
                 decision=decision,
                 meta=meta,
+                origin=origin,
             )
             if handled is not None:
                 code, headers, body = handled
@@ -871,12 +925,19 @@ class Wall:
                 return
         if decision == Decision.CHALLENGE:
             nxt = path if path.startswith("/") else "/"
-            code, headers, body = self._issue_challenge(ip, nxt, accept, meta)
+            code, headers, body = self._issue_challenge(
+                ip, nxt, accept, meta, scheme=scheme, origin=origin
+            )
             await _reply(code, headers, body, decision)
             return
         if decision == Decision.BLOCK:
             body = self._deny_payload(decision, meta)
-            await _reply(403, [("Content-Type", "application/json")], body, decision)
+            headers, _ = self._secure_headers(
+                [("Content-Type", "application/json")],
+                scheme,
+                origin,
+            )
+            await _reply(403, headers, body, decision)
             return
         scope = dict(scope)
         scope["headers"] = list(scope.get("headers") or []) + extra

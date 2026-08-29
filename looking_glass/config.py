@@ -39,6 +39,7 @@ DEFAULTS: Dict[str, Any] = {
         "workers": 1,
         "bind": "*",
         "staging": False,
+        "controller_origins": [],
     },
 }
 
@@ -278,6 +279,7 @@ def _clamp_workers(raw: Any, default: int) -> int:
 
 def _merge_http(raw: Any) -> Dict[str, Any]:
     out = dict(DEFAULTS["http"])
+    out["controller_origins"] = list(out.get("controller_origins") or [])
     if not isinstance(raw, dict):
         return out
     if "enabled" in raw:
@@ -311,6 +313,10 @@ def _merge_http(raw: Any) -> Dict[str, Any]:
     if "bind" in raw:
         bind = str(raw.get("bind") or "").strip() or out["bind"]
         out["bind"] = bind
+    if "controller_origins" in raw:
+        from .http.security import parse_controller_origins
+
+        out["controller_origins"] = parse_controller_origins(raw.get("controller_origins"))
     return out
 
 
@@ -430,6 +436,10 @@ def _parse_set_value(dotted: str, raw: Any) -> Any:
         if not bind:
             raise ValueError("http.bind must be a bind address")
         return bind
+    if key == "http.controller_origins":
+        from .http.security import parse_controller_origins
+
+        return parse_controller_origins(raw, strict=True)
     if key == "cache.ttl_days" or key.startswith("refresh."):
         days = _parse_days(raw if not isinstance(raw, str) else raw.strip())
         if days is None:

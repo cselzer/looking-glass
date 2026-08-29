@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+import socket
 import ssl
 import time
 import ipaddress
@@ -11,7 +12,14 @@ import urllib.parse
 from http.client import BadStatusLine, HTTPConnection, HTTPSConnection
 from typing import Any, Dict, List, Optional, Tuple
 
-from .host import bracket_host, format_hostport, restore_collapsed_slashes, unbracket_host
+from .host import (
+    bracket_host,
+    format_hostport,
+    reject_probe_target,
+    resolve_probe_host,
+    restore_collapsed_slashes,
+    unbracket_host,
+)
 
 
 _SCHEME_URL = re.compile(r"^([a-z][a-z0-9+.-]*):/+(.*)$", re.I)
@@ -63,6 +71,7 @@ def http_envelope_query(parsed: str, query_string: str = "") -> str:
         scheme = urllib.parse.urlsplit(value).scheme.lower()
         if scheme not in {"http", "https"}:
             raise ValueError("scheme must be http or https")
+        _split_target(value)
         return value
     text = restore_collapsed_slashes(str(parsed or "")).strip()
     if not text:
@@ -73,10 +82,14 @@ def http_envelope_query(parsed: str, query_string: str = "") -> str:
         scheme = urllib.parse.urlsplit(value).scheme.lower()
         if scheme not in {"http", "https"}:
             raise ValueError("scheme must be http or https")
+        _split_target(value)
         return value
     scheme = ((qs.get("scheme") or [""])[0]).lower()
     if scheme in {"http", "https"} and "://" not in text:
-        return f"{scheme}://{text}"
+        value = f"{scheme}://{text}"
+        _split_target(value)
+        return value
+    _split_target(text)
     return text
 
 
@@ -220,7 +233,44 @@ def _split_target(target: str) -> Tuple[str, str, int, str]:
     path = parsed.path or "/"
     if parsed.query:
         path = f"{path}?{parsed.query}"
+    reject_probe_target(host)
     return scheme, host, int(port), path
+
+
+def _resolve_http_hop(host: str, port: int) -> Tuple[str, int, Any]:
+    """Resolve one hop and refuse link-local (same guard as ping/tls/tcp)."""
+    reject_probe_target(host)
+    ip, family, sockaddr = resolve_probe_host(host, port=int(port), socktype=socket.SOCK_STREAM)
+    reject_probe_target(ip)
+    return ip, family, sockaddr
+
+
+def _dial(
+    scheme: str,
+    host: str,
+    port: int,
+    sockaddr: Any,
+    timeout: float,
+) -> Tuple[HTTPConnection, Optional[str]]:
+    """TCP (+TLS) to sockaddr; Host/SNI stay `host`."""
+    ctx = None
+    if scheme == "https":
+        ctx = ssl.create_default_context()
+        # HTTP/1.1 only. Offering h2 makes the peer send a SETTINGS preface
+        # that http.client then raises as BadStatusLine with raw bytes.
+        ctx.set_alpn_protocols(["http/1.1"])
+        conn: HTTPConnection = HTTPSConnection(host, port=port, timeout=timeout, context=ctx)
+    else:
+        conn = HTTPConnection(host, port=port, timeout=timeout)
+    sock = socket.create_connection(sockaddr, timeout)
+    alpn = None
+    if scheme == "https":
+        sock = ctx.wrap_socket(sock, server_hostname=host)
+        getter = getattr(sock, "selected_alpn_protocol", None)
+        if callable(getter):
+            alpn = getter() or None
+    conn.sock = sock
+    return conn, alpn
 
 
 def _read_response(conn: HTTPConnection, path: str, host: str) -> Dict[str, Any]:
@@ -249,6 +299,15 @@ def _read_response(conn: HTTPConnection, path: str, host: str) -> Dict[str, Any]
 
 def inspect_http(target: str, timeout: float = 8.0, max_redirects: int = 8) -> Dict[str, Any]:
     start = time.time()
+
+    def _denied(exc: BaseException) -> Dict[str, Any]:
+        return {
+            "ok": False,
+            "result": None,
+            "error": str(exc),
+            "total_ms": round((time.time() - start) * 1000.0, 3),
+        }
+
     try:
         scheme, host, port, path = _split_target(target)
     except ValueError as exc:
@@ -266,20 +325,18 @@ def inspect_http(target: str, timeout: float = 8.0, max_redirects: int = 8) -> D
                 error = "redirect loop"
                 break
             seen.add(key)
+            try:
+                _dest_ip, _family, sockaddr = _resolve_http_hop(host, port)
+            except ValueError as exc:
+                return _denied(exc)
             hop_start = time.perf_counter()
             hop_host = bracket_host(host)
-            if scheme == "https":
-                ctx = ssl.create_default_context()
-                # HTTP/1.1 only. Offering h2 makes the peer send a SETTINGS preface
-                # that http.client then raises as BadStatusLine with raw bytes.
-                ctx.set_alpn_protocols(["http/1.1"])
-                conn: HTTPConnection = HTTPSConnection(hop_host, port=port, timeout=timeout, context=ctx)
-            else:
-                conn = HTTPConnection(hop_host, port=port, timeout=timeout)
+            conn, hop_alpn = _dial(scheme, host, port, sockaddr, timeout)
+            if hop_alpn:
+                alpn = hop_alpn
             try:
-                conn.connect()
                 sock = getattr(conn, "sock", None)
-                if sock is not None and hasattr(sock, "selected_alpn_protocol"):
+                if sock is not None and hasattr(sock, "selected_alpn_protocol") and not hop_alpn:
                     alpn = sock.selected_alpn_protocol() or alpn
                 hop = _read_response(conn, path, hop_host)
             finally:
@@ -291,7 +348,10 @@ def inspect_http(target: str, timeout: float = 8.0, max_redirects: int = 8) -> D
             loc = hop.get("location")
             if hop["status"] in {301, 302, 303, 307, 308} and loc:
                 nxt = urllib.parse.urljoin(hop["url"], loc)
-                current = _split_target(nxt)
+                try:
+                    current = _split_target(nxt)
+                except ValueError as exc:
+                    return _denied(exc)
                 continue
             break
         else:

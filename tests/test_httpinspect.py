@@ -280,10 +280,20 @@ class _FakeHttpConn:
         return None
 
 
+_PUBLIC_SOCKADDR = ("93.184.216.34", 2, ("93.184.216.34", 443))
+
+
 class InspectHttpErrorTests(unittest.TestCase):
     def test_bad_status_line_is_printable(self):
         with (
-            patch("looking_glass.net.httpinspect.HTTPSConnection", return_value=_FakeHttpConn()),
+            patch(
+                "looking_glass.net.httpinspect._resolve_http_hop",
+                return_value=_PUBLIC_SOCKADDR,
+            ),
+            patch(
+                "looking_glass.net.httpinspect._dial",
+                return_value=(_FakeHttpConn(), None),
+            ),
             patch(
                 "looking_glass.net.httpinspect._read_response",
                 side_effect=BadStatusLine(_SETTINGS),
@@ -308,15 +318,93 @@ class InspectHttpErrorTests(unittest.TestCase):
                 return orig(protos)
 
             ctx.set_alpn_protocols = capture
+            ctx.wrap_socket = lambda sock, **kw: sock
             return ctx
 
         with (
             patch("looking_glass.net.httpinspect.ssl.create_default_context", side_effect=fake_create),
-            patch("looking_glass.net.httpinspect.HTTPSConnection", return_value=_FakeHttpConn()),
+            patch(
+                "looking_glass.net.httpinspect.resolve_probe_host",
+                return_value=_PUBLIC_SOCKADDR,
+            ),
+            patch("looking_glass.net.httpinspect.socket.create_connection", return_value=object()),
             patch("looking_glass.net.httpinspect._read_response", side_effect=OSError("stop")),
         ):
             inspect_http("example.com")
         self.assertEqual(captured.get("alpn"), ["http/1.1"])
+
+
+class InspectHttpDestPolicyTests(unittest.TestCase):
+    def test_literal_link_local_is_denied(self):
+        with self.assertRaises(ValueError) as ctx:
+            _split_target("http://169.254.169.254/")
+        self.assertEqual(str(ctx.exception), "link-local is not a probe target")
+        out = inspect_http("http://169.254.169.254/")
+        self.assertFalse(out["ok"])
+        self.assertIsNone(out["result"])
+        self.assertEqual(out["error"], "link-local is not a probe target")
+
+    def test_literal_fe80_is_denied(self):
+        with self.assertRaises(ValueError) as ctx:
+            _split_target("http://[fe80::1]/")
+        self.assertEqual(str(ctx.exception), "link-local is not a probe target")
+        out = inspect_http("http://[fe80::1]/")
+        self.assertFalse(out["ok"])
+        self.assertIsNone(out["result"])
+        self.assertEqual(out["error"], "link-local is not a probe target")
+
+    def test_resolved_link_local_is_denied(self):
+        with (
+            patch(
+                "looking_glass.net.httpinspect.resolve_probe_host",
+                return_value=("169.254.169.254", 2, ("169.254.169.254", 80)),
+            ),
+            patch("looking_glass.net.httpinspect.socket.create_connection") as conn,
+        ):
+            out = inspect_http("http://metadata.google.internal/")
+        conn.assert_not_called()
+        self.assertFalse(out["ok"])
+        self.assertIsNone(out["result"])
+        self.assertEqual(out["error"], "link-local is not a probe target")
+
+    def test_redirect_to_link_local_is_not_fetched(self):
+        hop = {
+            "status": 302,
+            "reason": "Found",
+            "http_version": "HTTP/1.1",
+            "headers": {"Location": "http://169.254.169.254/"},
+            "location": "http://169.254.169.254/",
+            "ttfb_ms": 1.0,
+            "elapsed_ms": 1.0,
+            "hsts": None,
+            "body_len": 0,
+        }
+        dials = []
+
+        def fake_dial(scheme, host, port, sockaddr, timeout):
+            dials.append(host)
+            return _FakeHttpConn(), None
+
+        for status in (301, 302):
+            hop["status"] = status
+            dials.clear()
+            with (
+                patch(
+                    "looking_glass.net.httpinspect._resolve_http_hop",
+                    return_value=("93.184.216.34", 2, ("93.184.216.34", 80)),
+                ),
+                patch("looking_glass.net.httpinspect._dial", side_effect=fake_dial),
+                patch("looking_glass.net.httpinspect._read_response", return_value=dict(hop)),
+            ):
+                out = inspect_http("http://example.com/")
+            self.assertEqual(dials, ["example.com"], status)
+            self.assertFalse(out["ok"])
+            self.assertIsNone(out["result"])
+            self.assertEqual(out["error"], "link-local is not a probe target")
+
+    def test_loopback_and_rfc1918_hosts_are_allowed(self):
+        self.assertEqual(_split_target("http://127.0.0.1/")[1], "127.0.0.1")
+        self.assertEqual(_split_target("http://10.0.0.1/")[1], "10.0.0.1")
 
 
 class FinishHttpTests(unittest.TestCase):
@@ -352,3 +440,15 @@ class FinishHttpTests(unittest.TestCase):
         )
         self.assertEqual(status, 200)
         self.assertFalse(body["ok"])
+
+    def test_link_local_is_400(self):
+        status, body = _finish(
+            {"ok": False, "result": None, "error": "link-local is not a probe target"},
+            "http",
+            "http://metadata.google.internal/",
+            {"protocol": "wsgi", "visitor": "1.1.1.1"},
+        )
+        self.assertEqual(status, 400)
+        self.assertFalse(body["ok"])
+        self.assertEqual(body["error"], "link-local is not a probe target")
+        self.assertNotIn("result", body)

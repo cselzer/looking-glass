@@ -45,6 +45,7 @@ class ConfigLoaderTests(unittest.TestCase):
             self.assertEqual(cfg["http"]["workers"], 1)
             self.assertEqual(cfg["http"]["bind"], "*")
             self.assertEqual(cfg["http"]["hostname"], "")
+            self.assertEqual(cfg["http"]["controller_origins"], [])
             dest = path()
             self.assertEqual(dest, os.path.join(tmp, "config.json"))
             self.assertTrue(os.path.isfile(dest))

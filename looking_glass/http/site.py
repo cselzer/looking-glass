@@ -46,6 +46,7 @@ from ..net.probe import parse_mtr_query_cycles, parse_probe_path, parse_tcp_trac
 from ..net.tls import inspect_tls, inspect_tls_async, parse_tls_path
 from . import render
 from . import admin as http_admin
+from .security import attach as attach_security, csp_nonce
 
 SITE = "looking-glass"
 _JSON = "application/json"
@@ -131,6 +132,18 @@ def _from3(result: Tuple[int, str, bytes], headers: Optional[ExtraHeaders] = Non
     return _out(result[0], result[1], result[2], headers)
 
 
+_PUBLIC_METHODS = frozenset({"GET", "HEAD", "POST"})
+
+
+def _method_not_allowed() -> HttpOut:
+    return _out(
+        405,
+        _JSON,
+        json.dumps({"ok": False, "error": "method not allowed"}).encode("utf-8"),
+        [("Allow", "GET, HEAD, POST")],
+    )
+
+
 def _serve_ui_i18n(method: str, token: str) -> HttpOut:
     """UI string map from disk catalogs. Not Click help, not inlined in HTML."""
     verb = (method or "GET").upper()
@@ -175,6 +188,7 @@ def _maybe_history_html(
     host: Optional[str],
     scheme: Optional[str],
     user: Optional[str],
+    csp_nonce_value: str = "",
 ) -> Optional[HttpOut]:
     if not html or not token.startswith("history/") or token == "history":
         return None
@@ -197,6 +211,7 @@ def _maybe_history_html(
             host=host,
             scheme=scheme,
             user=user,
+            csp_nonce_value=csp_nonce_value,
         )
     )
 
@@ -1414,10 +1429,13 @@ def _finish(
         result=payload.get("result"),
         extra=extra,
         error=None if payload.get("ok") else payload.get("error"),
+        include_result=payload.get("error") != "link-local is not a probe target",
     )
     status = 200
     if payload.get("error") == "intel server unavailable":
         status = 503
+    elif payload.get("error") == "link-local is not a probe target":
+        status = 400
     elif kind == "rdap" and not payload.get("ok"):
         try:
             status = int(payload.get("status") or 502)
@@ -1437,6 +1455,7 @@ def _encode_index(
     host: Optional[str],
     scheme: Optional[str],
     user: Optional[str] = None,
+    csp_nonce_value: str = "",
 ) -> Tuple[int, str, bytes]:
     origin_url = origin(host, scheme)
     try:
@@ -1454,6 +1473,7 @@ def _encode_index(
         cache_gui=bool(user),
         user=user,
         mtr=mtr_cfg,
+        csp_nonce=csp_nonce_value,
     )
     return 200, _HTML, text.encode("utf-8")
 
@@ -1493,6 +1513,7 @@ def _encode(
     scheme: Optional[str],
     user: Optional[str] = None,
     not_found: bool = False,
+    csp_nonce_value: str = "",
 ) -> Tuple[int, str, bytes]:
     if not html:
         return status, _JSON, json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -1505,6 +1526,7 @@ def _encode(
             path=path or "/",
             origin=origin_url,
             user=user,
+            csp_nonce=csp_nonce_value,
         )
         return status, _HTML, text.encode("utf-8")
     curl_block, httpie_block, url_block = _cli_blocks(origin_url, _howto_path(path, payload))
@@ -1519,6 +1541,7 @@ def _encode(
         httpie_block=httpie_block,
         url_block=url_block,
         user=user,
+        csp_nonce=csp_nonce_value,
     )
     return status, _HTML, text.encode("utf-8")
 
@@ -1583,6 +1606,7 @@ def _respond_impl(
     cookie: Optional[str] = None,
     body: bytes = b"",
     authorization: Optional[str] = None,
+    csp_nonce_value: str = "",
 ) -> HttpOut:
     html = wants_html(accept)
     _bind_html_locale(html, accept_language, cookie)
@@ -1599,15 +1623,24 @@ def _respond_impl(
     )
     if handled is not None:
         html_out = _maybe_history_html(
-            handled, html=html, token=token, path=path, host=host, scheme=scheme, user=user
+            handled,
+            html=html,
+            token=token,
+            path=path,
+            host=host,
+            scheme=scheme,
+            user=user,
+            csp_nonce_value=csp_nonce_value,
         )
         return html_out if html_out is not None else handled
+    if (method or "GET").upper() not in _PUBLIC_METHODS:
+        return _method_not_allowed()
     if token == "status":
         return _from3(_status_http(protocol, user))
     if token == "docs":
         return _from3(_docs_http(user), [("Cache-Control", "no-store")])
     if html and not token:
-        return _from3(_encode_index(visitor, host, scheme, user=user))
+        return _from3(_encode_index(visitor, host, scheme, user=user, csp_nonce_value=csp_nonce_value))
     err, kind, value, base = _plan(protocol, visitor, path, wall_hdrs, query_string)
     if err is not None:
         status, _ctype, raw = err
@@ -1622,6 +1655,7 @@ def _respond_impl(
                 scheme=scheme,
                 user=user,
                 not_found=int(status) == 404 and payload.get("kind") is None,
+                csp_nonce_value=csp_nonce_value,
             )
         )
     try:
@@ -1643,11 +1677,23 @@ def _respond_impl(
             host=host,
             scheme=scheme,
             user=user,
+            csp_nonce_value=csp_nonce_value,
         )
         return _from3(encoded)
     status, body_payload = _finish(payload, kind, value, base)
     _log_lookup(user, path, body_payload, origin(host, scheme))
-    return _from3(_encode(status, body_payload, html=html, path=path, host=host, scheme=scheme, user=user))
+    return _from3(
+        _encode(
+            status,
+            body_payload,
+            html=html,
+            path=path,
+            host=host,
+            scheme=scheme,
+            user=user,
+            csp_nonce_value=csp_nonce_value,
+        )
+    )
 
 
 async def _respond_async_impl(
@@ -1665,6 +1711,7 @@ async def _respond_async_impl(
     cookie: Optional[str] = None,
     body: bytes = b"",
     authorization: Optional[str] = None,
+    csp_nonce_value: str = "",
 ) -> HttpOut:
     html = wants_html(accept)
     _bind_html_locale(html, accept_language, cookie)
@@ -1681,15 +1728,24 @@ async def _respond_async_impl(
     )
     if handled is not None:
         html_out = _maybe_history_html(
-            handled, html=html, token=token, path=path, host=host, scheme=scheme, user=user
+            handled,
+            html=html,
+            token=token,
+            path=path,
+            host=host,
+            scheme=scheme,
+            user=user,
+            csp_nonce_value=csp_nonce_value,
         )
         return html_out if html_out is not None else handled
+    if (method or "GET").upper() not in _PUBLIC_METHODS:
+        return _method_not_allowed()
     if token == "status":
         return _from3(_status_http(protocol, user))
     if token == "docs":
         return _from3(_docs_http(user), [("Cache-Control", "no-store")])
     if html and not token:
-        return _from3(_encode_index(visitor, host, scheme, user=user))
+        return _from3(_encode_index(visitor, host, scheme, user=user, csp_nonce_value=csp_nonce_value))
     err, kind, value, base = _plan(protocol, visitor, path, wall_hdrs, query_string)
     if err is not None:
         status, _ctype, raw = err
@@ -1704,6 +1760,7 @@ async def _respond_async_impl(
                 scheme=scheme,
                 user=user,
                 not_found=int(status) == 404 and payload.get("kind") is None,
+                csp_nonce_value=csp_nonce_value,
             )
         )
     try:
@@ -1725,11 +1782,23 @@ async def _respond_async_impl(
             host=host,
             scheme=scheme,
             user=user,
+            csp_nonce_value=csp_nonce_value,
         )
         return _from3(encoded)
     status, body_payload = _finish(payload, kind, value, base)
     _log_lookup(user, path, body_payload, origin(host, scheme))
-    return _from3(_encode(status, body_payload, html=html, path=path, host=host, scheme=scheme, user=user))
+    return _from3(
+        _encode(
+            status,
+            body_payload,
+            html=html,
+            path=path,
+            host=host,
+            scheme=scheme,
+            user=user,
+            csp_nonce_value=csp_nonce_value,
+        )
+    )
 
 
 def respond(
@@ -1748,8 +1817,10 @@ def respond(
     body: bytes = b"",
     correlation_id: Optional[str] = None,
     authorization: Optional[str] = None,
+    origin: Optional[str] = None,
 ) -> HttpOut:
     started = time.perf_counter()
+    nonce = csp_nonce()
     try:
         out = _respond_impl(
             protocol,
@@ -1765,6 +1836,7 @@ def respond(
             cookie=cookie,
             body=body,
             authorization=authorization,
+            csp_nonce_value=nonce,
         )
     except Exception as exc:
         from . import weblog
@@ -1780,7 +1852,7 @@ def respond(
         except OSError:
             pass
         raise
-    return _audit_http(
+    audited = _audit_http(
         out,
         started=started,
         path=path,
@@ -1790,6 +1862,7 @@ def respond(
         correlation_id=correlation_id,
         authorization=authorization,
     )
+    return attach_security(audited, scheme, nonce, origin=origin)
 
 
 async def respond_async(
@@ -1808,8 +1881,10 @@ async def respond_async(
     body: bytes = b"",
     correlation_id: Optional[str] = None,
     authorization: Optional[str] = None,
+    origin: Optional[str] = None,
 ) -> HttpOut:
     started = time.perf_counter()
+    nonce = csp_nonce()
     try:
         out = await _respond_async_impl(
             protocol,
@@ -1825,6 +1900,7 @@ async def respond_async(
             cookie=cookie,
             body=body,
             authorization=authorization,
+            csp_nonce_value=nonce,
         )
     except Exception as exc:
         from . import weblog
@@ -1840,7 +1916,7 @@ async def respond_async(
         except OSError:
             pass
         raise
-    return _audit_http(
+    audited = _audit_http(
         out,
         started=started,
         path=path,
@@ -1850,4 +1926,5 @@ async def respond_async(
         correlation_id=correlation_id,
         authorization=authorization,
     )
+    return attach_security(audited, scheme, nonce, origin=origin)
 
