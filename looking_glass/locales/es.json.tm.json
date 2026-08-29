@@ -244,12 +244,12 @@
       "text": "RDAP"
     },
     "cli.apex.help": {
-      "en_sha256": "7a9324afc749f8ce9e12dcdf11acc1be91615c114c11cf926a943f320da8aada",
-      "text": "Salud de zona y correo (igual que GET /apex/<domain>)."
+      "en_sha256": "35a1efbf6fa2eedb34b3c775a4a7ac0a14ff40ed02ef17e58c324bb562b70b1f",
+      "text": "Salud de zona y correo de un dominio."
     },
     "cli.asn.help": {
-      "en_sha256": "e6800579b22471311f09be348bc4bee3563b6eb91910512793f4e30461cab61f",
-      "text": "Consultar un sistema autónomo (igual que GET /AS<number>)."
+      "en_sha256": "6fd5632a2e45b0e11fe2143fc8e3f2de0e736df894c7706d84eb5aa4d420b9e9",
+      "text": "Consultar un sistema autónomo por número (AS13335 o 13335)."
     },
     "cli.auth.help": {
       "en_sha256": "8cf3b0256779f756f31a83f6832a7a4a83252f073561ac53cb5b8e5b67ef42dd",
@@ -264,8 +264,8 @@
       "text": "Sesiones en archivo en ~/.looking-glass/data/sessions."
     },
     "cli.bgp.help": {
-      "en_sha256": "5a8b0d844daa2b31a316bd20811f1dc7acf574f2a7c88baa529f3733a948e404",
-      "text": "ASN de origen del prefijo y estado de RPKI ROA (igual que GET /bgp/<ip>)."
+      "en_sha256": "96c5d543b0e971082f706b206992831513f9637e18d42eb4bb649dc60e6fc5f0",
+      "text": "ASN de origen del prefijo y estado de ROA RPKI."
     },
     "cli.boot.check.help": {
       "en_sha256": "1753c1e693ebb8c7de59710870889445987163366130d669316568cbf48b513f",
@@ -380,8 +380,8 @@
       "text": "IP del nameserver (o IP:port)."
     },
     "cli.dnssec.help": {
-      "en_sha256": "5a0c40f93cfb3a110761907548aedaba43b8a451068ff4c354f50f1964093b47",
-      "text": "Recorre la cadena de confianza DNSSEC (igual que GET /dnssec/<domain>)."
+      "en_sha256": "679ea3034dad940fa72b5b0ab9d8841cde2ce1181b52afba1c9e55b3688ac5f7",
+      "text": "Recorrer la cadena de confianza DNSSEC de un dominio."
     },
     "cli.dnstrace.help": {
       "en_sha256": "c861a9d19e69a210945a839feafa9a2e3c5418fe61942f357b21d9b4cf928115",
@@ -452,8 +452,8 @@
       "text": "Segundos de espera para el apagado."
     },
     "cli.ip.help": {
-      "en_sha256": "fddf58436f3ad1a7a866edd890c30d837f54602c0c95506de5a7dd8b767e22ef",
-      "text": "Consultar una dirección IPv4 o IPv6 (igual que GET /<ip>). También acepta ASN o país."
+      "en_sha256": "7aa65b8900d89e7a122ee3a8dedeb3fdf9251e606157db9966c9a012d6fdbcf8",
+      "text": "Consultar una dirección IPv4 o IPv6. También acepta ASN o país."
     },
     "cli.locale.add.help": {
       "en_sha256": "ab228e004a1fa9259706cfcdb9753540397d8d9a4e4fc9caec5c8ee2023574a2",
@@ -520,8 +520,8 @@
       "text": "Detener el servidor intel."
     },
     "cli.lookup.bench.help": {
-      "en_sha256": "5330bf908c37c45954926acb42767a14cda94d1dcf3cb037d51a0cb999c7bde9",
-      "text": "Saturar GET /{ip} en el servidor intel (IPv4 e IPv6).\n\nRequiere `looking-glass lookup-server start`. No carga RIR en este proceso.\nEl progreso va a stderr; el informe es una vista compacta de terminal (o JSON con `--json`)."
+      "en_sha256": "259a20666d0143ce0aaf5f968ac78b6a1d10c03ed4205b2bb0951d90c3208615",
+      "text": "Saturar el socket Unix de intel con consultas IPv4 e IPv6.\n\nRequiere `looking-glass lookup-server start`. No carga RIR en este proceso.\nEl progreso se muestra en stderr; el informe es una vista compacta de terminal (o JSON con `--json`)."
     },
     "cli.lookup.bench.opt.concurrency": {
       "en_sha256": "fa533a14a25611d6336637711940ad299af62435341f5b67282c708f07d5aa0c",
@@ -620,8 +620,8 @@
       "text": "MX, SPF, DMARC, selectores DKIM, banner SMTP y STARTTLS."
     },
     "cli.mtr.help": {
-      "en_sha256": "6f7e31a503fb7d7c9c1c79c2c544e8846aa2b4a653b03790d5f3f4787d4f9bff",
-      "text": "Informe de ruta al estilo MTR (igual que GET /mtr/<host>)."
+      "en_sha256": "5cac79d44beea7ab5fe2900dd2bbc31b0b2608035b471c15427708e9dcaec7c7",
+      "text": "Informe de ruta al estilo MTR."
     },
     "cli.opt.as_json": {
       "en_sha256": "372708d4097ddf78ce894703da43f53f8d6b2080c0ea26bed4ab4ce0786bd681",
@@ -636,8 +636,8 @@
       "text": "Mostrar la versión y salir."
     },
     "cli.ping.help": {
-      "en_sha256": "8d65e7f99e9512a3b7bc70cf8845877836bd7b43051520f86d6dca290c53bc48",
-      "text": "ICMP ping (igual que GET /ping/<host>)."
+      "en_sha256": "de5a5814d678f5617784d13e55f680808e6181da21499036aaa4f402008b4918",
+      "text": "Hacer ping a un host (ICMP, o TCP si ICMP no está disponible)."
     },
     "cli.pmtu.help": {
       "en_sha256": "42fac34ee342b75ce0154a00e7d97fce2e9e5c2f0335288ae30a94a9b36c79f7",
@@ -652,20 +652,20 @@
       "text": "PTR más forward-confirmed reverse DNS."
     },
     "cli.rdap.help": {
-      "en_sha256": "3b7b4aa22e3f91e0abc1a5d0b9f8912eb575d3a5091e5f32f88b3c149afc68cc",
-      "text": "Consulta RDAP (igual que GET /rdap/<token>)."
+      "en_sha256": "cdbe609e7b6738a925a5798ff7508d4e9d279f8f75d7a8eaacedcfccac3dad5f",
+      "text": "Consulta RDAP de una IP, un ASN o un dominio."
     },
     "cli.register.help": {
-      "en_sha256": "b5d233eb681465db82443864f03c265143e86961f76aca859f5f6ef660f01fec",
-      "text": "Comprueba una etiqueta frente a cada TLD de IANA (igual que GET /register/<name>)."
+      "en_sha256": "53e642156dac1ce7121be1a13884c7b981f1de2078d6bcad6f96614315f2ec93",
+      "text": "Comprobar una etiqueta frente a cada TLD de IANA."
     },
     "cli.register.opt.tlds_opt": {
-      "en_sha256": "b2df6bd78534606580e4a8e0835dd372d4677dfe6e67e4ece304e06fc26888ba",
-      "text": "Lista de TLD separados por comas (igual que ?tlds=)."
+      "en_sha256": "1da4696fae01c88df43a7d6fd1a51dc0aaaf0cdfc4eca7dbcad02f91dc2b9384",
+      "text": "Lista de TLD separados por comas."
     },
     "cli.reputation.help": {
-      "en_sha256": "c25fc3015241fb8d40e1fa033396d8cbf8ee01277366d8da2267d98f267d94a4",
-      "text": "Listas de bloqueo de dominio o IP (igual que GET /reputation/<name>)."
+      "en_sha256": "8c154cedb9ce31c2088b2d95c27f0298b1f750f11d73dd295656451d3815e0f7",
+      "text": "Listas de bloqueo de dominio o IP."
     },
     "cli.restart.help": {
       "en_sha256": "796fbcca22145b8d82d2216a7cb4a29016bd33603d47c775a6516d2cd777995e",
@@ -680,20 +680,20 @@
       "text": "Comprobación de conexión TCP: RTT y una inspección opcional del banner."
     },
     "cli.tcptraceroute.help": {
-      "en_sha256": "533b0bf60ca58ccc00165549d8086339878176de9329325392678618f08235ca",
-      "text": "TCP traceroute (igual que GET /tcptraceroute/<host>/<port>)."
+      "en_sha256": "bcda1e04c33ffd32461e81ec835f1538f42e9bdfcbf95899627a52305d17bf61",
+      "text": "TCP traceroute a un host (puerto predeterminado 443)."
     },
     "cli.tls.help": {
-      "en_sha256": "80f7eadc96eef63bd3f7dbb3b2e80435404ff9af979aae07f60a3785f043608c",
-      "text": "Inspecciona un handshake TLS y el certificado (igual que GET /tls/<host> con /<port> opcional)."
+      "en_sha256": "a084d14046c3d83491f660a69ecddd0a6cbdde4150e6ac94b1ceb722463a1e11",
+      "text": "Inspeccionar un handshake TLS y el certificado."
     },
     "cli.tls.opt.sni": {
       "en_sha256": "4ce32de9ddd5dea49171b0a27bd6ee6a48c7dfa501991e85b695f2bebb2f9133",
       "text": "Sobrescribe el hostname SNI."
     },
     "cli.traceroute.help": {
-      "en_sha256": "262bb4fae87563fddfcd0b4927fe0330fcc23a1acdeb8d9ccc3b1ad561f0dd81",
-      "text": "UDP traceroute (igual que GET /traceroute/<host>)."
+      "en_sha256": "9d3d01ee257c106373c17201d4359adf5f6320067f96e531d0f9fc9f1ad60dcd",
+      "text": "UDP traceroute a un host."
     },
     "cli.validate.help": {
       "en_sha256": "2fe071b57b3934ad9d14c6ea1bd5bf6ade177608fb8e51d41e92e01cfc5f3675",
@@ -1152,8 +1152,8 @@
       "text": "Índice HTML de la GUI, o consulta JSON del peer TCP."
     },
     "docs.http.serve-start.notes": {
-      "en_sha256": "56ef02ed0fff88f7c566aee426e1128e7b070e58bf55e0a41caeb3c64073a495",
-      "text": "401 sin una sesión. La barra de estado muestra ready frente a building y el uptime de intel."
+      "en_sha256": "34e05aa12f1e0e075eb7dcef70228f7b70ab6ac0fe7b24e4bf5d0b3c61a56e36",
+      "text": "401 sin una sesión. La ventana de servicios muestra intel listo vs. en construcción y el uptime de ambos daemons."
     },
     "docs.http.serve-start.summary": {
       "en_sha256": "037988d480362d3b40e753c18e7f742abc7b3c67a45de6d7f3dac02932fe6175",
@@ -1172,8 +1172,8 @@
       "text": "Siempre JSON (Cache-Control: no-store)."
     },
     "docs.http.status.notes": {
-      "en_sha256": "b0adc9cc66378cc6f3245dc20012625ec3e9f85fb654e0adbce762707ad3e2df",
-      "text": "No está restringido por GUI. Lo usa la barra de estado. `ip` es ipv4 o ipv6; ambas familias también están en ipv4 / ipv6. Las respuestas autenticadas añaden user y serve.running / serve.uptime."
+      "en_sha256": "67db5c95bfd877842f4cc74a7290ebacccecd369d743dac86bf99a9110416e59",
+      "text": "No está restringido por GUI. Lo usa la barra de estado. `ip` es ipv4 o ipv6; ambas familias también están en ipv4 / ipv6. Las respuestas con sesión iniciada agregan user, serve (intel running/ready/uptime más pid y socket) y https (tls running/uptime/port más campos de cert cuando están presentes). La ventana de servicios lee este payload."
     },
     "docs.http.status.summary": {
       "en_sha256": "24a4565fe21ca4fe65cf5de9ebe74bff9da33ebcf0077479e02915da1d5286e5",
@@ -3334,6 +3334,158 @@
     "gui.logs.https_out": {
       "en_sha256": "e864b376c93de96b85bb2ae3363439c1aa30a8e98f7d8702b351a13696e492c7",
       "text": "salida https"
+    },
+    "cli.complete.help": {
+      "en_sha256": "414b7f07f828dfae54fb52a931810e98998875d76dce37d920f3e4f1004864ca",
+      "text": "Imprime un script de completado para bash, zsh o fish.\n\n\b\n  eval \"$(looking-glass complete bash)\"\n  eval \"$(looking-glass complete zsh)\"\n  looking-glass complete fish | source"
+    },
+    "cli.dns.help": {
+      "en_sha256": "7f702d89a656304f6781cb573496ffe3f4ef9ab4d60c4fb9aa23256d069e67db",
+      "text": "Consulta DNS como dig: [@server] name [type].\n\nEl nameserver predeterminado proviene de resolv.conf. Pase @server (o --server)\nsolo para sustituirlo.\n\n\b\n  looking-glass dns example.com\n  looking-glass dns example.com DS\n  looking-glass dns @1.1.1.1 example.com A\n  looking-glass dns @8.8.8.8:5353 example.com MX\n  looking-glass dns example.com AAAA -p 53 --server 9.9.9.9\n\nDS, DNSKEY y NSEC se publican en el Apex de la zona (example.com), no en www."
+    },
+    "cli.register.opt.all_flag": {
+      "en_sha256": "b0007b5397e44db6e21ec3dac2ce0df0c7057a9d21d934e9ad2c2a2681a68f7b",
+      "text": "Imprime el tablero TLD completo (modo humano)."
+    },
+    "gui.services.bind": {
+      "en_sha256": "f08dd851c430f52f3fbe9692678a2e2c3cf9009035a13a5cf080ce9ed2125ce9",
+      "text": "bind"
+    },
+    "gui.services.building": {
+      "en_sha256": "5167e9677e1fbc500ecb1751eec3b2a6fc24cd378b934b14b2544dfcd1228be1",
+      "text": "construyendo"
+    },
+    "gui.services.cert": {
+      "en_sha256": "03d66dd08835c1ca3f128cceacd1f31ac94163096b20f445ae84285bc0832d72",
+      "text": "certificado"
+    },
+    "gui.services.data": {
+      "en_sha256": "3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7",
+      "text": "datos"
+    },
+    "gui.services.days_left": {
+      "en_sha256": "593cbe7299f72b9bf4e84466641253ff0356379108b68bf0c664f4f229fbfae4",
+      "text": "días restantes"
+    },
+    "gui.services.disabled": {
+      "en_sha256": "17eb3c0168d0d7b21ede5481150f17233427d89833ec121b4dbc4fb96cfab71e",
+      "text": "deshabilitado"
+    },
+    "gui.services.down": {
+      "en_sha256": "908aec4512d80ff4fefb1970899091e9de8e734b36b8fdb7678e77dc092f6959",
+      "text": "caído"
+    },
+    "gui.services.enabled": {
+      "en_sha256": "fb9cf75606b4070dd6a9705810906bba28d0e2ea74ff301b999a91dbb68c7d98",
+      "text": "habilitado"
+    },
+    "gui.services.host": {
+      "en_sha256": "4740ae6347b0172c01254ff55bae5aff5199f4446e7f6d643d40185b3f475145",
+      "text": "host"
+    },
+    "gui.services.hostname": {
+      "en_sha256": "7063dece7cccf374d9fa1ee30ff23300fa42477e064e69be7bb6d01c0cfff682",
+      "text": "hostname"
+    },
+    "gui.services.intel": {
+      "en_sha256": "96eebba49dbbf422d245f02290f9d4ed0eb02da9daa6bbceefb162800ff42481",
+      "text": "intel"
+    },
+    "gui.services.issue": {
+      "en_sha256": "76507c685645c022b47a1ea45a6e6906cd769e2398ac64fc2651fa298a2b4eba",
+      "text": "necesita emitir"
+    },
+    "gui.services.issuer": {
+      "en_sha256": "535c6f8eb511f5d966a1b0725df92ebf27514faba945cbbd698e23ac72c41757",
+      "text": "emisor"
+    },
+    "gui.services.listen": {
+      "en_sha256": "6f8860eb5103a16b917146f9cbf21aa00fe7d2291b1aad7f4fe83a6db71688cf",
+      "text": "listen"
+    },
+    "gui.services.load": {
+      "en_sha256": "0cf67fc72b3c86c7a454f6d86b43ed245a8e491d0e5288d4da8c7ff43a7bcdb0",
+      "text": "carga"
+    },
+    "gui.services.no": {
+      "en_sha256": "9390298f3fb0c5b160498935d79cb139aef28e1c47358b4bbba61862b9c26e59",
+      "text": "no"
+    },
+    "gui.services.pid": {
+      "en_sha256": "ce71df4dc560de1e3e3d08a85db646710b493e3106c7af94ae10372d61f9eda8",
+      "text": "pid"
+    },
+    "gui.services.port": {
+      "en_sha256": "f8d397a33fcb9725db96501e653bf3cfa4455c5639482b9936c22b221634d659",
+      "text": "puerto"
+    },
+    "gui.services.ready": {
+      "en_sha256": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6",
+      "text": "listo"
+    },
+    "gui.services.san": {
+      "en_sha256": "8217143646e511ed7f8ab2f83dc8a69d61b119960d92d2f3f61c9d621b286ca3",
+      "text": "SAN"
+    },
+    "gui.services.service": {
+      "en_sha256": "9df6b026a8c6c26e3c3acd2370a16e93fffdc0015ff5bd879218788025db0280",
+      "text": "servicio"
+    },
+    "gui.services.socket": {
+      "en_sha256": "47dd56c2c7a7f7aac789ff6a0190ecc9f7508548c7e4f5118bef1622b478fbeb",
+      "text": "socket"
+    },
+    "gui.services.staging": {
+      "en_sha256": "e919a75364398a449f860aeadddc57fa0502145a4e63959ddb33c417a48dc0da",
+      "text": "staging"
+    },
+    "gui.services.stale": {
+      "en_sha256": "fe719e481a990288efde778f2400693d0c99db4fabb06cc1f896a3010ebee15e",
+      "text": "pidfile obsoleto"
+    },
+    "gui.services.started": {
+      "en_sha256": "03494afd4248c42f5fa1237bf2eeebe751ab8d9c977d55405fcb17469dbd91f8",
+      "text": "iniciado"
+    },
+    "gui.services.state": {
+      "en_sha256": "4ba69735ca53765ed6a709edb56c6ea236b7193a3b29a6b390c346f0f4340e4e",
+      "text": "estado"
+    },
+    "gui.services.subject": {
+      "en_sha256": "a9491f4c1bf7b0cffbadcba2db8f028e4b3f2867cb59e1f3a0bc1968f3c51242",
+      "text": "asunto"
+    },
+    "gui.services.system": {
+      "en_sha256": "bbc5e661e106c6dcd8dc6dd186454c2fcba3c710fb4d8e71a60c93eaf077f073",
+      "text": "sistema"
+    },
+    "gui.services.title": {
+      "en_sha256": "604dce445e326d952308addc99bd3d0e3ffb0ed9a455e4aa0190641fc5facccc",
+      "text": "Servicios"
+    },
+    "gui.services.tls": {
+      "en_sha256": "b7e651cbb43ba0ca3498759c8c3596c3a11a199004cd9e5a198d50d4585ec8c5",
+      "text": "tls"
+    },
+    "gui.services.up": {
+      "en_sha256": "75a288c0d6898c5f7b054590845978a82a3ad79fcce3d43ff68a7501e5a91ee9",
+      "text": "activo"
+    },
+    "gui.services.uptime": {
+      "en_sha256": "dd291cd6294bafef2a7e9c378eb320e87198d6dae214272addb569775750c802",
+      "text": "tiempo de actividad"
+    },
+    "gui.services.workers": {
+      "en_sha256": "ed574aa71eb87d6cefff58373c93f1c2b7b4e46cc90cb6aacd8311279f9733da",
+      "text": "workers"
+    },
+    "gui.services.yes": {
+      "en_sha256": "8a798890fe93817163b10b5f7bd2ca4d25d84c52739a645a889c173eee7d9d3d",
+      "text": "sí"
+    },
+    "status.services": {
+      "en_sha256": "ef1c4b45f2ed763283f8de890730defb2e7d1f8f0cc4214b740dd8cc5f10364d",
+      "text": "servicios"
     }
   }
 }

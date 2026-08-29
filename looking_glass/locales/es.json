@@ -3,12 +3,12 @@
   "source": "en",
   "messages": {
     "cli.apex.help": {
-      "text": "Salud de zona y correo (igual que GET /apex/<domain>).",
-      "en": "Zone and mail health (same as GET /apex/<domain>)."
+      "text": "Salud de zona y correo de un dominio.",
+      "en": "Zone and mail health for a domain."
     },
     "cli.asn.help": {
-      "text": "Consultar un sistema autónomo (igual que GET /AS<number>).",
-      "en": "Look up an autonomous system (same as GET /AS<number>)."
+      "text": "Consultar un sistema autónomo por número (AS13335 o 13335).",
+      "en": "Look up an autonomous system by number (AS13335 or 13335)."
     },
     "cli.auth.help": {
       "text": "Administrar la contraseña de la GUI, las claves API y las sesiones en archivo.\n\nSi no hay una contraseña configurada, el inicio de sesión queda deshabilitado (no abre el acceso de administrador). Las claves API\nfuncionan de forma independiente y otorgan los mismos derechos de administrador que una sesión con contraseña.\n\n\b\nlooking-glass auth password set\nlooking-glass auth keys create tokyo\nlooking-glass auth sessions clear",
@@ -51,8 +51,8 @@
       "en": "File sessions under ~/.looking-glass/data/sessions."
     },
     "cli.bgp.help": {
-      "text": "ASN de origen del prefijo y estado de RPKI ROA (igual que GET /bgp/<ip>).",
-      "en": "Prefix origin ASN and RPKI ROA status (same as GET /bgp/<ip>)."
+      "text": "ASN de origen del prefijo y estado de ROA RPKI.",
+      "en": "Prefix origin ASN and RPKI ROA status."
     },
     "cli.boot.check.help": {
       "text": "Mostrar linger y si las unidades de usuario de looking-glass están instaladas.",
@@ -122,6 +122,10 @@
       "text": "Mostrar archivos en caché. NAMESPACE es rdap o bgp.",
       "en": "Show cached files. NAMESPACE is rdap or bgp."
     },
+    "cli.complete.help": {
+      "text": "Imprime un script de completado para bash, zsh o fish.\n\n\b\n  eval \"$(looking-glass complete bash)\"\n  eval \"$(looking-glass complete zsh)\"\n  looking-glass complete fish | source",
+      "en": "Print a bash, zsh, or fish completion script.\n\n\b\n  eval \"$(looking-glass complete bash)\"\n  eval \"$(looking-glass complete zsh)\"\n  looking-glass complete fish | source"
+    },
     "cli.config.get.help": {
       "text": "Imprime una clave con puntos (locale, cache.gui, refresh.rir, …).",
       "en": "Print one dotted key (locale, cache.gui, refresh.rir, …)."
@@ -158,6 +162,10 @@
       "text": "Demasiados argumentos; se esperaba [@server] name [type]",
       "en": "Too many arguments; expected [@server] name [type]"
     },
+    "cli.dns.help": {
+      "text": "Consulta DNS como dig: [@server] name [type].\n\nEl nameserver predeterminado proviene de resolv.conf. Pase @server (o --server)\nsolo para sustituirlo.\n\n\b\n  looking-glass dns example.com\n  looking-glass dns example.com DS\n  looking-glass dns @1.1.1.1 example.com A\n  looking-glass dns @8.8.8.8:5353 example.com MX\n  looking-glass dns example.com AAAA -p 53 --server 9.9.9.9\n\nDS, DNSKEY y NSEC se publican en el Apex de la zona (example.com), no en www.",
+      "en": "Query DNS like dig: [@server] name [type].\n\nDefault nameserver comes from resolv.conf. Pass @server (or --server)\nonly to override it.\n\n\b\n  looking-glass dns example.com\n  looking-glass dns example.com DS\n  looking-glass dns @1.1.1.1 example.com A\n  looking-glass dns @8.8.8.8:5353 example.com MX\n  looking-glass dns example.com AAAA -p 53 --server 9.9.9.9\n\nDS, DNSKEY, and NSEC are published at the zone apex (example.com), not www."
+    },
     "cli.dns.opt.port": {
       "text": "Puerto del nameserver (por defecto 53).",
       "en": "Nameserver port (default 53)."
@@ -171,8 +179,8 @@
       "en": "Nameserver IP (or IP:port)."
     },
     "cli.dnssec.help": {
-      "text": "Recorre la cadena de confianza DNSSEC (igual que GET /dnssec/<domain>).",
-      "en": "Walk the DNSSEC chain of trust (same as GET /dnssec/<domain>)."
+      "text": "Recorrer la cadena de confianza DNSSEC de un dominio.",
+      "en": "Walk the DNSSEC chain of trust for a domain."
     },
     "cli.dnstrace.help": {
       "text": "Recorrido DNS iterativo desde la raíz, como dig +trace.",
@@ -235,8 +243,8 @@
       "en": "Seconds to wait for shutdown."
     },
     "cli.ip.help": {
-      "text": "Consultar una dirección IPv4 o IPv6 (igual que GET /<ip>). También acepta ASN o país.",
-      "en": "Look up an IPv4 or IPv6 address (same as GET /<ip>). Also accepts ASN or country."
+      "text": "Consultar una dirección IPv4 o IPv6. También acepta ASN o país.",
+      "en": "Look up an IPv4 or IPv6 address. Also accepts ASN or country."
     },
     "cli.locale.add.help": {
       "text": "Instalar LANG desde FILE, o clonar los marcadores de posición en inglés.",
@@ -311,8 +319,8 @@
       "en": "Seconds to wait for shutdown."
     },
     "cli.lookup.bench.help": {
-      "text": "Saturar GET /{ip} en el servidor intel (IPv4 e IPv6).\n\nRequiere `looking-glass lookup-server start`. No carga RIR en este proceso.\nEl progreso va a stderr; el informe es una vista compacta de terminal (o JSON con `--json`).",
-      "en": "Hammer GET /{ip} on the intel server (IPv4 and IPv6).\n\nRequires `looking-glass lookup-server start`. Does not load RIR in this process.\nProgress is on stderr; the report is a compact terminal view (or JSON with `--json`)."
+      "text": "Saturar el socket Unix de intel con consultas IPv4 e IPv6.\n\nRequiere `looking-glass lookup-server start`. No carga RIR en este proceso.\nEl progreso se muestra en stderr; el informe es una vista compacta de terminal (o JSON con `--json`).",
+      "en": "Hammer the intel Unix socket with IPv4 and IPv6 lookups.\n\nRequires `looking-glass lookup-server start`. Does not load RIR in this process.\nProgress is on stderr; the report is a compact terminal view (or JSON with `--json`)."
     },
     "cli.lookup.bench.opt.concurrency": {
       "text": "Workers concurrentes por hilo (por defecto 200).",
@@ -411,8 +419,8 @@
       "en": "MX, SPF, DMARC, DKIM selectors, SMTP banner and STARTTLS."
     },
     "cli.mtr.help": {
-      "text": "Informe de ruta al estilo MTR (igual que GET /mtr/<host>).",
-      "en": "MTR-style path report (same as GET /mtr/<host>)."
+      "text": "Informe de ruta al estilo MTR.",
+      "en": "MTR-style path report."
     },
     "cli.opt.as_json": {
       "text": "Imprimir JSON en stdout en lugar de una vista compacta de terminal.",
@@ -427,8 +435,8 @@
       "en": "Show the version and exit."
     },
     "cli.ping.help": {
-      "text": "ICMP ping (igual que GET /ping/<host>).",
-      "en": "ICMP ping (same as GET /ping/<host>)."
+      "text": "Hacer ping a un host (ICMP, o TCP si ICMP no está disponible).",
+      "en": "Ping a host (ICMP, or TCP if ICMP is unavailable)."
     },
     "cli.pmtu.help": {
       "text": "Descubrimiento de Path MTU con sondas ping don't-fragment.",
@@ -439,20 +447,24 @@
       "en": "PTR plus forward-confirmed reverse DNS."
     },
     "cli.rdap.help": {
-      "text": "Consulta RDAP (igual que GET /rdap/<token>).",
-      "en": "RDAP lookup (same as GET /rdap/<token>)."
+      "text": "Consulta RDAP de una IP, un ASN o un dominio.",
+      "en": "RDAP lookup for an IP, ASN, or domain."
     },
     "cli.register.help": {
-      "text": "Comprueba una etiqueta frente a cada TLD de IANA (igual que GET /register/<name>).",
-      "en": "Check a label against every IANA TLD (same as GET /register/<name>)."
+      "text": "Comprobar una etiqueta frente a cada TLD de IANA.",
+      "en": "Check a label against every IANA TLD."
+    },
+    "cli.register.opt.all_flag": {
+      "text": "Imprime el tablero TLD completo (modo humano).",
+      "en": "Print the full TLD board (human mode)."
     },
     "cli.register.opt.tlds_opt": {
-      "text": "Lista de TLD separados por comas (igual que ?tlds=).",
-      "en": "Comma-separated TLD list (same as ?tlds=)."
+      "text": "Lista de TLD separados por comas.",
+      "en": "Comma-separated TLD list."
     },
     "cli.reputation.help": {
-      "text": "Listas de bloqueo de dominio o IP (igual que GET /reputation/<name>).",
-      "en": "Domain or IP blocklists (same as GET /reputation/<name>)."
+      "text": "Listas de bloqueo de dominio o IP.",
+      "en": "Domain or IP blocklists."
     },
     "cli.restart.help": {
       "text": "Detiene y luego inicia el servidor intel y el supervisor HTTPS.\n\nCuando las unidades systemd --user están habilitadas, reinicia esas unidades.\nDe lo contrario, stop es un no-op si un daemon ya está detenido, así que esto\ntambién inicia ambos desde un estado en frío.",
@@ -467,20 +479,20 @@
       "en": "TCP connect check: RTT and an optional banner peek."
     },
     "cli.tcptraceroute.help": {
-      "text": "TCP traceroute (igual que GET /tcptraceroute/<host>/<port>).",
-      "en": "TCP traceroute (same as GET /tcptraceroute/<host>/<port>)."
+      "text": "TCP traceroute a un host (puerto predeterminado 443).",
+      "en": "TCP traceroute to a host (default port 443)."
     },
     "cli.tls.help": {
-      "text": "Inspecciona un handshake TLS y el certificado (igual que GET /tls/<host> con /<port> opcional).",
-      "en": "Inspect a TLS handshake and certificate (same as GET /tls/<host> with optional /<port>)."
+      "text": "Inspeccionar un handshake TLS y el certificado.",
+      "en": "Inspect a TLS handshake and certificate."
     },
     "cli.tls.opt.sni": {
       "text": "Sobrescribe el hostname SNI.",
       "en": "Override SNI hostname."
     },
     "cli.traceroute.help": {
-      "text": "UDP traceroute (igual que GET /traceroute/<host>).",
-      "en": "UDP traceroute (same as GET /traceroute/<host>)."
+      "text": "UDP traceroute a un host.",
+      "en": "UDP traceroute to a host."
     },
     "cli.validate.help": {
       "text": "Comprueba que los datasets locales se carguen y que se consulten IPs conocidas correctamente.\n\nUsa ~/.looking-glass/data (los mismos archivos que `looking-glass lookup`). No vuelve a descargar.\nLas consultas son muestras aleatorias de esos datasets, no una lista fija de IP.\nLas cachés obsoletas emiten advertencias; --strict las trata como fallos. Código de salida 2 si falla una comprobación requerida.",
@@ -915,8 +927,8 @@
       "en": "JSON."
     },
     "docs.http.serve-start.notes": {
-      "text": "401 sin una sesión. La barra de estado muestra ready frente a building y el uptime de intel.",
-      "en": "401 without a session. Status bar shows ready vs building and intel uptime."
+      "text": "401 sin una sesión. La ventana de servicios muestra intel listo vs. en construcción y el uptime de ambos daemons.",
+      "en": "401 without a session. The services window shows intel ready vs building and both daemons' uptime."
     },
     "docs.http.serve-start.summary": {
       "text": "Iniciar el servidor intel. También POST /serve/stop.",
@@ -939,8 +951,8 @@
       "en": "Always JSON (Cache-Control: no-store)."
     },
     "docs.http.status.notes": {
-      "text": "No está restringido por GUI. Lo usa la barra de estado. `ip` es ipv4 o ipv6; ambas familias también están en ipv4 / ipv6. Las respuestas autenticadas añaden user y serve.running / serve.uptime.",
-      "en": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user and serve.running / serve.uptime."
+      "text": "No está restringido por GUI. Lo usa la barra de estado. `ip` es ipv4 o ipv6; ambas familias también están en ipv4 / ipv6. Las respuestas con sesión iniciada agregan user, serve (intel running/ready/uptime más pid y socket) y https (tls running/uptime/port más campos de cert cuando están presentes). La ventana de servicios lee este payload.",
+      "en": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user, serve (intel running/ready/uptime plus pid and socket), and https (tls running/uptime/port plus cert fields when present). The services window reads this payload."
     },
     "docs.http.status.summary": {
       "text": "Hostname, IPv4 y/o IPv6, reloj, uptime, carga, WSGI/ASGI.",
@@ -2134,6 +2146,142 @@
       "text": "Ejecuten una consulta. Los informes se muestran aquí.",
       "en": "Run a lookup. Reports paint here."
     },
+    "gui.services.bind": {
+      "text": "bind",
+      "en": "bind"
+    },
+    "gui.services.building": {
+      "text": "construyendo",
+      "en": "building"
+    },
+    "gui.services.cert": {
+      "text": "certificado",
+      "en": "certificate"
+    },
+    "gui.services.data": {
+      "text": "datos",
+      "en": "data"
+    },
+    "gui.services.days_left": {
+      "text": "días restantes",
+      "en": "days left"
+    },
+    "gui.services.disabled": {
+      "text": "deshabilitado",
+      "en": "disabled"
+    },
+    "gui.services.down": {
+      "text": "caído",
+      "en": "down"
+    },
+    "gui.services.enabled": {
+      "text": "habilitado",
+      "en": "enabled"
+    },
+    "gui.services.host": {
+      "text": "host",
+      "en": "host"
+    },
+    "gui.services.hostname": {
+      "text": "hostname",
+      "en": "hostname"
+    },
+    "gui.services.intel": {
+      "text": "intel",
+      "en": "intel"
+    },
+    "gui.services.issue": {
+      "text": "necesita emitir",
+      "en": "needs issue"
+    },
+    "gui.services.issuer": {
+      "text": "emisor",
+      "en": "issuer"
+    },
+    "gui.services.listen": {
+      "text": "listen",
+      "en": "listen"
+    },
+    "gui.services.load": {
+      "text": "carga",
+      "en": "load"
+    },
+    "gui.services.no": {
+      "text": "no",
+      "en": "no"
+    },
+    "gui.services.pid": {
+      "text": "pid",
+      "en": "pid"
+    },
+    "gui.services.port": {
+      "text": "puerto",
+      "en": "port"
+    },
+    "gui.services.ready": {
+      "text": "listo",
+      "en": "ready"
+    },
+    "gui.services.san": {
+      "text": "SAN",
+      "en": "SAN"
+    },
+    "gui.services.service": {
+      "text": "servicio",
+      "en": "service"
+    },
+    "gui.services.socket": {
+      "text": "socket",
+      "en": "socket"
+    },
+    "gui.services.staging": {
+      "text": "staging",
+      "en": "staging"
+    },
+    "gui.services.stale": {
+      "text": "pidfile obsoleto",
+      "en": "stale pidfile"
+    },
+    "gui.services.started": {
+      "text": "iniciado",
+      "en": "started"
+    },
+    "gui.services.state": {
+      "text": "estado",
+      "en": "state"
+    },
+    "gui.services.subject": {
+      "text": "asunto",
+      "en": "subject"
+    },
+    "gui.services.system": {
+      "text": "sistema",
+      "en": "system"
+    },
+    "gui.services.title": {
+      "text": "Servicios",
+      "en": "Services"
+    },
+    "gui.services.tls": {
+      "text": "tls",
+      "en": "tls"
+    },
+    "gui.services.up": {
+      "text": "activo",
+      "en": "up"
+    },
+    "gui.services.uptime": {
+      "text": "tiempo de actividad",
+      "en": "uptime"
+    },
+    "gui.services.workers": {
+      "text": "workers",
+      "en": "workers"
+    },
+    "gui.services.yes": {
+      "text": "sí",
+      "en": "yes"
+    },
     "gui.tcp.hint": {
       "text": "Conectar a un host y un puerto, mostrar el RTT y examinar el banner del protocolo si se ofrece.",
       "en": "Connect to a host and port, show RTT, and peek at a protocol banner if one is offered."
@@ -3313,6 +3461,10 @@
     "status.serve.up": {
       "text": "intel activo",
       "en": "intel up"
+    },
+    "status.services": {
+      "text": "servicios",
+      "en": "services"
     },
     "status.up": {
       "text": "activo {value}",
