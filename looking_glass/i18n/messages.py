@@ -221,6 +221,8 @@ INVENTORY: Dict[str, str] = {
     "gui.services.intel": "intel",
     "gui.services.tls": "tls",
     "gui.services.host": "host",
+    "gui.services.system": "system",
+    "gui.services.service": "service",
     "gui.services.state": "state",
     "gui.services.uptime": "uptime",
     "gui.services.pid": "pid",

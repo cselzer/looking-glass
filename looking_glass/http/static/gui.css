@@ -585,6 +585,7 @@
       color: var(--muted);
       font-size: 0.82rem;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      text-align: center;
     }
     .services-grid {
       display: grid;

@@ -77,7 +77,17 @@ class StaticFilesTests(unittest.TestCase):
         self.assertIn("const mtrSec", text)
         self.assertIn('WIN_ID = "services"', text)
         self.assertIn("services-pop", text)
+        self.assertIn("function formatDn", text)
+        self.assertIn("commonName", text)
+        self.assertIn("formatDn(https.subject)", text)
+        self.assertIn("formatDn(https.issuer)", text)
+        self.assertNotIn("String(https.subject)", text)
+        self.assertIn("gui.services.system", text)
+        self.assertIn("gui.services.service", text)
         self.assertNotIn("/serve/stop", text)
+        _, _, css, _ = respond("wsgi", "127.0.0.1", "/static/gui.css", {})
+        css_text = css.decode("utf-8")
+        self.assertRegex(css_text, r"\.services-host\s*\{[^}]*text-align:\s*center")
 
     def test_missing_and_escape_are_404(self):
         for path in ("/static/nope.js", "/static/../site.py", "/static/%2e%2e/site.py"):

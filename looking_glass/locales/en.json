@@ -2214,6 +2214,10 @@
       "text": "SAN",
       "en": "SAN"
     },
+    "gui.services.service": {
+      "text": "service",
+      "en": "service"
+    },
     "gui.services.socket": {
       "text": "socket",
       "en": "socket"
@@ -2237,6 +2241,10 @@
     "gui.services.subject": {
       "text": "subject",
       "en": "subject"
+    },
+    "gui.services.system": {
+      "text": "system",
+      "en": "system"
     },
     "gui.services.title": {
       "text": "Services",

@@ -3470,6 +3470,26 @@
       return String(value);
     }
 
+    function formatDn(value) {
+      if (value == null || value === "") return "";
+      if (typeof value === "string") return value;
+      if (typeof value !== "object" || Array.isArray(value)) return "";
+      const keys = [
+        ["commonName", "CN"],
+        ["organizationName", "O"],
+        ["organizationalUnitName", "OU"],
+        ["localityName", "L"],
+        ["stateOrProvinceName", "ST"],
+        ["countryName", "C"],
+      ];
+      const parts = [];
+      keys.forEach(([key, short]) => {
+        const text = value[key];
+        if (text) parts.push(short + "=" + text);
+      });
+      return parts.join(", ");
+    }
+
     function formatBool(value) {
       return value ? t("gui.services.yes", "yes") : t("gui.services.no", "no");
     }
@@ -3484,6 +3504,7 @@
 
     function addRow(dl, key, value, cls) {
       if (value == null || value === "") return;
+      if (typeof value === "object") return;
       dl.append(el("dt", "", key), el("dd", cls || "", String(value)));
     }
 
@@ -3522,7 +3543,7 @@
       const hostBits = [];
       if (data.hostname) hostBits.push(data.hostname);
       const up = formatDuration(data.uptime);
-      if (up) hostBits.push(window.t ? window.t("status.up", { value: up }) : ("up " + up));
+      if (up) hostBits.push(t("gui.services.system", "system") + " " + up);
       if (Array.isArray(data.load) && data.load.length) {
         hostBits.push(t("gui.services.load", "load") + " " + data.load.map((n) => Number(n).toFixed(2)).join(" "));
       }
@@ -3533,7 +3554,7 @@
       const [intelWord, intelCls] = intelState(serve);
       grid.append(paintCard(t("gui.services.intel", "intel"), intelWord, intelCls, [
         [t("gui.services.state", "state"), intelWord, intelCls],
-        [t("gui.services.uptime", "uptime"), formatDuration(serve.uptime)],
+        [t("gui.services.service", "service"), formatDuration(serve.uptime)],
         [t("gui.services.pid", "pid"), serve.pid],
         [t("gui.services.ready", "ready"), serve.running ? formatBool(!!serve.ready) : ""],
         [t("gui.services.started", "started"), formatStarted(serve.started_at)],
@@ -3547,7 +3568,7 @@
       const daysText = days == null || days === "" ? "" : (Number.isFinite(Number(days)) ? Math.trunc(Number(days)) + "d" : String(days));
       grid.append(paintCard(t("gui.services.tls", "tls"), tlsWord, tlsCls, [
         [t("gui.services.state", "state"), tlsWord, tlsCls],
-        [t("gui.services.uptime", "uptime"), formatDuration(https.uptime)],
+        [t("gui.services.service", "service"), formatDuration(https.uptime)],
         [t("gui.services.pid", "pid"), https.pid],
         [t("gui.services.enabled", "enabled"), "enabled" in https ? formatBool(!!https.enabled) : ""],
         [t("gui.services.hostname", "hostname"), https.hostname],
@@ -3558,8 +3579,8 @@
         [t("gui.services.staging", "staging"), "staging" in https ? formatBool(!!https.staging) : ""],
         [t("gui.services.issue", "needs issue"), "needs_issue" in https ? formatBool(!!https.needs_issue) : ""],
         [t("gui.services.days_left", "days left"), daysText],
-        [t("gui.services.subject", "subject"), https.subject],
-        [t("gui.services.issuer", "issuer"), https.issuer],
+        [t("gui.services.subject", "subject"), formatDn(https.subject)],
+        [t("gui.services.issuer", "issuer"), formatDn(https.issuer)],
         [t("gui.services.san", "SAN"), formatList(https.san)],
         [t("gui.services.cert", "certificate"), https.fullchain],
         [t("gui.services.started", "started"), formatStarted(https.started_at)],
