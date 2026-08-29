@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import time
@@ -79,6 +80,23 @@ def _dataset_due(
     return due, info
 
 
+def _tee_build_raw(event: str, dataset: str, message: str) -> None:
+    row = {
+        "ts": time.time(),
+        "logger": "build",
+        "event": event,
+        "dataset": dataset,
+        "message": message,
+    }
+    path = get_cache_path("build.raw.log")
+    try:
+        from .logrotate import append_line
+
+        append_line(path, json.dumps(row, ensure_ascii=False))
+    except Exception:
+        pass
+
+
 def due_keys(
     *,
     now: Optional[float] = None,
@@ -132,6 +150,7 @@ def rebuild_due(
             )
             continue
         logger.info("rebuild start %s", key)
+        _tee_build_raw("start", key, f"rebuild start {key}")
         t0 = time.time()
         err: Optional[str] = None
         ok = False
@@ -146,6 +165,7 @@ def rebuild_due(
         if not ok and err is None:
             err = "build failed"
         logger.info("rebuild end %s", key)
+        _tee_build_raw("end", key, f"rebuild end {key}")
         results.append(
             {
                 "key": key,

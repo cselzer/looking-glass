@@ -23,7 +23,18 @@ DAY_SPAN = 24 * 60 * 60
 WEEK_SPAN = 7 * 24 * 60 * 60
 
 JSONL_KINDS = ("access", "error", "login")
-FILE_KINDS = ("lookup", "serve-out", "serve-err", "wall", "challenge", "build")
+FILE_KINDS = (
+    "lookup",
+    "serve-out",
+    "serve-err",
+    "wall",
+    "challenge",
+    "build",
+    "acme",
+    "https-out",
+    "https-err",
+)
+TEXT_KINDS = ("acme", "https-out", "https-err")
 PUZZLE_EVENTS = frozenset({"issued", "solved", "failed"})
 SKIP_ACCESS = {"status", "static"}
 INTEL_KEYS = (
@@ -186,31 +197,19 @@ def _row_intel(*values: Optional[str]) -> Optional[Dict[str, Any]]:
     return None
 
 
-def _trim_jsonl_fd(fd: int) -> None:
-    keep = MAX_JSONL // 2
-    size = os.fstat(fd).st_size
-    if size <= MAX_JSONL:
-        return
-    os.lseek(fd, max(0, size - keep), os.SEEK_SET)
-    leftover = os.read(fd, size)
-    nl = leftover.find(b"\n")
-    data = leftover[nl + 1 :] if nl >= 0 else leftover
-    os.lseek(fd, 0, os.SEEK_SET)
-    os.ftruncate(fd, 0)
-    os.write(fd, data)
-
-
 def _append_jsonl(name: str, row: Dict[str, Any]) -> None:
+    from ..logrotate import rotate_if_needed
+
     path = _path(name)
     payload = (json.dumps(row, ensure_ascii=False) + "\n").encode("utf-8")
     try:
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        rotate_if_needed(path)
         fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
         try:
             fcntl.flock(fd, fcntl.LOCK_EX)
             os.lseek(fd, 0, os.SEEK_END)
             os.write(fd, payload)
-            _trim_jsonl_fd(fd)
         finally:
             try:
                 fcntl.flock(fd, fcntl.LOCK_UN)
@@ -470,6 +469,24 @@ def _tail_bytes(path: str, max_bytes: int = TAIL_BYTES) -> str:
         os.close(fd)
 
 
+def _parse_log_lines(text: str) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            item = json.loads(line)
+        except json.JSONDecodeError:
+            rows.append({"message": line})
+            continue
+        if isinstance(item, dict):
+            rows.append(item)
+        else:
+            rows.append({"message": line})
+    return rows
+
+
 def _parse_jsonl(text: str) -> List[Dict[str, Any]]:
     rows: List[Dict[str, Any]] = []
     for line in text.splitlines():
@@ -497,6 +514,18 @@ def _file_source(kind: str) -> Optional[str]:
         return os.path.join(get_data_dir(), "wall.log")
     if name == "build":
         return os.path.join(get_data_dir(), "build.raw.log")
+    if name == "acme":
+        from .acme_issue import acme_log_path
+
+        return str(acme_log_path())
+    if name == "https-out":
+        from . import https_serve
+
+        return str(https_serve._paths()[2])
+    if name == "https-err":
+        from . import https_serve
+
+        return str(https_serve._paths()[3])
     return None
 
 
@@ -534,7 +563,8 @@ def tail(
         return {"ok": True, "kind": name, "rows": rows[-cap:], "path": path}
     if name in FILE_KINDS:
         path = _file_source(name) or ""
-        rows = [_enrich_row(row) for row in _parse_jsonl(_tail_bytes(path) if path else "")]
+        parser = _parse_log_lines if name in TEXT_KINDS else _parse_jsonl
+        rows = [_enrich_row(row) for row in parser(_tail_bytes(path) if path else "")]
         if name == "challenge":
             rows = [
                 row

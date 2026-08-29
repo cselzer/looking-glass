@@ -408,6 +408,10 @@ def supervisor_loop(
         while True:
             if should_stop and should_stop():
                 break
+            from ..logrotate import copytruncate_if_needed
+
+            copytruncate_if_needed(str(outlog))
+            copytruncate_if_needed(str(errlog))
             http = _http_cfg()
             if not http.get("enabled"):
                 _stop_children(children, stop_child)

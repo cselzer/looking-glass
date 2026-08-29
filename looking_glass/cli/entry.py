@@ -230,6 +230,18 @@ class _BuildRawLog:
             if self._fp is None:
                 return
             try:
+                from looking_glass.logrotate import rotate_if_needed
+
+                self._fp.flush()
+                if rotate_if_needed(self.path):
+                    try:
+                        self._fp.close()
+                    except Exception:
+                        pass
+                    self._fp = open(self.path, "a", encoding="utf-8", buffering=1)
+            except Exception:
+                pass
+            try:
                 self._fp.write(line.rstrip("\n") + "\n")
             except Exception:
                 pass

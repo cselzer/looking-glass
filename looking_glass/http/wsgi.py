@@ -34,6 +34,8 @@ def inner(environ, start_response):
         environ.get("HTTP_X_FORWARDED_PROTO"),
     )
     path = environ.get("PATH_INFO") or "/"
+    raw_uri = str(environ.get("REQUEST_URI") or environ.get("RAW_URI") or "")
+    raw_path = raw_uri.split("?", 1)[0] or path
     try:
         length = int(environ.get("CONTENT_LENGTH") or 0)
     except (TypeError, ValueError):
@@ -55,6 +57,7 @@ def inner(environ, start_response):
         correlation_id=environ.get("HTTP_X_CORRELATION_ID"),
         authorization=environ.get("HTTP_AUTHORIZATION"),
         origin=environ.get("HTTP_ORIGIN"),
+        raw_path=raw_path,
     )
     try:
         phrase = HTTPStatus(status).phrase

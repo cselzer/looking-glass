@@ -296,12 +296,62 @@ class LeftoverCoercionTests(unittest.TestCase):
         self.assertEqual(status, 400)
         self.assertFalse(payload["ok"])
         self.assertNotIn("result", payload)
+        with patch("looking_glass.http.site.run_probe") as run:
+            status, _, body, *_ = respond(
+                "wsgi",
+                "127.0.0.1",
+                "/tcptraceroute/1.1.1.1/32",
+                {},
+                accept="application/json",
+                raw_path="/tcptraceroute/1.1.1.1%2F32",
+            )
+        run.assert_not_called()
+        payload = json.loads(body.decode("utf-8"))
+        self.assertEqual(status, 400)
+        self.assertFalse(payload["ok"])
+        self.assertNotIn("result", payload)
         fake = {"ok": True, "result": {"target": "1.1.1.1", "port": 443}, "error": None}
         with patch("looking_glass.http.site.run_probe", return_value=fake) as run:
             status, payload = _json("/tcptraceroute/1.1.1.1/443")
         self.assertEqual(status, 200)
         self.assertTrue(payload["ok"])
         self.assertEqual(run.call_args.kwargs.get("port"), 443)
+
+    def test_dns_family_notanip_is_400(self):
+        for path in (
+            "/dns/notanip",
+            "/apex/notanip",
+            "/dnssec/notanip",
+            "/mail/notanip",
+        ):
+            with (
+                patch("looking_glass.http.site.lookup_dns") as dns,
+                patch("looking_glass.http.site.check_apex") as apex,
+                patch("looking_glass.http.site.check_dnssec") as dnssec,
+                patch("looking_glass.http.site.check_mail") as mail,
+            ):
+                status, payload = _json(path)
+            dns.assert_not_called()
+            apex.assert_not_called()
+            dnssec.assert_not_called()
+            mail.assert_not_called()
+            self.assertEqual(status, 400, path)
+            self.assertFalse(payload["ok"])
+            self.assertNotIn("result", payload)
+
+    def test_short_ipv4_probe_is_400(self):
+        for path in (
+            "/ping/1.2.3",
+            "/mtr/1.2.3",
+            "/traceroute/1.2.3",
+            "/tcptraceroute/1.2.3",
+        ):
+            with patch("looking_glass.http.site.run_probe") as run:
+                status, payload = _json(path)
+            run.assert_not_called()
+            self.assertEqual(status, 400, path)
+            self.assertFalse(payload["ok"])
+            self.assertNotIn("result", payload)
 
     def test_ptr_zone_id_is_400(self):
         with patch("looking_glass.http.site.check_ptr") as check:
@@ -399,3 +449,8 @@ class LeftoverCoercionTests(unittest.TestCase):
         self.assertTrue(payload["ok"])
         status, payload = _json("/register/example.com")
         self.assertEqual(status, 400)
+        fake_dns = {"ok": True, "result": {"name": "xn--fsq.jp"}, "error": None}
+        with patch("looking_glass.http.site.lookup_dns", return_value=fake_dns):
+            status, payload = _json("/dns/xn--fsq.jp")
+        self.assertEqual(status, 200)
+        self.assertTrue(payload["ok"])

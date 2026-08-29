@@ -46,6 +46,13 @@ async def inner(scope, receive, send):
     raw_qs = scope.get("query_string") or b""
     query_string = raw_qs.decode("latin-1") if isinstance(raw_qs, (bytes, bytearray)) else str(raw_qs)
     path = scope.get("path") or "/"
+    raw = scope.get("raw_path")
+    if isinstance(raw, (bytes, bytearray)):
+        raw_path = raw.decode("latin-1")
+    elif raw:
+        raw_path = str(raw)
+    else:
+        raw_path = path
     raw_body = await _read_body(receive)
     status, content_type, body, extra = await respond_async(
         "asgi",
@@ -63,6 +70,7 @@ async def inner(scope, receive, send):
         correlation_id=headers.get("x-correlation-id"),
         authorization=headers.get("authorization"),
         origin=headers.get("origin"),
+        raw_path=raw_path,
     )
     out_headers = [
         (b"content-type", content_type.encode("latin-1")),

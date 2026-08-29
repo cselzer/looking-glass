@@ -166,10 +166,19 @@ async def _lifespan(app: FastAPI):
             pass
 
 
+def _rotate_lookup_logs() -> None:
+    from ..logrotate import copytruncate_if_needed
+
+    _, _, outlog, errlog, _ = _paths()
+    copytruncate_if_needed(str(outlog))
+    copytruncate_if_needed(str(errlog))
+
+
 async def _refresh_loop(loop: asyncio.AbstractEventLoop) -> None:
     try:
         while True:
             await asyncio.sleep(REBUILD_EVERY)
+            _rotate_lookup_logs()
             await loop.run_in_executor(None, _rebuild_then_load)
     except asyncio.CancelledError:
         raise
@@ -211,6 +220,9 @@ def _write_lookup_access(
         "intel": intel or None,
     }
     try:
+        from ..logrotate import copytruncate_if_needed
+
+        copytruncate_if_needed(str(_outlog))
         with open(_outlog, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
     except OSError:

@@ -569,16 +569,32 @@
       max-height: none;
     }
     .config-pop {
-      width: min(96vw, 28rem);
-      height: min(80vh, 40rem);
+      width: min(96vw, 72rem);
+      height: min(85vh, 48rem);
       max-height: none;
     }
-    .config-form { display: grid; gap: 0.75rem; }
+    .config-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      align-items: start;
+    }
     .config-sec {
       margin: 0;
       padding: 0.55rem 0.65rem 0.7rem;
       border: 1px solid var(--line);
       border-radius: 10px;
+    }
+    .config-sec.config-span,
+    .config-meta,
+    .config-actions {
+      grid-column: 1 / -1;
+    }
+    .config-headers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 0.75rem;
+      margin-top: 0.35rem;
     }
     .config-sec legend {
       padding: 0 0.3rem;
@@ -594,9 +610,10 @@
       font-size: 0.85rem;
     }
     .config-row input[type="text"],
-    .config-row input[type="number"] {
+    .config-row input[type="number"],
+    .config-row select {
       appearance: none;
-      width: 7.5rem;
+      width: 12rem;
       background: var(--panel);
       color: var(--fg);
       border: 1px solid var(--line);

@@ -14,6 +14,30 @@
       "text": "Manage the GUI password, API keys, and file sessions.\n\nAn unset password disables login (it does not open admin). API keys\nwork independently and grant the same admin rights as a password session.\n\n\b\nlooking-glass auth password set\nlooking-glass auth keys create tokyo\nlooking-glass auth sessions clear",
       "en": "Manage the GUI password, API keys, and file sessions.\n\nAn unset password disables login (it does not open admin). API keys\nwork independently and grant the same admin rights as a password session.\n\n\b\nlooking-glass auth password set\nlooking-glass auth keys create tokyo\nlooking-glass auth sessions clear"
     },
+    "cli.auth.keys.create.help": {
+      "text": "Create a key named NAME and print the secret once.",
+      "en": "Create a key named NAME and print the secret once."
+    },
+    "cli.auth.keys.help": {
+      "text": "List or create API keys. Secrets are shown once at create.",
+      "en": "List or create API keys. Secrets are shown once at create."
+    },
+    "cli.auth.keys.revoke.help": {
+      "text": "Revoke the key with ID.",
+      "en": "Revoke the key with ID."
+    },
+    "cli.auth.password.clear.help": {
+      "text": "Disable GUI login. Existing API keys still work.",
+      "en": "Disable GUI login. Existing API keys still work."
+    },
+    "cli.auth.password.help": {
+      "text": "Show whether the admin password is set, or set/clear it.",
+      "en": "Show whether the admin password is set, or set/clear it."
+    },
+    "cli.auth.password.set.help": {
+      "text": "Set the GUI admin password (prompted, not on the command line).",
+      "en": "Set the GUI admin password (prompted, not on the command line)."
+    },
     "cli.auth.sessions.clear.help": {
       "text": "Delete every on-disk GUI session.",
       "en": "Delete every on-disk GUI session."
@@ -1190,6 +1214,10 @@
       "text": "Config",
       "en": "Config"
     },
+    "gui.config.auth": {
+      "text": "Admin",
+      "en": "Admin"
+    },
     "gui.config.cache": {
       "text": "Cache",
       "en": "Cache"
@@ -1246,6 +1274,22 @@
       "text": "Uvicorn workers",
       "en": "Uvicorn workers"
     },
+    "gui.config.keys.create": {
+      "text": "Create key",
+      "en": "Create key"
+    },
+    "gui.config.keys.name": {
+      "text": "Key name",
+      "en": "Key name"
+    },
+    "gui.config.keys.revoke": {
+      "text": "Revoke",
+      "en": "Revoke"
+    },
+    "gui.config.keys.secret": {
+      "text": "Copy this key now; it is shown once.",
+      "en": "Copy this key now; it is shown once."
+    },
     "gui.config.loading": {
       "text": "Loading…",
       "en": "Loading…"
@@ -1253,6 +1297,18 @@
     "gui.config.locale": {
       "text": "Locale",
       "en": "Locale"
+    },
+    "gui.config.logs": {
+      "text": "Logs",
+      "en": "Logs"
+    },
+    "gui.config.logs.keep": {
+      "text": "Keep rotated files (−1 forever)",
+      "en": "Keep rotated files (−1 forever)"
+    },
+    "gui.config.logs.max_bytes": {
+      "text": "Rotate at (bytes)",
+      "en": "Rotate at (bytes)"
     },
     "gui.config.mtr": {
       "text": "MTR",
@@ -1265,6 +1321,22 @@
     "gui.config.mtr.max_cycles": {
       "text": "Max passes",
       "en": "Max passes"
+    },
+    "gui.config.password.clear": {
+      "text": "Disable login",
+      "en": "Disable login"
+    },
+    "gui.config.password.off": {
+      "text": "Login is disabled until a password is set.",
+      "en": "Login is disabled until a password is set."
+    },
+    "gui.config.password.save": {
+      "text": "Set password",
+      "en": "Set password"
+    },
+    "gui.config.password.set": {
+      "text": "Password is set.",
+      "en": "Password is set."
     },
     "gui.config.path": {
       "text": "File",
@@ -1290,6 +1362,10 @@
       "text": "IANA",
       "en": "IANA"
     },
+    "gui.config.refresh.rdap_dns": {
+      "text": "RDAP DNS",
+      "en": "RDAP DNS"
+    },
     "gui.config.refresh.rir": {
       "text": "RIR",
       "en": "RIR"
@@ -1311,8 +1387,8 @@
       "en": "Config"
     },
     "gui.config.wall": {
-      "text": "Firewall challenge",
-      "en": "Firewall challenge"
+      "text": "Firewall",
+      "en": "Firewall"
     },
     "gui.config.wall.challenge_bits": {
       "text": "Puzzle bits (8–24)",
@@ -1321,6 +1397,54 @@
     "gui.config.wall.challenge_ttl_days": {
       "text": "Pass cookie TTL (days)",
       "en": "Pass cookie TTL (days)"
+    },
+    "gui.config.wall.default": {
+      "text": "Unmatched traffic",
+      "en": "Unmatched traffic"
+    },
+    "gui.config.wall.default.allow": {
+      "text": "Allow",
+      "en": "Allow"
+    },
+    "gui.config.wall.default.block": {
+      "text": "Block",
+      "en": "Block"
+    },
+    "gui.config.wall.headers.asn": {
+      "text": "X-Wall-ASN",
+      "en": "X-Wall-ASN"
+    },
+    "gui.config.wall.headers.country": {
+      "text": "X-Wall-Country",
+      "en": "X-Wall-Country"
+    },
+    "gui.config.wall.headers.decision": {
+      "text": "X-Wall-Decision",
+      "en": "X-Wall-Decision"
+    },
+    "gui.config.wall.headers.flag_url": {
+      "text": "X-Wall-Flag-Url",
+      "en": "X-Wall-Flag-Url"
+    },
+    "gui.config.wall.headers.iana": {
+      "text": "X-Wall-IANA",
+      "en": "X-Wall-IANA"
+    },
+    "gui.config.wall.headers.org": {
+      "text": "X-Wall-Org",
+      "en": "X-Wall-Org"
+    },
+    "gui.config.wall.headers.prefix": {
+      "text": "X-Wall-Prefix",
+      "en": "X-Wall-Prefix"
+    },
+    "gui.config.wall.headers.reason": {
+      "text": "X-Wall-Reason",
+      "en": "X-Wall-Reason"
+    },
+    "gui.config.wall.headers.timings": {
+      "text": "X-Wall-Timings",
+      "en": "X-Wall-Timings"
     },
     "gui.dns.filter": {
       "text": "Filter types",
@@ -1586,6 +1710,10 @@
       "text": "access",
       "en": "access"
     },
+    "gui.logs.acme": {
+      "text": "acme",
+      "en": "acme"
+    },
     "gui.logs.all": {
       "text": "all",
       "en": "all"
@@ -1633,6 +1761,14 @@
     "gui.logs.hits": {
       "text": "hits",
       "en": "hits"
+    },
+    "gui.logs.https_err": {
+      "text": "https err",
+      "en": "https err"
+    },
+    "gui.logs.https_out": {
+      "text": "https out",
+      "en": "https out"
     },
     "gui.logs.kinds": {
       "text": "kinds",
@@ -3178,77 +3314,9 @@
       "text": "firewall",
       "en": "firewall"
     },
-    "status.windows.min": {
-      "text": "min",
-      "en": "min"
-    },
-    "status.windows.restore": {
-      "text": "restore",
-      "en": "restore"
-    },
     "term.copied": {
       "text": " copied",
       "en": " copied"
-    },
-    "cli.auth.password.help": {
-      "text": "Show whether the admin password is set, or set/clear it.",
-      "en": "Show whether the admin password is set, or set/clear it."
-    },
-    "cli.auth.password.set.help": {
-      "text": "Set the GUI admin password (prompted, not on the command line).",
-      "en": "Set the GUI admin password (prompted, not on the command line)."
-    },
-    "cli.auth.password.clear.help": {
-      "text": "Disable GUI login. Existing API keys still work.",
-      "en": "Disable GUI login. Existing API keys still work."
-    },
-    "cli.auth.keys.help": {
-      "text": "List or create API keys. Secrets are shown once at create.",
-      "en": "List or create API keys. Secrets are shown once at create."
-    },
-    "cli.auth.keys.create.help": {
-      "text": "Create a key named NAME and print the secret once.",
-      "en": "Create a key named NAME and print the secret once."
-    },
-    "cli.auth.keys.revoke.help": {
-      "text": "Revoke the key with ID.",
-      "en": "Revoke the key with ID."
-    },
-    "gui.config.auth": {
-      "text": "Admin",
-      "en": "Admin"
-    },
-    "gui.config.password.set": {
-      "text": "Password is set.",
-      "en": "Password is set."
-    },
-    "gui.config.password.off": {
-      "text": "Login is disabled until a password is set.",
-      "en": "Login is disabled until a password is set."
-    },
-    "gui.config.password.save": {
-      "text": "Set password",
-      "en": "Set password"
-    },
-    "gui.config.password.clear": {
-      "text": "Disable login",
-      "en": "Disable login"
-    },
-    "gui.config.keys.create": {
-      "text": "Create key",
-      "en": "Create key"
-    },
-    "gui.config.keys.revoke": {
-      "text": "Revoke",
-      "en": "Revoke"
-    },
-    "gui.config.keys.name": {
-      "text": "Key name",
-      "en": "Key name"
-    },
-    "gui.config.keys.secret": {
-      "text": "Copy this key now; it is shown once.",
-      "en": "Copy this key now; it is shown once."
     }
   }
 }

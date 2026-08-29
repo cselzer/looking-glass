@@ -108,9 +108,9 @@ class WebLogTests(unittest.TestCase):
                 self.assertNotIn('id="cache-btn"', home_html)
                 self.assertNotIn("sizeLogPopToAccess", home_html)
                 self.assertIn('id="status-wins"', home_html)
-                self.assertIn('id="status-windows"', home_html)
-                self.assertIn("minimizeAll", home_html)
-                self.assertIn("restoreAll", home_html)
+                self.assertNotIn('id="status-windows"', home_html)
+                self.assertNotIn("minimizeAll", home_html)
+                self.assertNotIn("restoreAll", home_html)
                 self.assertIn("status-win-stack", home_html)
                 self.assertIn("inspect-pop-min", home_html)
                 self.assertIn("inspect-pop-refresh", home_html)
@@ -166,6 +166,10 @@ class WebLogTests(unittest.TestCase):
                 self.assertIn("sortLogRows", authed_html)
                 self.assertIn("log-th-sort", authed_html)
                 self.assertIn("gui.logs.challenge", authed_html)
+                self.assertIn("gui.logs.acme", authed_html)
+                self.assertIn("gui.logs.https_out", authed_html)
+                self.assertIn("gui.config.wall.default", authed_html)
+                self.assertIn("min(96vw, 72rem", authed_html)
                 self.assertIn("gui.logs.peak", authed_html)
                 self.assertIn("log-charts", authed_html)
                 self.assertIn("log-spark", authed_html)
@@ -242,6 +246,10 @@ class WebLogTests(unittest.TestCase):
                 Path(tmp, "data", "build.raw.log").write_text(
                     json.dumps({"ts": time.time(), "logger": "build", "event": "event", "dataset": "iana", "message": "ok"})
                     + "\n",
+                    encoding="utf-8",
+                )
+                Path(tmp, "data", "acme.log").write_text(
+                    "2026-08-28T00:00:00Z issued example.com\n",
                     encoding="utf-8",
                 )
                 unauth, _, _denied_body, _ = respond("wsgi", "127.0.0.1", "/logs", {})
@@ -375,6 +383,18 @@ class WebLogTests(unittest.TestCase):
                 )
                 self.assertEqual(build_st, 200)
                 self.assertTrue(any(row.get("logger") == "build" for row in json.loads(build_body)["rows"]))
+                acme_st, _, acme_body, _ = respond(
+                    "wsgi",
+                    "127.0.0.1",
+                    "/logs",
+                    {},
+                    query_string="kind=acme",
+                    cookie=cookie,
+                )
+                self.assertEqual(acme_st, 200)
+                self.assertTrue(
+                    any("issued example.com" in str(row.get("message") or "") for row in json.loads(acme_body)["rows"])
+                )
                 with patch("looking_glass.intel_server.app.status", return_value={"running": True, "ready": True, "uptime": 90.0}), patch(
                     "looking_glass.http.https_serve.status",
                     return_value={"running": True, "uptime": 12.0, "port": 5555},
@@ -566,6 +586,7 @@ class DaemonRebuildTests(unittest.TestCase):
         with (
             patch("looking_glass.datasets.file_row", return_value=fresh),
             patch("looking_glass.config.refresh_policy", return_value={"days": days}),
+            patch("looking_glass.datasets._tee_build_raw"),
             ExitStack() as stack,
         ):
             builds = [
@@ -585,6 +606,7 @@ class DaemonRebuildTests(unittest.TestCase):
         with (
             patch("looking_glass.datasets.file_row", return_value=missing),
             patch("looking_glass.config.refresh_policy", return_value={"days": days}),
+            patch("looking_glass.datasets._tee_build_raw"),
             ExitStack() as stack,
         ):
             builds = [
@@ -597,6 +619,27 @@ class DaemonRebuildTests(unittest.TestCase):
             for mocked in builds:
                 mocked.assert_called()
         self.assertTrue(all(row["result"] == "ok" for row in results))
+
+    def test_rebuild_due_tees_build_raw(self):
+        from looking_glass.datasets import DATASETS, rebuild_due
+
+        missing = {"exists": False, "mtime": None, "size": None, "path": "x"}
+        days = {key: 30 for key, *_ in DATASETS}
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = os.path.join(tmp, "build.raw.log")
+            with (
+                patch("looking_glass.datasets.file_row", return_value=missing),
+                patch("looking_glass.config.refresh_policy", return_value={"days": days}),
+                patch("looking_glass.datasets.get_cache_path", return_value=dest),
+                ExitStack() as stack,
+            ):
+                for _key, mod, _fn, _label in DATASETS:
+                    stack.enter_context(patch.object(mod, "build", return_value=True))
+                    stack.enter_context(patch.object(mod, "load", return_value=True))
+                rebuild_due(now=time.time())
+            text = Path(dest).read_text(encoding="utf-8")
+        self.assertIn("rebuild start", text)
+        self.assertIn("rebuild end", text)
 
     def test_lifespan_writes_ready_after_rebuild(self):
         async def idle(_loop):

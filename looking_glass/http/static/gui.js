@@ -104,10 +104,7 @@
 
     function paintDock() {
       const host = dock();
-      if (!host) {
-        syncWindowsBtn();
-        return;
-      }
+      if (!host) return;
       host.replaceChildren();
       const groups = [];
       const index = new Map();
@@ -141,7 +138,6 @@
         stack.append(face);
         host.append(stack);
       }
-      syncWindowsBtn();
     }
 
     function raise(node) {
@@ -514,65 +510,6 @@
       persist();
     }
 
-    function minimizeAll() {
-      let n = 0;
-      for (const e of entries.values()) {
-        if (e.minimized) continue;
-        e.minimized = true;
-        e.node.classList.add("is-minimized");
-        n += 1;
-      }
-      if (!n) return;
-      paintDock();
-      persist();
-    }
-
-    function restoreAll() {
-      let n = 0;
-      for (const e of entries.values()) {
-        if (!e.minimized) continue;
-        e.minimized = false;
-        e.node.classList.remove("is-minimized");
-        raise(e.node);
-        n += 1;
-      }
-      if (!n) return;
-      paintDock();
-      persist();
-    }
-
-    function syncWindowsBtn() {
-      const btn = document.getElementById("status-windows");
-      if (!btn) return;
-      const list = [...entries.values()];
-      if (!list.length) {
-        btn.hidden = true;
-        return;
-      }
-      btn.hidden = false;
-      const anyOpen = list.some((e) => !e.minimized);
-      const label = anyOpen ? t("status.windows.min", "min") : t("status.windows.restore", "restore");
-      btn.textContent = label;
-      btn.setAttribute("aria-label", label);
-    }
-
-    function toggleAllWindows() {
-      const list = [...entries.values()];
-      if (!list.length) return;
-      if (list.some((e) => !e.minimized)) minimizeAll();
-      else restoreAll();
-    }
-
-    function bindWindowsBtn() {
-      const btn = document.getElementById("status-windows");
-      if (!btn || btn.dataset.bound === "1") return;
-      btn.dataset.bound = "1";
-      btn.addEventListener("click", (event) => {
-        event.preventDefault();
-        toggleAllWindows();
-      });
-    }
-
     function front(id) {
       const e = entries.get(id);
       if (!e || !e.node || !document.body.contains(e.node)) {
@@ -673,12 +610,11 @@
     window.addEventListener("beforeunload", persist);
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", function () {
-        bindWindowsBtn();
         paintDock();
         flushRestore();
       });
     } else {
-      bindWindowsBtn();
+      paintDock();
     }
 
     window.lookingGlassWindows = {
@@ -686,8 +622,6 @@
       adopt,
       minimize,
       restore,
-      minimizeAll,
-      restoreAll,
       front,
       close: closeWin,
       detach,

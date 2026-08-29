@@ -26,10 +26,12 @@ def unbracket_host(value: str) -> str:
 
 
 def reject_bogus_ipv4(text: str) -> None:
-    """Four decimal labels that are not a valid IPv4 are not a domain."""
+    """All-decimal dotted tokens must be a real IPv4 address, not a hostname."""
     raw = unbracket_host(text).strip().rstrip(".")
+    if not raw:
+        return
     labels = raw.split(".")
-    if len(labels) != 4 or not all(part.isdigit() for part in labels):
+    if not all(part.isdigit() for part in labels):
         return
     try:
         ipaddress.IPv4Address(raw)

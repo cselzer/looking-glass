@@ -126,6 +126,9 @@ def append_action(
     payload.setdefault("ts", _utc_now())
     encoded = (json.dumps(payload, ensure_ascii=False) + "\n").encode("utf-8")
     try:
+        from ..logrotate import rotate_if_needed
+
+        rotate_if_needed(log_path)
         os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
         fd = _flock_open(log_path, exclusive=True)
         try:

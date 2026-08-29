@@ -87,6 +87,11 @@ def _peer_ip(peer: Optional[str]) -> Optional[str]:
     return str(ip_obj)
 
 
+def _is_acme_http01(path: Any) -> bool:
+    text = str(path or "")
+    return text.startswith("/.well-known/acme-challenge/")
+
+
 def _header_safe(value: Any) -> str:
     text = str(value).replace("\r", " ").replace("\n", " ")
     return text.encode("latin-1", "replace").decode("latin-1")
@@ -238,6 +243,27 @@ class Wall:
         except Exception:
             return default
 
+    def _default_is_block(self) -> bool:
+        raw = self.config.get("default", self._cfg_get("default", "allow"))
+        return str(raw or "allow").strip().lower() == "block"
+
+    def _header_on(self, name: str) -> bool:
+        blob = self.config.get("headers")
+        if isinstance(blob, dict) and name in blob:
+            val = blob[name]
+            if isinstance(val, bool):
+                return val
+            text = str(val).strip().lower()
+            if text in {"0", "false", "no", "off"}:
+                return False
+            if text in {"1", "true", "yes", "on"}:
+                return True
+            return bool(val)
+        try:
+            return bool(self._cfg_get(f"headers.{name}", True))
+        except Exception:
+            return True
+
     def _setting(self, name: str, default: int) -> int:
         raw = self.config.get(name, self._cfg_get(name, default))
         try:
@@ -335,6 +361,12 @@ class Wall:
         if asn_n is not None and asn_n in snap.challenge_asns:
             return Decision.CHALLENGE, {"reason": "challenge_asn", "asn": asn_n}
 
+        if self._default_is_block():
+            if ip_obj.is_loopback:
+                return Decision.ALLOW, {"reason": "loopback"}
+            if _is_acme_http01(path):
+                return Decision.ALLOW, {"reason": "acme"}
+            return Decision.BLOCK, {"reason": "default"}
         return Decision.ALLOW, {"reason": "default"}
 
     def _ip_list_decision(
@@ -422,7 +454,7 @@ class Wall:
             return Decision.CHALLENGE, {"reason": "lookup_failed"}
         return None
 
-    def _finish_sync(self, ip: Optional[str]) -> Tuple[Decision, Dict[str, Any], Any]:
+    def _finish_sync(self, ip: Optional[str], path: str = "/") -> Tuple[Decision, Dict[str, Any], Any]:
         settled = self._lists_only(ip)
         if settled is not None:
             return settled[0], settled[1], None
@@ -435,10 +467,10 @@ class Wall:
             miss = self._lookup_miss(self._current_snap())
             if miss is not None:
                 return miss[0], miss[1], None
-        decision, meta = self.check(ip=ip, ctx=ctx)
+        decision, meta = self.check(ip=ip, ctx=ctx, path=path)
         return decision, meta, ctx
 
-    async def _finish_async(self, ip: Optional[str]) -> Tuple[Decision, Dict[str, Any], Any]:
+    async def _finish_async(self, ip: Optional[str], path: str = "/") -> Tuple[Decision, Dict[str, Any], Any]:
         settled = self._lists_only(ip)
         if settled is not None:
             return settled[0], settled[1], None
@@ -451,7 +483,7 @@ class Wall:
             miss = self._lookup_miss(self._current_snap())
             if miss is not None:
                 return miss[0], miss[1], None
-        decision, meta = self.check(ip=ip, ctx=ctx)
+        decision, meta = self.check(ip=ip, ctx=ctx, path=path)
         return decision, meta, ctx
 
     async def _session(self):
@@ -503,26 +535,26 @@ class Wall:
     ) -> List[Tuple[str, str]]:
         pref = self._hdr
         items: List[Tuple[str, str]] = [("X-Correlation-Id", corr)]
-        if decision is not None:
+        if decision is not None and self._header_on("decision"):
             items.append((f"{pref}-Decision", decision.name.lower()))
         reason = meta.get("reason")
-        if reason:
+        if reason and self._header_on("reason"):
             items.append((f"{pref}-Reason", str(reason)))
         if ctx is None:
             return [(_header_safe(k), _header_safe(v)) for k, v in items]
-        if getattr(ctx, "asn", None) not in (None, False):
+        if getattr(ctx, "asn", None) not in (None, False) and self._header_on("asn"):
             items.append((f"{pref}-ASN", str(ctx.asn)))
-        if getattr(ctx, "org_name", None):
+        if getattr(ctx, "org_name", None) and self._header_on("org"):
             items.append((f"{pref}-Org", str(ctx.org_name)))
-        if getattr(ctx, "prefix", None):
+        if getattr(ctx, "prefix", None) and self._header_on("prefix"):
             items.append((f"{pref}-Prefix", str(ctx.prefix)))
-        if getattr(ctx, "country", None):
+        if getattr(ctx, "country", None) and self._header_on("country"):
             items.append((f"{pref}-Country", str(ctx.country)))
-        if getattr(ctx, "flag_url", None):
+        if getattr(ctx, "flag_url", None) and self._header_on("flag_url"):
             items.append((f"{pref}-Flag-Url", str(ctx.flag_url)))
-        if getattr(ctx, "timings", None):
+        if getattr(ctx, "timings", None) and self._header_on("timings"):
             items.append((f"{pref}-Timings", _JSON(ctx.timings)))
-        if getattr(ctx, "iana", None):
+        if getattr(ctx, "iana", None) and self._header_on("iana"):
             items.append((f"{pref}-IANA", _JSON(ctx.iana)))
         return [(_header_safe(k), _header_safe(v)) for k, v in items]
 
@@ -720,7 +752,7 @@ class Wall:
         )
         origin = environ.get("HTTP_ORIGIN")
         corr = _correlation_id()
-        decision, meta, ctx = self._finish_sync(ip)
+        decision, meta, ctx = self._finish_sync(ip, path=path)
         decision, meta = self._soften_challenge(decision, meta, ip, cookie)
         decision, meta = self._admin_wall_allow(decision, meta, path, cookie, authorization)
         items = self._header_items(ctx, decision, meta, corr)
@@ -853,7 +885,7 @@ class Wall:
         )
         origin = _header_value(scope.get("headers"), "origin")
         corr = _correlation_id()
-        decision, meta, ctx = await self._finish_async(ip)
+        decision, meta, ctx = await self._finish_async(ip, path=path)
         decision, meta = self._soften_challenge(decision, meta, ip, cookie)
         decision, meta = self._admin_wall_allow(decision, meta, path, cookie, authorization)
         items = self._header_items(ctx, decision, meta, corr)
@@ -972,7 +1004,7 @@ class Wall:
         if client:
             peer = client[0]
         ip = _peer_ip(peer)
-        decision, meta, _ctx = await self._finish_async(ip)
+        decision, meta, _ctx = await self._finish_async(ip, path=str(scope.get("path") or "/"))
         cookie = _header_value(scope.get("headers"), "cookie")
         decision, meta = self._soften_challenge(decision, meta, ip, cookie)
         if decision == Decision.ALLOW:

@@ -549,6 +549,9 @@
       ["wall", "gui.logs.wall", "wall"],
       ["challenge", "gui.logs.challenge", "challenge"],
       ["build", "gui.logs.build", "build"],
+      ["acme", "gui.logs.acme", "acme"],
+      ["https-out", "gui.logs.https_out", "https out"],
+      ["https-err", "gui.logs.https_err", "https err"],
     ];
 
     const COLUMNS = {
@@ -615,6 +618,15 @@
         { key: "ts", label: "time" },
         { key: "event", label: "event" },
         { key: "dataset", label: "dataset" },
+        { key: "message", label: "message" },
+      ],
+      acme: [
+        { key: "message", label: "message" },
+      ],
+      "https-out": [
+        { key: "message", label: "message" },
+      ],
+      "https-err": [
         { key: "message", label: "message" },
       ],
     };
@@ -3003,7 +3015,16 @@
       const row = el("label", "config-row");
       row.append(el("span", "config-label", label));
       let input;
-      if (type === "checkbox") {
+      if (type === "select") {
+        input = document.createElement("select");
+        (extra && extra.options ? extra.options : []).forEach((opt) => {
+          const o = document.createElement("option");
+          o.value = opt[0];
+          o.textContent = opt[1];
+          if (String(opt[0]) === String(value)) o.selected = true;
+          input.append(o);
+        });
+      } else if (type === "checkbox") {
         input = document.createElement("input");
         input.type = "checkbox";
         input.checked = !!value;
@@ -3011,9 +3032,9 @@
         input = document.createElement("input");
         input.type = type || "text";
         input.value = value == null ? "" : String(value);
+        if (extra) Object.assign(input, extra);
       }
       input.name = name;
-      if (extra) Object.assign(input, extra);
       row.append(input);
       return row;
     }
@@ -3048,11 +3069,42 @@
       histSec.append(field("history.snapshots", t("gui.config.history.snapshots", "Snapshots"), "number", history.snapshots, { min: "-1", step: "1" }));
       form.append(histSec);
 
-      const wallSec = el("fieldset", "config-sec");
-      wallSec.append(el("legend", null, t("gui.config.wall", "Firewall challenge")));
+      const wallSec = el("fieldset", "config-sec config-span");
+      wallSec.append(el("legend", null, t("gui.config.wall", "Firewall")));
+      wallSec.append(field(
+        "wall.default",
+        t("gui.config.wall.default", "Unmatched traffic"),
+        "select",
+        wall.default || "allow",
+        {
+          options: [
+            ["allow", t("gui.config.wall.default.allow", "Allow")],
+            ["block", t("gui.config.wall.default.block", "Block")],
+          ],
+        }
+      ));
       wallSec.append(field("wall.challenge_ttl_days", t("gui.config.wall.challenge_ttl_days", "Pass cookie TTL (days)"), "number", wall.challenge_ttl_days, { min: "1", step: "1" }));
       wallSec.append(field("wall.challenge_bits", t("gui.config.wall.challenge_bits", "Puzzle bits (8–24)"), "number", wall.challenge_bits, { min: "8", max: "24", step: "1" }));
+      const headers = wall.headers || {};
+      const headerNames = ["decision", "reason", "asn", "org", "prefix", "country", "flag_url", "timings", "iana"];
+      const headerBox = el("div", "config-headers");
+      headerNames.forEach((name) => {
+        headerBox.append(field(
+          "wall.headers." + name,
+          t("gui.config.wall.headers." + name, name),
+          "checkbox",
+          headers[name] !== false
+        ));
+      });
+      wallSec.append(headerBox);
       form.append(wallSec);
+
+      const logs = data.logs || {};
+      const logsSec = el("fieldset", "config-sec");
+      logsSec.append(el("legend", null, t("gui.config.logs", "Logs")));
+      logsSec.append(field("logs.max_bytes", t("gui.config.logs.max_bytes", "Rotate at (bytes)"), "number", logs.max_bytes, { min: "1024", step: "1" }));
+      logsSec.append(field("logs.keep", t("gui.config.logs.keep", "Keep rotated files (−1 forever)"), "number", logs.keep, { min: "-1", step: "1" }));
+      form.append(logsSec);
 
       const mtr = data.mtr || {};
       const mtrSec = el("fieldset", "config-sec");
@@ -3062,7 +3114,7 @@
       form.append(mtrSec);
 
       const http = data.http || {};
-      const httpSec = el("fieldset", "config-sec");
+      const httpSec = el("fieldset", "config-sec config-span");
       httpSec.append(el("legend", null, t("gui.config.http", "HTTPS")));
       httpSec.append(field("http.enabled", t("gui.config.http.enabled", "Serve the GUI over TLS"), "checkbox", http.enabled));
       httpSec.append(field("http.hostname", t("gui.config.http.hostname", "Hostname (FQDN)"), "text", http.hostname || ""));
@@ -3072,7 +3124,7 @@
       httpSec.append(field("http.staging", t("gui.config.http.staging", "Use Let's Encrypt staging"), "checkbox", http.staging));
       form.append(httpSec);
 
-      const refSec = el("fieldset", "config-sec");
+      const refSec = el("fieldset", "config-sec config-span");
       refSec.append(el("legend", null, t("gui.config.refresh", "Dataset refresh (days)")));
       ["iana", "dns_types", "tlds", "rdap_dns", "rir", "asn_org", "asn"].forEach((name) => {
         refSec.append(field(
@@ -3222,7 +3274,7 @@
     function readForm() {
       const out = {};
       if (!form) return out;
-      form.querySelectorAll("input[name]").forEach((input) => {
+      form.querySelectorAll("input[name], select[name]").forEach((input) => {
         if (input.type === "checkbox") out[input.name] = input.checked;
         else out[input.name] = input.value;
       });

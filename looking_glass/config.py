@@ -22,12 +22,32 @@ DEFAULT_REFRESH: Dict[str, int] = {
     "asn": 1,
 }
 
+LOG_MIN_BYTES = 1024
+DEFAULT_LOG_MAX_BYTES = 8 * 1024 * 1024
+WALL_HEADER_NAMES = (
+    "decision",
+    "reason",
+    "asn",
+    "org",
+    "prefix",
+    "country",
+    "flag_url",
+    "timings",
+    "iana",
+)
+
 DEFAULTS: Dict[str, Any] = {
     "locale": "en",
     "cache": {"ttl_days": 7, "gui": False},
     "refresh": dict(DEFAULT_REFRESH),
     "history": {"snapshots": -1},
-    "wall": {"challenge_ttl_days": 5, "challenge_bits": 16},
+    "wall": {
+        "challenge_ttl_days": 5,
+        "challenge_bits": 16,
+        "default": "allow",
+        "headers": {name: True for name in WALL_HEADER_NAMES},
+    },
+    "logs": {"max_bytes": DEFAULT_LOG_MAX_BYTES, "keep": -1},
     "docs": {"enabled": False},
     "mtr": {"cycles": 10, "max_cycles": 30},
     "http": {
@@ -209,7 +229,12 @@ def _merge_history(raw: Any) -> Dict[str, Any]:
 
 
 def _merge_wall(raw: Any) -> Dict[str, Any]:
-    out = dict(DEFAULTS["wall"])
+    out: Dict[str, Any] = {
+        "challenge_ttl_days": DEFAULTS["wall"]["challenge_ttl_days"],
+        "challenge_bits": DEFAULTS["wall"]["challenge_bits"],
+        "default": DEFAULTS["wall"]["default"],
+        "headers": dict(DEFAULTS["wall"]["headers"]),
+    }
     if not isinstance(raw, dict):
         return out
     days = _parse_days(raw.get("challenge_ttl_days"))
@@ -218,6 +243,40 @@ def _merge_wall(raw: Any) -> Dict[str, Any]:
     bits = _parse_days(raw.get("challenge_bits"))
     if bits is not None and 8 <= bits <= 24:
         out["challenge_bits"] = bits
+    default = _parse_wall_default(raw.get("default"))
+    if default is not None:
+        out["default"] = default
+    headers = raw.get("headers")
+    if isinstance(headers, dict):
+        for name in WALL_HEADER_NAMES:
+            if name not in headers:
+                continue
+            try:
+                out["headers"][name] = _parse_bool(headers.get(name), f"wall.headers.{name}")
+            except ValueError:
+                pass
+    return out
+
+
+def _parse_wall_default(value: Any) -> Optional[str]:
+    if isinstance(value, bool):
+        return None
+    text = str(value or "").strip().lower()
+    if text in {"allow", "block"}:
+        return text
+    return None
+
+
+def _merge_logs(raw: Any) -> Dict[str, Any]:
+    out = dict(DEFAULTS["logs"])
+    if not isinstance(raw, dict):
+        return out
+    parsed = _parse_days(raw.get("max_bytes"))
+    if parsed is not None and parsed >= LOG_MIN_BYTES:
+        out["max_bytes"] = parsed
+    keep = _parse_snapshots(raw.get("keep"))
+    if keep is not None:
+        out["keep"] = keep
     return out
 
 
@@ -351,6 +410,7 @@ def normalize(payload: Any) -> Dict[str, Any]:
         "refresh": _merge_refresh(data.get("refresh")),
         "history": _merge_history(data.get("history")),
         "wall": _merge_wall(data.get("wall")),
+        "logs": _merge_logs(data.get("logs")),
         "docs": _merge_docs(data.get("docs")),
         "mtr": _merge_mtr(data.get("mtr")),
         "http": _merge_http(data.get("http")),
@@ -464,6 +524,26 @@ def _parse_set_value(dotted: str, raw: Any) -> Any:
         if bits is None or bits < 8 or bits > 24:
             raise ValueError("wall.challenge_bits must be an integer 8-24")
         return bits
+    if key == "wall.default":
+        parsed = _parse_wall_default(raw)
+        if parsed is None:
+            raise ValueError("wall.default must be allow or block")
+        return parsed
+    if key.startswith("wall.headers."):
+        name = key.split(".", 2)[-1]
+        if name not in WALL_HEADER_NAMES:
+            raise KeyError(key)
+        return _parse_bool(raw, key)
+    if key == "logs.max_bytes":
+        parsed = _parse_days(raw if not isinstance(raw, str) else raw.strip())
+        if parsed is None or parsed < LOG_MIN_BYTES:
+            raise ValueError(f"logs.max_bytes must be an integer >= {LOG_MIN_BYTES}")
+        return parsed
+    if key == "logs.keep":
+        parsed = _parse_snapshots(raw if not isinstance(raw, str) else raw.strip())
+        if parsed is None:
+            raise ValueError("logs.keep must be an integer >= -1")
+        return parsed
     if key in {"mtr.cycles", "mtr.max_cycles"}:
         parsed = _parse_days(raw if not isinstance(raw, str) else raw.strip())
         if parsed is None:
@@ -575,6 +655,9 @@ def known_keys() -> List[str]:
         "history.snapshots",
         "wall.challenge_ttl_days",
         "wall.challenge_bits",
+        "wall.default",
+        "logs.max_bytes",
+        "logs.keep",
         "docs.enabled",
         "mtr.cycles",
         "mtr.max_cycles",
@@ -588,4 +671,5 @@ def known_keys() -> List[str]:
         "http.staging",
     ]
     keys.extend(f"refresh.{name}" for name in DEFAULT_REFRESH)
+    keys.extend(f"wall.headers.{name}" for name in WALL_HEADER_NAMES)
     return keys

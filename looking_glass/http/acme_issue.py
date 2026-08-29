@@ -82,9 +82,10 @@ def append_acme_log(line: str) -> None:
         return
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
-        with acme_log_path().open("a", encoding="utf-8") as fh:
-            fh.write(f"{stamp} {text}\n")
-    except OSError:
+        from ..logrotate import append_line
+
+        append_line(str(acme_log_path()), f"{stamp} {text}")
+    except Exception:
         pass
 
 

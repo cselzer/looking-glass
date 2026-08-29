@@ -205,6 +205,25 @@ class CheckDecisionTests(unittest.TestCase):
         self.assertEqual(decision, Decision.ALLOW)
         self.assertEqual(meta["reason"], "default")
 
+    def test_default_block_loopback_and_acme(self):
+        w = _wrap(default="block")
+        decision, meta = w.check(ip="203.0.113.1")
+        self.assertEqual(decision, Decision.BLOCK)
+        self.assertEqual(meta["reason"], "default")
+        decision, meta = w.check(ip="127.0.0.1")
+        self.assertEqual(decision, Decision.ALLOW)
+        self.assertEqual(meta["reason"], "loopback")
+        decision, meta = w.check(
+            ip="203.0.113.1",
+            path="/.well-known/acme-challenge/token",
+        )
+        self.assertEqual(decision, Decision.ALLOW)
+        self.assertEqual(meta["reason"], "acme")
+        allowed = _wrap(default="block", allow_ips=["203.0.113.1"])
+        decision, meta = allowed.check(ip="203.0.113.1")
+        self.assertEqual(decision, Decision.ALLOW)
+        self.assertEqual(meta["reason"], "allow_ip")
+
     def test_iana_documentation_is_allowed(self):
         w = _wrap()
         ctx = _ctx(
@@ -380,6 +399,20 @@ class WrapTests(unittest.TestCase):
         self.assertEqual(headers.get("X-Wall-Decision"), "block")
         self.assertEqual(headers.get("X-Wall-Reason"), "block_ip")
         self.assertEqual(json.loads(body)["decision"], "block")
+
+    def test_header_toggles(self):
+        app = _wrap(
+            block_ips=["203.0.113.9"],
+            headers={"asn": False, "reason": False, "decision": True},
+        )
+        with patch("looking_glass.intel_server.client.lookup_ip") as mocked:
+            status, headers, _body = _wsgi_get(app, remote="203.0.113.9")
+        mocked.assert_not_called()
+        self.assertEqual(status, 403)
+        self.assertEqual(headers.get("X-Wall-Decision"), "block")
+        self.assertIsNone(headers.get("X-Wall-Reason"))
+        self.assertIsNone(headers.get("X-Wall-ASN"))
+        self.assertTrue(headers.get("X-Correlation-Id"))
 
     def test_forwarded_for_cannot_spoof_client(self):
         app = _wrap(block_ips=["203.0.113.9"])
@@ -2624,14 +2657,14 @@ class HttpDemoTests(unittest.TestCase):
         self.assertIn("inspect-tool-list", text)
         self.assertIn('id="status-login"', text)
         self.assertIn("gui.wall.note", text)
-        self.assertIn('id="status-windows"', text)
-        self.assertIn("minimizeAll", text)
-        self.assertIn("restoreAll", text)
+        self.assertNotIn('id="status-windows"', text)
+        self.assertNotIn("minimizeAll", text)
+        self.assertNotIn("restoreAll", text)
         self.assertIn("unwrapPayload", text)
         self.assertIn("lockPopSize(pop, { width: false })", text)
         self.assertIn("max-content", text)
         self.assertIn(".sec-graph", text)
-        self.assertIn("status.windows.min", text)
+        self.assertNotIn("status.windows.min", text)
         self.assertNotIn('id="status-logs"', text)
         self.assertNotIn('id="cache-btn"', text)
         self.assertNotIn('id="status-logout"', text)
@@ -2734,7 +2767,7 @@ class HttpDemoTests(unittest.TestCase):
         self.assertIn('id="status-history"', text)
         self.assertIn('id="status-history">history', text)
         self.assertIn('id="cache-btn">cache', text)
-        self.assertIn('id="status-windows"', text)
+        self.assertNotIn('id="status-windows"', text)
         self.assertIn("status.history", text)
         self.assertIn("status.cache", text)
         self.assertIn('id="status-wall"', text)

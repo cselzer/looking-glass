@@ -535,6 +535,7 @@ def parse_tls_http_path(path: str) -> Tuple[str, int]:
 
 def parse_mail_http_path(path: str) -> str:
     name = parse_mail_path(path)
+    _require_fetch_name(name, "mail")
     return normalize_qname(name, qtype="MX").rstrip(".")
 
 
@@ -606,9 +607,25 @@ def _kind_plan(
     return None, kind, str(value), base
 
 
-def parse_tcp_trace_http_path(path: str) -> Tuple[str, int]:
+def _require_fetch_name(name: str, kind: str) -> None:
+    """DNS-family tools take a real IP or a 2+ label domain (IDNA-safe)."""
     from ..net.host import unbracket_host
 
+    try:
+        ipaddress.ip_address(unbracket_host(name))
+        return
+    except ValueError:
+        pass
+    if not _is_rdap_domain(name):
+        raise ValueError(f"{kind} path needs a domain or IP, e.g. /{kind}/example.com")
+
+
+def parse_tcp_trace_http_path(path: str, raw_path: Optional[str] = None) -> Tuple[str, int]:
+    from ..net.host import unbracket_host
+    from ..net.probe import tcp_trace_has_encoded_slash
+
+    if tcp_trace_has_encoded_slash(raw_path or ""):
+        raise ValueError("tcptraceroute path needs a host, e.g. /tcptraceroute/1.1.1.1/443")
     host, port = parse_tcp_trace_path(path)
     host = unbracket_host(host)
     try:
@@ -1073,6 +1090,7 @@ def _plan(
     path: str,
     wall_hdrs: Dict[str, str],
     query_string: str = "",
+    raw_path: Optional[str] = None,
 ) -> Tuple[Optional[Tuple[int, str, bytes]], Optional[str], Optional[str], Dict[str, Any]]:
     token = path_token(path)
     if token == "dns" or token.startswith("dns/"):
@@ -1084,6 +1102,7 @@ def _plan(
         try:
             name, qtype = parse_dns_path("/" + token)
             canonicalize_qtype(qtype)
+            _require_fetch_name(name, "dns")
             normalize_qname(name, qtype=qtype)
             server, ns_port = _dns_upstream(query_string)
         except ValueError as e:
@@ -1157,6 +1176,8 @@ def _plan(
         }
         try:
             name = parse_apex_http_path("/" + token)
+            if not _is_rdap_domain(name):
+                raise ValueError("apex path needs a domain, e.g. /apex/example.com")
             value = normalize_qname(name, qtype="A").rstrip(".")
         except ValueError as e:
             return (
@@ -1209,6 +1230,8 @@ def _plan(
         base = {"protocol": protocol, "visitor": visitor, "query": token}
         try:
             name = parse_dnssec_http_path("/" + token)
+            if not _is_rdap_domain(name):
+                raise ValueError("dnssec path needs a domain, e.g. /dnssec/example.com")
             value = normalize_qname(name, qtype="A").rstrip(".")
         except ValueError as e:
             return (
@@ -1301,7 +1324,7 @@ def _plan(
     if token == "tcptraceroute" or token.startswith("tcptraceroute/"):
         base = {"protocol": protocol, "visitor": visitor, "query": token}
         try:
-            value, port = parse_tcp_trace_http_path(path)
+            value, port = parse_tcp_trace_http_path(path, raw_path)
         except ValueError as e:
             return (
                 _error_body(
@@ -1648,6 +1671,7 @@ def _respond_impl(
     body: bytes = b"",
     authorization: Optional[str] = None,
     csp_nonce_value: str = "",
+    raw_path: Optional[str] = None,
 ) -> HttpOut:
     html = wants_html(accept)
     _bind_html_locale(html, accept_language, cookie)
@@ -1682,7 +1706,9 @@ def _respond_impl(
         return _from3(_docs_http(user), [("Cache-Control", "no-store")])
     if html and not token and _is_root_path(path):
         return _from3(_encode_index(visitor, host, scheme, user=user, csp_nonce_value=csp_nonce_value))
-    err, kind, value, base = _plan(protocol, visitor, path, wall_hdrs, query_string)
+    err, kind, value, base = _plan(
+        protocol, visitor, path, wall_hdrs, query_string, raw_path=raw_path
+    )
     if err is not None:
         status, _ctype, raw = err
         payload = json.loads(raw.decode("utf-8"))
@@ -1753,6 +1779,7 @@ async def _respond_async_impl(
     body: bytes = b"",
     authorization: Optional[str] = None,
     csp_nonce_value: str = "",
+    raw_path: Optional[str] = None,
 ) -> HttpOut:
     html = wants_html(accept)
     _bind_html_locale(html, accept_language, cookie)
@@ -1787,7 +1814,9 @@ async def _respond_async_impl(
         return _from3(_docs_http(user), [("Cache-Control", "no-store")])
     if html and not token and _is_root_path(path):
         return _from3(_encode_index(visitor, host, scheme, user=user, csp_nonce_value=csp_nonce_value))
-    err, kind, value, base = _plan(protocol, visitor, path, wall_hdrs, query_string)
+    err, kind, value, base = _plan(
+        protocol, visitor, path, wall_hdrs, query_string, raw_path=raw_path
+    )
     if err is not None:
         status, _ctype, raw = err
         payload = json.loads(raw.decode("utf-8"))
@@ -1859,6 +1888,7 @@ def respond(
     correlation_id: Optional[str] = None,
     authorization: Optional[str] = None,
     origin: Optional[str] = None,
+    raw_path: Optional[str] = None,
 ) -> HttpOut:
     started = time.perf_counter()
     nonce = csp_nonce()
@@ -1878,6 +1908,7 @@ def respond(
             body=body,
             authorization=authorization,
             csp_nonce_value=nonce,
+            raw_path=raw_path,
         )
     except Exception as exc:
         from . import weblog
@@ -1923,6 +1954,7 @@ async def respond_async(
     correlation_id: Optional[str] = None,
     authorization: Optional[str] = None,
     origin: Optional[str] = None,
+    raw_path: Optional[str] = None,
 ) -> HttpOut:
     started = time.perf_counter()
     nonce = csp_nonce()
@@ -1942,6 +1974,7 @@ async def respond_async(
             body=body,
             authorization=authorization,
             csp_nonce_value=nonce,
+            raw_path=raw_path,
         )
     except Exception as exc:
         from . import weblog

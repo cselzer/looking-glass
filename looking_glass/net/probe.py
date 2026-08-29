@@ -118,6 +118,17 @@ def parse_probe_path(path: str) -> Tuple[str, str]:
     raise ValueError("not a ping, traceroute, or mtr path")
 
 
+def tcp_trace_has_encoded_slash(raw_path: str) -> bool:
+    """True when the request-target still has %2F in the tcptraceroute tail."""
+    text = str(raw_path or "").split("?", 1)[0]
+    lower = text.lower()
+    marker = "tcptraceroute/"
+    idx = lower.find(marker)
+    if idx < 0:
+        return False
+    return "%2f" in lower[idx + len(marker) :]
+
+
 def parse_tcp_trace_path(path: str) -> Tuple[str, int]:
     """Parse /tcptraceroute/<host> or /tcptraceroute/<host>/<port>."""
     text = str(path or "")
