@@ -124,3 +124,52 @@ class StaticFilesTests(unittest.TestCase):
         status, _, body, _ = serve("GET", "static/secret.txt")
         self.assertEqual(status, 404)
         self.assertEqual(body, b"not found")
+
+    def test_raw_text_fields_disable_safari_correct(self):
+        import re
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parents[1]
+        four = 'spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"'
+        macro = (root / "looking_glass/http/templates/_raw_input.html").read_text(encoding="utf-8")
+        self.assertIn(four, macro)
+        html = (root / "looking_glass/http/templates/index.html").read_text(encoding="utf-8")
+        self.assertIn('{% from "_raw_input.html" import raw %}', html)
+        ping = html[html.index('id="form-ping"'):html.index('id="form-tcp"')]
+        self.assertIn("{{ raw() }}", ping)
+        tag_re = re.compile(r"<input\b[^>]*>", re.I)
+        for tag in tag_re.findall(html):
+            if 'type="radio"' in tag or 'inputmode="numeric"' in tag:
+                continue
+            self.assertIn("{{ raw() }}", tag, tag)
+        bar = (root / "looking_glass/http/templates/_status_bar.html").read_text(encoding="utf-8")
+        pw = bar.split('type="password"', 1)[1].split(">", 1)[0]
+        self.assertIn('spellcheck="false"', pw)
+        self.assertIn('autocomplete="current-password"', pw)
+        self.assertNotIn("autocorrect", pw)
+        gui = (root / "looking_glass/http/static/gui.js").read_text(encoding="utf-8")
+        admin = (root / "looking_glass/http/static/admin.js").read_text(encoding="utf-8")
+        self.assertIn("function rawTextField", gui)
+        self.assertIn("function rawTextField", admin)
+        self.assertIn("rawTextField(search)", gui)
+        self.assertIn("rawTextField(input)", admin)
+        self.assertIn("rawTextField(search)", admin)
+        self.assertIn("rawTextField(searchEl)", admin)
+        self.assertIn('rawTextField(pw, "password")', admin)
+        status, _, body, _ = respond(
+            "wsgi",
+            "127.0.0.1",
+            "/",
+            {},
+            accept="text/html",
+            host="lg.example.com",
+            scheme="https",
+        )
+        self.assertEqual(status, 200)
+        text = body.decode("utf-8")
+        ping_html = text[text.index('id="form-ping"'):text.index('id="form-tcp"')]
+        host = ping_html.split("<input", 1)[1].split(">", 1)[0]
+        self.assertIn('spellcheck="false"', host)
+        self.assertIn('autocorrect="off"', host)
+        self.assertIn('autocapitalize="off"', host)
+        self.assertIn('autocomplete="off"', host)

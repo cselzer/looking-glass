@@ -1,3 +1,16 @@
+function rawTextField(node, kind) {
+  if (!node) return node;
+  node.setAttribute("spellcheck", "false");
+  if (kind === "password") return node;
+  node.setAttribute("autocorrect", "off");
+  node.setAttribute("autocapitalize", "off");
+  var ac = String(node.getAttribute("autocomplete") || "").toLowerCase();
+  if (ac !== "username" && ac !== "current-password" && ac !== "new-password" && ac !== "one-time-code") {
+    node.setAttribute("autocomplete", "off");
+  }
+  return node;
+}
+
 (function () {
     const logsBtn = document.getElementById("status-logs");
     if (!logsBtn) return;
@@ -1222,6 +1235,7 @@
       search.className = "hist-search";
       search.placeholder = t("gui.cache.search", "Search query, namespace, or kind");
       search.setAttribute("aria-label", t("gui.cache.search", "Search query, namespace, or kind"));
+      rawTextField(search);
       search.value = cacheQuery;
       search.addEventListener("input", () => {
         cacheQuery = search.value;
@@ -1699,6 +1713,7 @@
       search.className = "hist-search";
       search.placeholder = t("gui.history.search", "Search query, user, or date");
       search.setAttribute("aria-label", t("gui.history.search", "Search query, user, or date"));
+      rawTextField(search);
       search.value = histQuery;
       search.addEventListener("input", () => {
         histQuery = search.value;
@@ -2176,6 +2191,7 @@
       const input = document.createElement("input");
       input.type = "text";
       input.required = true;
+      rawTextField(input);
       input.placeholder = kind === "ip"
         ? t("gui.wall.ip_or_cidr", "IP or CIDR")
         : kind === "asn"
@@ -2184,6 +2200,7 @@
       const noteInput = document.createElement("input");
       noteInput.type = "text";
       noteInput.placeholder = t("gui.wall.note", "note");
+      rawTextField(noteInput);
       const go = el("button", "wall-act on", t("gui.wall.add", "add"));
       go.type = "submit";
       form.append(action, input, noteInput, go);
@@ -2872,6 +2889,7 @@
       searchEl.className = "hist-search";
       searchEl.placeholder = t("gui.wall.search", "Search lists, traffic, or challenge");
       searchEl.setAttribute("aria-label", t("gui.wall.search", "Search lists, traffic, or challenge"));
+      rawTextField(searchEl);
       searchEl.value = wallQuery;
       searchEl.addEventListener("input", () => {
         wallQuery = searchEl.value;
@@ -3033,6 +3051,9 @@
         input.type = type || "text";
         input.value = value == null ? "" : String(value);
         if (extra) Object.assign(input, extra);
+        var kind = type || "text";
+        if (kind === "password") rawTextField(input, "password");
+        else if (kind === "text" || kind === "search" || kind === "url" || kind === "email") rawTextField(input);
       }
       input.name = name;
       row.append(input);
@@ -3167,6 +3188,7 @@
       const pw = document.createElement("input");
       pw.type = "password";
       pw.autocomplete = "new-password";
+      rawTextField(pw, "password");
       pw.placeholder = t("gui.login.password", "Password");
       const setBtn = el("button", "go", t("gui.config.password.save", "Set password"));
       setBtn.type = "button";
@@ -3219,6 +3241,7 @@
       const nameInput = document.createElement("input");
       nameInput.type = "text";
       nameInput.placeholder = t("gui.config.keys.name", "Key name");
+      rawTextField(nameInput);
       const createBtn = el("button", "go", t("gui.config.keys.create", "Create key"));
       createBtn.type = "button";
       createBtn.addEventListener("click", async () => {

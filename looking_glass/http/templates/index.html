@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_raw_input.html" import raw %}
 {% block title %}{{ site }}{% endblock %}
 {% block body_class %}gui{% endblock %}
 {% block body %}
@@ -70,7 +71,7 @@
           <p class="hint">{{ t("gui.ip.hint") }}</p>
           <form id="form-ip" class="form-bar" data-kind="ip">
             <label class="field field-grow">{{ t("gui.ip.label") }}
-              <input name="q" autocomplete="off" placeholder="1.1.1.1 or 2001:db8::1" required>
+              <input name="q" {{ raw() }} placeholder="1.1.1.1 or 2001:db8::1" required>
             </label>
             <button class="go" type="submit">{{ t("gui.ip.submit") }}</button>
           </form>
@@ -84,7 +85,7 @@
           <p class="hint">{{ t("gui.asn.hint") }}</p>
           <form id="form-asn" class="form-bar" data-kind="asn">
             <label class="field field-grow">{{ t("gui.asn.label") }}
-              <input name="q" autocomplete="off" placeholder="13335 or AS13335" required>
+              <input name="q" {{ raw() }} placeholder="13335 or AS13335" required>
             </label>
             <button class="go" type="submit">{{ t("gui.asn.submit") }}</button>
           </form>
@@ -99,7 +100,7 @@
           <p class="hint">{{ t("gui.bgp.hint") }}</p>
           <form id="form-bgp" class="form-bar" data-kind="bgp">
             <label class="field field-grow">{{ t("gui.bgp.label") }}
-              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or 1.1.1.0/24" required>
+              <input name="target" {{ raw() }} placeholder="1.1.1.1, 2001:db8::1, or 1.1.1.0/24" required>
             </label>
             <button class="go" type="submit">{{ t("gui.bgp.submit") }}</button>
           </form>
@@ -112,14 +113,14 @@
           <p class="hint">{{ t("gui.dns.hint") }}</p>
           <form id="form-dns" class="form-bar" data-kind="dns">
             <label class="field field-grow">{{ t("gui.dns.name") }}
-              <input name="name" autocomplete="off" placeholder="example.com" required>
+              <input name="name" {{ raw() }} placeholder="example.com" required>
             </label>
             <label class="field field-type">{{ t("gui.dns.type") }}
-              <input class="type-filter" id="type-filter" type="search" placeholder="{{ t('gui.dns.filter') }}" aria-label="{{ t('gui.dns.filter') }}">
+              <input class="type-filter" id="type-filter" type="search" {{ raw() }} placeholder="{{ t('gui.dns.filter') }}" aria-label="{{ t('gui.dns.filter') }}">
               <select name="type" id="dns-type" required></select>
             </label>
             <label class="field field-narrow">{{ t("gui.dns.nameserver") }}
-              <input name="server" autocomplete="off" placeholder="resolv.conf or 2001:db8::1">
+              <input name="server" {{ raw() }} placeholder="resolv.conf or 2001:db8::1">
             </label>
             <label class="field field-narrow">{{ t("gui.dns.port") }}
               <input name="port" inputmode="numeric" placeholder="53">
@@ -137,10 +138,10 @@
           <p class="hint">{{ t("gui.dnstrace.hint") }}</p>
           <form id="form-dnstrace" class="form-bar" data-kind="dnstrace">
             <label class="field field-grow">{{ t("gui.dns.name") }}
-              <input name="name" autocomplete="off" placeholder="example.com" required>
+              <input name="name" {{ raw() }} placeholder="example.com" required>
             </label>
             <label class="field field-narrow">{{ t("gui.dns.type") }}
-              <input name="type" autocomplete="off" placeholder="A">
+              <input name="type" {{ raw() }} placeholder="A">
             </label>
             <button class="go" type="submit">{{ t("gui.dnstrace.submit") }}</button>
           </form>
@@ -153,7 +154,7 @@
           <p class="hint">{{ t("gui.dnssec.hint") }}</p>
           <form id="form-dnssec" class="form-bar" data-kind="dnssec">
             <label class="field field-grow">{{ t("gui.domain") }}
-              <input name="domain" autocomplete="off" placeholder="example.com" required>
+              <input name="domain" {{ raw() }} placeholder="example.com" required>
             </label>
             <button class="go" type="submit">{{ t("gui.dnssec.submit") }}</button>
           </form>
@@ -168,7 +169,7 @@
           <p class="hint">{{ t("gui.ptr.hint") }}</p>
           <form id="form-ptr" class="form-bar" data-kind="ptr">
             <label class="field field-grow">{{ t("gui.ptr.label") }}
-              <input name="target" autocomplete="off" placeholder="1.1.1.1 or 2001:db8::1" required>
+              <input name="target" {{ raw() }} placeholder="1.1.1.1 or 2001:db8::1" required>
             </label>
             <button class="go" type="submit">{{ t("gui.ptr.submit") }}</button>
           </form>
@@ -181,7 +182,7 @@
           <p class="hint">{{ t("gui.register.hint") }}</p>
           <form id="form-register" class="form-bar" data-kind="register">
             <label class="field field-grow">{{ t("gui.register.label") }}
-              <input name="name" autocomplete="off" placeholder="example" required>
+              <input name="name" {{ raw() }} placeholder="example" required>
             </label>
             <button class="go" type="submit">{{ t("gui.register.submit") }}</button>
           </form>
@@ -194,13 +195,13 @@
           <p class="hint">{{ t("gui.tls.hint") }}</p>
           <form id="form-tls" class="form-bar" data-kind="tls">
             <label class="field field-grow">{{ t("gui.host_or_ip") }}
-              <input name="host" autocomplete="off" placeholder="example.com or 2001:db8::1" required>
+              <input name="host" {{ raw() }} placeholder="example.com or 2001:db8::1" required>
             </label>
             <label class="field field-narrow">{{ t("gui.tls.port") }}
               <input name="port" inputmode="numeric" placeholder="443">
             </label>
             <label class="field field-narrow">{{ t("gui.tls.sni") }}
-              <input name="sni" autocomplete="off" placeholder="optional hostname">
+              <input name="sni" {{ raw() }} placeholder="optional hostname">
             </label>
             <button class="go" type="submit">{{ t("gui.tls.submit") }}</button>
           </form>
@@ -215,7 +216,7 @@
           <p class="hint">{{ t("gui.http.hint") }}</p>
           <form id="form-http" class="form-bar" data-kind="http">
             <label class="field field-grow">{{ t("gui.http.label") }}
-              <input name="target" autocomplete="off" placeholder="example.com, https://example.com/, or 2001:db8::1" required>
+              <input name="target" {{ raw() }} placeholder="example.com, https://example.com/, or 2001:db8::1" required>
             </label>
             <button class="go" type="submit">{{ t("gui.http.submit") }}</button>
           </form>
@@ -228,7 +229,7 @@
           <p class="hint">{{ t("gui.apex.hint") }}</p>
           <form id="form-apex" class="form-bar" data-kind="apex">
             <label class="field field-grow">{{ t("gui.domain") }}
-              <input name="domain" autocomplete="off" placeholder="example.com" required>
+              <input name="domain" {{ raw() }} placeholder="example.com" required>
             </label>
             <button class="go" type="submit">{{ t("gui.apex.submit") }}</button>
           </form>
@@ -243,7 +244,7 @@
           <p class="hint">{{ t("gui.mail.hint") }}</p>
           <form id="form-mail" class="form-bar" data-kind="mail">
             <label class="field field-grow">{{ t("gui.domain") }}
-              <input name="domain" autocomplete="off" placeholder="example.com" required>
+              <input name="domain" {{ raw() }} placeholder="example.com" required>
             </label>
             <button class="go" type="submit">{{ t("gui.mail.submit") }}</button>
           </form>
@@ -256,7 +257,7 @@
           <p class="hint">{{ t("gui.ping.hint") }}</p>
           <form id="form-ping" class="form-bar" data-kind="ping">
             <label class="field field-grow">{{ t("gui.host_or_ip") }}
-              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
+              <input name="target" {{ raw() }} placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
             </label>
             <button class="go" type="submit">{{ t("gui.ping.submit") }}</button>
           </form>
@@ -270,7 +271,7 @@
           <p class="hint">{{ t("gui.traceroute.hint") }}</p>
           <form id="form-traceroute" class="form-bar" data-kind="traceroute">
             <label class="field field-grow">{{ t("gui.host_or_ip") }}
-              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
+              <input name="target" {{ raw() }} placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
             </label>
             <button class="go" type="submit">{{ t("gui.traceroute.submit") }}</button>
           </form>
@@ -284,7 +285,7 @@
           <p class="hint">{{ t("gui.mtr.hint") }}</p>
           <form id="form-mtr" class="form-bar" data-kind="mtr">
             <label class="field field-grow">{{ t("gui.host_or_ip") }}
-              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
+              <input name="target" {{ raw() }} placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
             </label>
             <label class="field field-narrow">{{ t("gui.mtr.cycles") }}
               <input name="cycles" inputmode="numeric" placeholder="10" min="1">
@@ -301,7 +302,7 @@
           <p class="hint">{{ t("gui.tcptraceroute.hint") }}</p>
           <form id="form-tcptraceroute" class="form-bar" data-kind="tcptraceroute">
             <label class="field field-grow">{{ t("gui.host_or_ip") }}
-              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
+              <input name="target" {{ raw() }} placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
             </label>
             <label class="field field-narrow">{{ t("gui.tcptraceroute.port") }}
               <input name="port" inputmode="numeric" placeholder="443">
@@ -319,7 +320,7 @@
           <p class="hint">{{ t("gui.tcp.hint") }}</p>
           <form id="form-tcp" class="form-bar" data-kind="tcp">
             <label class="field field-grow">{{ t("gui.tcp.host") }}
-              <input name="host" autocomplete="off" placeholder="example.com or 2001:db8::1" required>
+              <input name="host" {{ raw() }} placeholder="example.com or 2001:db8::1" required>
             </label>
             <label class="field field-narrow">{{ t("gui.dns.port") }}
               <input name="port" inputmode="numeric" placeholder="443">
@@ -336,7 +337,7 @@
           <p class="hint">{{ t("gui.pmtu.hint") }}</p>
           <form id="form-pmtu" class="form-bar" data-kind="pmtu">
             <label class="field field-grow">{{ t("gui.host_or_ip") }}
-              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
+              <input name="target" {{ raw() }} placeholder="1.1.1.1, 2001:db8::1, or example.com" required>
             </label>
             <button class="go" type="submit">{{ t("gui.pmtu.submit") }}</button>
           </form>
@@ -349,7 +350,7 @@
           <p class="hint">{{ t("gui.rdap.hint") }}</p>
           <form id="form-rdap" class="form-bar" data-kind="rdap">
             <label class="field field-grow">{{ t("gui.rdap.label") }}
-              <input name="target" autocomplete="off" placeholder="1.1.1.1, 2001:db8::1, example.com, AS13335" required>
+              <input name="target" {{ raw() }} placeholder="1.1.1.1, 2001:db8::1, example.com, AS13335" required>
             </label>
             <fieldset class="mode">
               <legend>{{ t("gui.rdap.protocol") }}</legend>
@@ -368,7 +369,7 @@
           <p class="hint">{{ t("gui.reputation.hint") }}</p>
           <form id="form-rep" class="form-bar" data-kind="reputation">
             <label class="field field-grow">{{ t("gui.reputation.label") }}
-              <input name="target" autocomplete="off" placeholder="example.com, 1.1.1.1, or 2001:db8::1" required>
+              <input name="target" {{ raw() }} placeholder="example.com, 1.1.1.1, or 2001:db8::1" required>
             </label>
             <button class="go" type="submit">{{ t("gui.reputation.submit") }}</button>
           </form>

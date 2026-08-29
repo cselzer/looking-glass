@@ -1,3 +1,16 @@
+function rawTextField(node, kind) {
+  if (!node) return node;
+  node.setAttribute("spellcheck", "false");
+  if (kind === "password") return node;
+  node.setAttribute("autocorrect", "off");
+  node.setAttribute("autocapitalize", "off");
+  var ac = String(node.getAttribute("autocomplete") || "").toLowerCase();
+  if (ac !== "username" && ac !== "current-password" && ac !== "new-password" && ac !== "one-time-code") {
+    node.setAttribute("autocomplete", "off");
+  }
+  return node;
+}
+
 (function () {
     if (window.lookingGlassWindows) return;
 
@@ -1296,6 +1309,7 @@ function renderRegister(payload) {
   search.className = "register-search";
   search.setAttribute("aria-label", window.t("gui.register.search"));
   search.placeholder = window.t("gui.register.search");
+  rawTextField(search);
   const board = el("div", "register-board");
   const cells = [];
 
