@@ -122,6 +122,10 @@
       "text": "Show cached files. NAMESPACE is rdap or bgp.",
       "en": "Show cached files. NAMESPACE is rdap or bgp."
     },
+    "cli.complete.help": {
+      "text": "Print a bash, zsh, or fish completion script.\n\n\b\n  eval \"$(looking-glass complete bash)\"\n  eval \"$(looking-glass complete zsh)\"\n  looking-glass complete fish | source",
+      "en": "Print a bash, zsh, or fish completion script.\n\n\b\n  eval \"$(looking-glass complete bash)\"\n  eval \"$(looking-glass complete zsh)\"\n  looking-glass complete fish | source"
+    },
     "cli.config.get.help": {
       "text": "Print one dotted key (locale, cache.gui, refresh.rir, …).",
       "en": "Print one dotted key (locale, cache.gui, refresh.rir, …)."
@@ -157,6 +161,10 @@
     "cli.dns.err.too_many": {
       "text": "Too many arguments; expected [@server] name [type]",
       "en": "Too many arguments; expected [@server] name [type]"
+    },
+    "cli.dns.help": {
+      "text": "Query DNS like dig: [@server] name [type].\n\nDefault nameserver comes from resolv.conf. Pass @server (or --server)\nonly to override it.\n\n\b\n  looking-glass dns example.com\n  looking-glass dns example.com DS\n  looking-glass dns @1.1.1.1 example.com A\n  looking-glass dns @8.8.8.8:5353 example.com MX\n  looking-glass dns example.com AAAA -p 53 --server 9.9.9.9\n\nDS, DNSKEY, and NSEC are published at the zone apex (example.com), not www.",
+      "en": "Query DNS like dig: [@server] name [type].\n\nDefault nameserver comes from resolv.conf. Pass @server (or --server)\nonly to override it.\n\n\b\n  looking-glass dns example.com\n  looking-glass dns example.com DS\n  looking-glass dns @1.1.1.1 example.com A\n  looking-glass dns @8.8.8.8:5353 example.com MX\n  looking-glass dns example.com AAAA -p 53 --server 9.9.9.9\n\nDS, DNSKEY, and NSEC are published at the zone apex (example.com), not www."
     },
     "cli.dns.opt.port": {
       "text": "Nameserver port (default 53).",
@@ -446,9 +454,13 @@
       "text": "Check a label against every IANA TLD.",
       "en": "Check a label against every IANA TLD."
     },
+    "cli.register.opt.all_flag": {
+      "text": "Print the full TLD board (human mode).",
+      "en": "Print the full TLD board (human mode)."
+    },
     "cli.register.opt.tlds_opt": {
-      "text": "Comma-separated TLD list (same as ?tlds=).",
-      "en": "Comma-separated TLD list (same as ?tlds=)."
+      "text": "Comma-separated TLD list.",
+      "en": "Comma-separated TLD list."
     },
     "cli.reputation.help": {
       "text": "Domain or IP blocklists.",

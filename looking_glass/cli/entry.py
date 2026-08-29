@@ -27,6 +27,7 @@ _COMMAND_ORDER = (
     "build",
     "validate",
     "docs",
+    "complete",
     "locale",
     "config",
     "auth",
@@ -1227,7 +1228,7 @@ def _apply_json(ctx: click.Context, _param: click.Parameter, value: bool) -> boo
     callback=_apply_json,
     help="Print JSON on stdout instead of a compact terminal view.",
 )
-@click.version_option(version="0.1.0", prog_name="looking-glass")
+@click.version_option(package_name="looking-glass", prog_name="looking-glass")
 @click.pass_context
 def cli(ctx: click.Context, lang: Optional[str], as_json: bool) -> None:
     """Local IP intelligence: country, ASN, and organization.
@@ -1274,6 +1275,24 @@ def docs_cmd(path: Optional[str]) -> None:
 
     dest = write_docs(path)
     emit_path(dest)
+
+
+@cli.command("complete")
+@click.argument("shell", type=click.Choice(["bash", "zsh", "fish"], case_sensitive=False))
+def complete_cmd(shell: str) -> None:
+    """Print a bash, zsh, or fish completion script.
+
+    \b
+      eval "$(looking-glass complete bash)"
+      eval "$(looking-glass complete zsh)"
+      looking-glass complete fish | source
+    """
+    from click.shell_completion import get_completion_class
+
+    cls = get_completion_class(str(shell).lower())
+    if cls is None:
+        raise click.UsageError(f"unsupported shell {shell!r}")
+    click.echo(cls(cli, {}, "looking-glass", "_LOOKING_GLASS_COMPLETE").source())
 
 
 @cli.command("build")

@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, Sequence, Tuple
 import click
 
 from ..intel_server.pipeline import classify_query
-from ..dns.resolve import parse_nameserver
+from ..dns.resolve import DNS_TYPE_EXAMPLES, parse_nameserver
 from ..http.site import lookup_classified
 from ..i18n import t
 from ..net.host import reject_probe_target
@@ -16,6 +16,41 @@ from .render import emit
 _PROBE_KINDS = frozenset(
     {"ping", "traceroute", "mtr", "tcptraceroute", "tls", "tcp", "pmtu", "ptr"}
 )
+_REJECT_COMPLETE = (
+    "javascript:",
+    "169.254.169.254",
+    "1.2.3",
+    "1.1.1.1/32",
+)
+
+
+def _complete_probe_host(_ctx: click.Context, _param: click.Parameter, incomplete: str) -> list:
+    """Hosts are typed, not picked from a list that includes rejected literals."""
+    text = str(incomplete or "")
+    if text in _REJECT_COMPLETE:
+        return []
+    if text:
+        try:
+            reject_probe_target(text)
+        except ValueError:
+            return []
+    return []
+
+
+def _complete_dns_type(_ctx: click.Context, _param: click.Parameter, incomplete: str) -> list:
+    prefix = str(incomplete or "").upper()
+    return [name for name in DNS_TYPE_EXAMPLES if name.startswith(prefix)]
+
+
+def _complete_dns_args(ctx: click.Context, param: click.Parameter, incomplete: str) -> list:
+    text = str(incomplete or "")
+    if text.startswith("@"):
+        return []
+    tokens = [str(t) for t in (ctx.params.get("args") or ()) if t]
+    have_name = any(not t.startswith("@") for t in tokens)
+    if have_name:
+        return _complete_dns_type(ctx, param, text)
+    return []
 
 
 def _cli_history_path(kind: str, value: str, kwargs: dict) -> str:
@@ -167,7 +202,7 @@ def register_tool_commands(cli: click.Group) -> None:
 
 
 @click.command("ip", short_help="Look up an IPv4 or IPv6 address (also ASN or country)")
-@click.argument("addr")
+@click.argument("addr", shell_complete=_complete_probe_host)
 def ip_cmd(addr: str) -> None:
     """Look up an IPv4 or IPv6 address. Also accepts ASN or country."""
     try:
@@ -188,7 +223,7 @@ def asn_cmd(asn: str) -> None:
 
 
 @click.command("dns", short_help="Query like dig: [@server] name [type]")
-@click.argument("args", nargs=-1)
+@click.argument("args", nargs=-1, shell_complete=_complete_dns_args)
 @click.option("-p", "--port", type=int, default=None, help="Nameserver port (default 53).")
 @click.option(
     "-t",
@@ -196,6 +231,7 @@ def asn_cmd(asn: str) -> None:
     "rrtype",
     default=None,
     help="RR type (A, AAAA, MX, DS, …). Positional type wins if both are given.",
+    shell_complete=_complete_dns_type,
 )
 @click.option("--server", "server_opt", default=None, help="Nameserver IP (or IP:port).")
 @click.option("--timeout", type=float, default=5.0, show_default=True)
@@ -244,7 +280,7 @@ def dnssec_cmd(domain: str) -> None:
 
 
 @click.command("tls", short_help="Inspect a TLS handshake and certificate")
-@click.argument("host")
+@click.argument("host", shell_complete=_complete_probe_host)
 @click.option("-p", "--port", type=int, default=443, show_default=True)
 @click.option("--sni", default=None, help="Override SNI hostname.")
 def tls_cmd(host: str, port: int, sni: Optional[str]) -> None:
@@ -274,21 +310,21 @@ def register_cmd(name: str, tlds_opt: Optional[str], all_flag: bool) -> None:
 
 
 @click.command("ping", short_help="Ping a host (ICMP, or TCP if ICMP is unavailable)")
-@click.argument("target")
+@click.argument("target", shell_complete=_complete_probe_host)
 def ping_cmd(target: str) -> None:
     """Ping a host (ICMP, or TCP if ICMP is unavailable)."""
     _run("ping", target)
 
 
 @click.command("traceroute", short_help="UDP traceroute")
-@click.argument("target")
+@click.argument("target", shell_complete=_complete_probe_host)
 def traceroute_cmd(target: str) -> None:
     """UDP traceroute to a host."""
     _run("traceroute", target)
 
 
 @click.command("mtr", short_help="MTR-style path report")
-@click.argument("target")
+@click.argument("target", shell_complete=_complete_probe_host)
 @click.option("-c", "--cycles", type=int, default=None)
 def mtr_cmd(target: str, cycles: Optional[int]) -> None:
     """MTR-style path report."""
@@ -296,7 +332,7 @@ def mtr_cmd(target: str, cycles: Optional[int]) -> None:
 
 
 @click.command("tcptraceroute", short_help="TCP traceroute")
-@click.argument("target")
+@click.argument("target", shell_complete=_complete_probe_host)
 @click.option("-p", "--port", type=int, default=443, show_default=True)
 def tcptraceroute_cmd(target: str, port: int) -> None:
     """TCP traceroute to a host (default port 443)."""
@@ -304,21 +340,21 @@ def tcptraceroute_cmd(target: str, port: int) -> None:
 
 
 @click.command("rdap", short_help="RDAP lookup")
-@click.argument("target")
+@click.argument("target", shell_complete=_complete_probe_host)
 def rdap_cmd(target: str) -> None:
     """RDAP lookup for an IP, ASN, or domain."""
     _run("rdap", target)
 
 
 @click.command("reputation", short_help="Domain or IP blocklists")
-@click.argument("target")
+@click.argument("target", shell_complete=_complete_probe_host)
 def reputation_cmd(target: str) -> None:
     """Domain or IP blocklists."""
     _run("reputation", target)
 
 
 @click.command("bgp", short_help="Prefix origin ASN and RPKI ROA status")
-@click.argument("target")
+@click.argument("target", shell_complete=_complete_probe_host)
 def bgp_cmd(target: str) -> None:
     """Prefix origin ASN and RPKI ROA status."""
     _run("bgp", target)
@@ -326,21 +362,28 @@ def bgp_cmd(target: str) -> None:
 
 @click.command("dnstrace")
 @click.argument("name")
-@click.option("-t", "--type", "qtype", default="A", show_default=True)
+@click.option(
+    "-t",
+    "--type",
+    "qtype",
+    default="A",
+    show_default=True,
+    shell_complete=_complete_dns_type,
+)
 def dnstrace_cmd(name: str, qtype: str) -> None:
     """Iterative DNS walk from the root, like dig +trace."""
     _run("dnstrace", name, qtype=qtype)
 
 
 @click.command("http")
-@click.argument("target")
+@click.argument("target", shell_complete=_complete_probe_host)
 def http_cmd(target: str) -> None:
     """Inspect HTTP status chain, redirects, headers, and TTFB."""
     _run("http", target)
 
 
 @click.command("ptr")
-@click.argument("addr")
+@click.argument("addr", shell_complete=_complete_probe_host)
 def ptr_cmd(addr: str) -> None:
     """PTR plus forward-confirmed reverse DNS."""
     _run("ptr", addr)
@@ -354,7 +397,7 @@ def mail_cmd(domain: str) -> None:
 
 
 @click.command("tcp")
-@click.argument("host")
+@click.argument("host", shell_complete=_complete_probe_host)
 @click.option("-p", "--port", type=int, default=443, show_default=True)
 def tcp_cmd(host: str, port: int) -> None:
     """TCP connect check: RTT and an optional banner peek."""
@@ -362,14 +405,14 @@ def tcp_cmd(host: str, port: int) -> None:
 
 
 @click.command("pmtu")
-@click.argument("host")
+@click.argument("host", shell_complete=_complete_probe_host)
 def pmtu_cmd(host: str) -> None:
     """Path MTU discovery with don't-fragment ping probes."""
     _run("pmtu", host)
 
 
 @click.command("whois")
-@click.argument("target")
+@click.argument("target", shell_complete=_complete_probe_host)
 @click.option("--legacy", is_flag=True, help="Use port-43 WHOIS instead of RDAP.")
 def whois_cmd(target: str, legacy: bool) -> None:
     """Registration data. RDAP by default; --legacy for classic WHOIS."""

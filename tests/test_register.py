@@ -308,8 +308,9 @@ class RegisterHttpCliTests(unittest.TestCase):
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertNotIn('"squares"', result.output)
         self.assertIn("com", result.output)
-        self.assertIn("xyz", result.output)
+        self.assertNotIn("xyz", result.output)
         self.assertIn("no_dns", result.output)
+        self.assertIn("--all", result.output)
 
     def test_howto_cli(self):
         self.assertEqual(wall_cli("/register/example"), "looking-glass register example")

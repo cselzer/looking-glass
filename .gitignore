@@ -23,6 +23,7 @@ pip-wheel-metadata/
 *.egg
 *.whl
 *.egg-info/
+looking_glass/_version.py
 
 # Testing / coverage
 .pytest_cache/

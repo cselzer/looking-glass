@@ -136,6 +136,7 @@ class LookupCliTests(unittest.TestCase):
                 "build",
                 "validate",
                 "docs",
+                "complete",
                 "locale",
                 "config",
                 "auth",

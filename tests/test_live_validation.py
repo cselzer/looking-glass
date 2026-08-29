@@ -174,6 +174,96 @@ class LinkLocalTests(unittest.TestCase):
         self.assertEqual(payload["error"], "link-local is not a probe target")
         self.assertNotIn("result", payload)
 
+    def test_http_redirect_to_fe80_is_400(self):
+        hop = {
+            "status": 302,
+            "reason": "Found",
+            "http_version": "HTTP/1.1",
+            "headers": {"Location": "http://[fe80::1]/"},
+            "location": "http://[fe80::1]/",
+            "ttfb_ms": 1.0,
+            "elapsed_ms": 1.0,
+            "hsts": None,
+            "body_len": 0,
+        }
+        dials = []
+
+        def fake_dial(scheme, host, port, *rest):
+            dials.append(host)
+            return type("Conn", (), {"close": lambda self: None})(), None
+
+        def fake_resolve(name, *, port=None, socktype=None):
+            self.assertNotIn("fe80", str(name).lower())
+            return ("93.184.216.34", 2, ("93.184.216.34", 80))
+
+        with (
+            patch(
+                "looking_glass.net.httpinspect.resolve_probe_host",
+                side_effect=fake_resolve,
+            ),
+            patch("looking_glass.net.httpinspect._dial", side_effect=fake_dial),
+            patch("looking_glass.net.httpinspect._read_response", return_value=hop),
+        ):
+            status, payload = _json("/http", "url=http://example.com/")
+        self.assertEqual(dials, ["example.com"])
+        self.assertEqual(status, 400)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"], "link-local is not a probe target")
+        self.assertNotIn("result", payload)
+
+    def test_http_redirect_hostname_a_record_link_local_is_400(self):
+        hop = {
+            "status": 302,
+            "reason": "Found",
+            "http_version": "HTTP/1.1",
+            "headers": {"Location": "http://linklocal.example/"},
+            "location": "http://linklocal.example/",
+            "ttfb_ms": 1.0,
+            "elapsed_ms": 1.0,
+            "hsts": None,
+            "body_len": 0,
+        }
+        dials = []
+
+        def fake_resolve(name, *, port=None, socktype=None):
+            if name == "linklocal.example":
+                return ("169.254.169.254", 2, ("169.254.169.254", 80))
+            return ("93.184.216.34", 2, ("93.184.216.34", 80))
+
+        def fake_dial(scheme, host, port, *rest):
+            dials.append(host)
+            self.assertNotEqual(host, "linklocal.example")
+            return type("Conn", (), {"close": lambda self: None})(), None
+
+        with (
+            patch(
+                "looking_glass.net.httpinspect.resolve_probe_host",
+                side_effect=fake_resolve,
+            ),
+            patch("looking_glass.net.httpinspect._dial", side_effect=fake_dial),
+            patch("looking_glass.net.httpinspect._read_response", return_value=hop),
+        ):
+            status, payload = _json("/http", "url=http://example.com/")
+        self.assertEqual(dials, ["example.com"])
+        self.assertEqual(status, 400)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"], "link-local is not a probe target")
+        self.assertNotIn("result", payload)
+
+    def test_http_path_in_tail_is_200(self):
+        fake = {
+            "ok": True,
+            "result": {"status": 200, "chain": [], "query": "example.com/foo/bar"},
+            "error": None,
+        }
+        with patch("looking_glass.http.site.inspect_http", return_value=fake) as inspect:
+            status, payload = _json("/http/example.com/foo/bar")
+        inspect.assert_called_once()
+        self.assertEqual(inspect.call_args.args[0], "example.com/foo/bar")
+        self.assertEqual(status, 200)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["query"], "example.com/foo/bar")
+
     def test_http_loopback_and_rfc1918_are_not_policy_400(self):
         fake = {"ok": True, "result": {"status": 200, "chain": []}, "error": None}
         for query in ("url=http://127.0.0.1/", "url=http://10.0.0.1/"):

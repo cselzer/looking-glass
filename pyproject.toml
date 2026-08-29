@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "looking-glass"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Self-hosted looking glass: IP/domain intel, DNS, RDAP, path probes, and a request wall"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -38,6 +38,10 @@ dependencies = [
 
 [project.scripts]
 looking-glass = "looking_glass.cli:main"
+
+[tool.setuptools_scm]
+version_file = "looking_glass/_version.py"
+local_scheme = "node-and-hash"
 
 [tool.setuptools.packages.find]
 include = ["looking_glass*"]

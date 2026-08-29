@@ -658,10 +658,18 @@ _RIR_RDAP = (
 _DNS_BOOTSTRAP_URL = "https://data.iana.org/rdap/dns.json"
 _FETCH_TIMEOUT = (3, 8)
 _RETRY_AFTER_MAX = 10.0
-_RDAP_HEADERS = {
-    "User-Agent": "looking-glass/0.1.0",
-    "Accept": "application/rdap+json",
-}
+_RDAP_ACCEPT = "application/rdap+json"
+
+
+def _rdap_headers() -> Dict[str, str]:
+    from looking_glass import package_version
+
+    return {
+        "User-Agent": f"looking-glass/{package_version()}",
+        "Accept": _RDAP_ACCEPT,
+    }
+
+
 _DNS_BOOTSTRAP: Optional[List[Tuple[Tuple[str, ...], Tuple[str, ...]]]] = None
 _DNS_BOOTSTRAP_LOADED = 0.0
 _NO_RDAP_TLD = "no RDAP for this TLD"
@@ -799,7 +807,7 @@ def _rdap_client(origin: str, http2: bool = True) -> Any:
         client = httpx.Client(
             http2=bool(http2),
             follow_redirects=True,
-            headers=dict(_RDAP_HEADERS),
+            headers=_rdap_headers(),
             limits=limits,
         )
         _HTTP_CLIENTS[key] = client
@@ -826,7 +834,7 @@ def _rdap_http_get(url: str, timeout: Any = None, *, http2: bool = True) -> Any:
     return _rdap_client(origin, http2=http2).get(
         url,
         timeout=_httpx_timeout(timeout),
-        headers=dict(_RDAP_HEADERS),
+        headers=_rdap_headers(),
     )
 
 

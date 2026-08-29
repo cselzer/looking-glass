@@ -174,6 +174,25 @@ class HttpKindPlanTests(unittest.TestCase):
         self.assertEqual(value, "example.com")
         self.assertEqual(base["query"], "example.com")
 
+    def test_path_in_tail_stays_on_example(self):
+        err, kind, value, base = _kind_plan(
+            "wsgi",
+            "1.1.1.1",
+            "http/example.com/foo/bar",
+            "http",
+            parse_http_path,
+            "",
+        )
+        self.assertIsNone(err)
+        self.assertEqual(kind, "http")
+        self.assertEqual(value, "example.com/foo/bar")
+        self.assertEqual(base["query"], "example.com/foo/bar")
+        self.assertEqual(
+            _split_target("example.com/foo/bar"),
+            ("https", "example.com", 443, "/foo/bar"),
+        )
+        self.assertEqual(http_envelope_query("example.com/foo/bar"), "example.com/foo/bar")
+
     def test_http_envelope_query_helper(self):
         self.assertEqual(http_envelope_query("https:/example.com"), "https://example.com")
         self.assertEqual(http_envelope_query("example.com"), "example.com")
@@ -496,6 +515,19 @@ class InspectHttpDestPolicyTests(unittest.TestCase):
         self.assertIsNone(out["result"])
         self.assertEqual(out["error"], "link-local is not a probe target")
 
+    def _redirect_hop(self, location: str, status: int = 302) -> dict:
+        return {
+            "status": status,
+            "reason": "Found",
+            "http_version": "HTTP/1.1",
+            "headers": {"Location": location},
+            "location": location,
+            "ttfb_ms": 1.0,
+            "elapsed_ms": 1.0,
+            "hsts": None,
+            "body_len": 0,
+        }
+
     def test_redirect_to_link_local_is_not_fetched(self):
         hop = {
             "status": 302,
@@ -531,9 +563,87 @@ class InspectHttpDestPolicyTests(unittest.TestCase):
             self.assertIsNone(out["result"])
             self.assertEqual(out["error"], "link-local is not a probe target")
 
+    def test_redirect_to_fe80_is_not_fetched(self):
+        dials = []
+
+        def fake_dial(scheme, host, port, *rest):
+            dials.append(host)
+            return _FakeHttpConn(), None
+
+        def fake_resolve(name, *, port=None, socktype=None):
+            self.assertNotIn("fe80", str(name).lower())
+            return ("93.184.216.34", 2, ("93.184.216.34", 80))
+
+        with (
+            patch(
+                "looking_glass.net.httpinspect.resolve_probe_host",
+                side_effect=fake_resolve,
+            ),
+            patch("looking_glass.net.httpinspect._dial", side_effect=fake_dial),
+            patch(
+                "looking_glass.net.httpinspect._read_response",
+                return_value=self._redirect_hop("http://[fe80::1]/"),
+            ),
+        ):
+            out = inspect_http("http://example.com/")
+        self.assertEqual(dials, ["example.com"])
+        self.assertFalse(out["ok"])
+        self.assertIsNone(out["result"])
+        self.assertEqual(out["error"], "link-local is not a probe target")
+
+    def test_redirect_hostname_a_record_link_local_is_not_fetched(self):
+        dials = []
+        resolves = []
+
+        def fake_resolve(name, *, port=None, socktype=None):
+            resolves.append(name)
+            if name == "linklocal.example":
+                return ("169.254.169.254", 2, ("169.254.169.254", 80))
+            return ("93.184.216.34", 2, ("93.184.216.34", 80))
+
+        def fake_dial(scheme, host, port, *rest):
+            dials.append(host)
+            self.assertNotEqual(host, "linklocal.example")
+            self.assertNotEqual(host, "169.254.169.254")
+            return _FakeHttpConn(), None
+
+        with (
+            patch(
+                "looking_glass.net.httpinspect.resolve_probe_host",
+                side_effect=fake_resolve,
+            ),
+            patch("looking_glass.net.httpinspect._dial", side_effect=fake_dial),
+            patch(
+                "looking_glass.net.httpinspect._read_response",
+                return_value=self._redirect_hop("http://linklocal.example/"),
+            ),
+        ):
+            out = inspect_http("http://example.com/")
+        self.assertEqual(dials, ["example.com"])
+        self.assertIn("linklocal.example", resolves)
+        self.assertFalse(out["ok"])
+        self.assertIsNone(out["result"])
+        self.assertEqual(out["error"], "link-local is not a probe target")
+
     def test_loopback_and_rfc1918_hosts_are_allowed(self):
         self.assertEqual(_split_target("http://127.0.0.1/")[1], "127.0.0.1")
         self.assertEqual(_split_target("http://10.0.0.1/")[1], "10.0.0.1")
+
+    def test_path_in_tail_finish_is_200(self):
+        status, body = _finish(
+            {
+                "ok": True,
+                "result": {"status": 200, "chain": [], "query": "example.com/foo/bar"},
+                "error": None,
+            },
+            "http",
+            "example.com/foo/bar",
+            {"protocol": "wsgi", "visitor": "1.1.1.1"},
+        )
+        self.assertEqual(status, 200)
+        self.assertTrue(body["ok"])
+        self.assertEqual(body["query"], "example.com/foo/bar")
+        self.assertNotEqual(body.get("error"), "link-local is not a probe target")
 
 
 class FinishHttpTests(unittest.TestCase):
