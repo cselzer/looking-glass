@@ -667,6 +667,7 @@ _DNS_BOOTSTRAP_LOADED = 0.0
 _NO_RDAP_TLD = "no RDAP for this TLD"
 _RATE_LIMITED = "RDAP rate limited"
 _UPSTREAM_TIMEOUT = "RDAP upstream timeout"
+_UPSTREAM_RESET = "RDAP upstream connection reset"
 # IANA dns.json (2026-07-23) has no "de" service. Live DENIC RDAP was verified.
 _DENIC_OVERRIDE: Tuple[Tuple[Tuple[str, ...], Tuple[str, ...]], ...] = (
     (("de",), ("https://rdap.denic.de/",)),
@@ -674,7 +675,7 @@ _DENIC_OVERRIDE: Tuple[Tuple[Tuple[str, ...], Tuple[str, ...]], ...] = (
 _ORIGIN_LOCKS: Dict[str, threading.Lock] = {}
 _ORIGIN_READY: Dict[str, float] = {}
 _ORIGIN_GUARD = threading.Lock()
-_HTTP_CLIENT: Any = None
+_HTTP_CLIENTS: Dict[Tuple[str, bool], Any] = {}
 
 
 def _rdap_json_body(resp: Any) -> Optional[dict]:
@@ -786,22 +787,43 @@ def _httpx_timeout(timeout: Any) -> Any:
     return httpx.Timeout(read, connect=connect)
 
 
-def _rdap_client() -> Any:
-    global _HTTP_CLIENT
-    if _HTTP_CLIENT is None:
-        import httpx
+def _rdap_client(origin: str, http2: bool = True) -> Any:
+    import httpx
 
-        _HTTP_CLIENT = httpx.Client(
-            http2=True,
+    key = (origin or "", bool(http2))
+    with _ORIGIN_GUARD:
+        client = _HTTP_CLIENTS.get(key)
+        if client is not None:
+            return client
+        limits = httpx.Limits(max_connections=1, max_keepalive_connections=1)
+        client = httpx.Client(
+            http2=bool(http2),
             follow_redirects=True,
             headers=dict(_RDAP_HEADERS),
+            limits=limits,
         )
-    return _HTTP_CLIENT
+        _HTTP_CLIENTS[key] = client
+        return client
 
 
-def _rdap_http_get(url: str, timeout: Any = None) -> Any:
+def _drop_rdap_client(origin: str, http2: bool = True) -> None:
+    key = (origin or "", bool(http2))
+    with _ORIGIN_GUARD:
+        client = _HTTP_CLIENTS.pop(key, None)
+    if client is None:
+        return
+    closer = getattr(client, "close", None)
+    if callable(closer):
+        try:
+            closer()
+        except Exception:
+            pass
+
+
+def _rdap_http_get(url: str, timeout: Any = None, *, http2: bool = True) -> Any:
     """GET one RDAP URL. Tests patch this, not the HTTP library."""
-    return _rdap_client().get(
+    origin = _rdap_origin(url)
+    return _rdap_client(origin, http2=http2).get(
         url,
         timeout=_httpx_timeout(timeout),
         headers=dict(_RDAP_HEADERS),
@@ -838,6 +860,31 @@ def _parse_retry_after(resp: Any) -> Optional[float]:
     return max(0.0, (when - datetime.now(timezone.utc)).total_seconds())
 
 
+def _is_h2_reset_exc(exc: BaseException) -> bool:
+    name = type(exc).__name__
+    text = str(exc) or ""
+    combined = f"{name} {text}"
+    if "ConnectionTerminated" in combined or "GOAWAY" in combined.upper():
+        return True
+    if "remoteprotocolerror" in name.lower():
+        return True
+    try:
+        import httpx
+
+        if isinstance(exc, httpx.RemoteProtocolError):
+            return True
+    except Exception:
+        pass
+    try:
+        from h2.exceptions import ProtocolError as H2ProtocolError
+
+        if isinstance(exc, H2ProtocolError):
+            return True
+    except Exception:
+        pass
+    return False
+
+
 def _is_timeout_exc(exc: BaseException) -> bool:
     name = type(exc).__name__.lower()
     if "timeout" in name:
@@ -856,6 +903,8 @@ def _is_timeout_exc(exc: BaseException) -> bool:
 def _short_exc(exc: BaseException) -> str:
     if _is_timeout_exc(exc):
         return _UPSTREAM_TIMEOUT
+    if _is_h2_reset_exc(exc):
+        return _UPSTREAM_RESET
     text = str(exc) or type(exc).__name__
     if any(
         marker in text
@@ -1086,15 +1135,22 @@ def _fetch_rdap_result(
         origin = _rdap_origin(url)
         retried_timeout = False
         retried_429 = False
+        retried_h2 = False
+        use_http2 = True
         with _origin_gate(origin):
             while True:
                 try:
-                    resp = _rdap_http_get(url, timeout=wait)
+                    resp = _rdap_http_get(url, timeout=wait, http2=use_http2)
                 except Exception as exc:
                     last_url = url
                     last_status = None
                     if _is_timeout_exc(exc) and not retried_timeout:
                         retried_timeout = True
+                        continue
+                    if _is_h2_reset_exc(exc) and not retried_h2:
+                        retried_h2 = True
+                        use_http2 = False
+                        _drop_rdap_client(origin, http2=True)
                         continue
                     last_error = _short_exc(exc)
                     break
@@ -1159,6 +1215,17 @@ def _fetch_rdap_result(
                 out["data"] = cached
                 out["error"] = None
             return out
+        if last_error == _UPSTREAM_RESET:
+            return {
+                "data": None,
+                "not_found": False,
+                "no_service": False,
+                "url": last_url,
+                "http_status": None,
+                "error": _UPSTREAM_RESET,
+                "kind": kind,
+                "lookup": lookup,
+            }
         if last_status == 429:
             result = {
                 "data": None,
@@ -1283,6 +1350,9 @@ def lookup_rdap(target: str, *, force: bool = False) -> Dict[str, Any]:
     elif fetched.get("error") == _UPSTREAM_TIMEOUT:
         out["error"] = _UPSTREAM_TIMEOUT
         out["status"] = 504
+    elif fetched.get("error") == _UPSTREAM_RESET:
+        out["error"] = _UPSTREAM_RESET
+        out["status"] = 502
     elif fetched.get("error") == _RATE_LIMITED or fetched.get("http_status") == 429:
         out["error"] = _RATE_LIMITED
         out["status"] = 429

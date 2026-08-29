@@ -19,6 +19,7 @@ _IANA_FIXTURE = [
     [["fr"], ["https://rdap.nic.fr/"]],
     [["ar"], ["https://rdap.nic.ar/"]],
     [["shop"], ["https://rdap.gmoregistry.net/rdap/"]],
+    [["id"], ["https://rdap.pandi.id/rdap/"]],
 ]
 _IANA_COM_ONLY = [
     [["com", "net"], ["https://rdap.verisign.com/com/v1/"]],
@@ -30,6 +31,14 @@ def _reset_bootstrap() -> None:
     rdap._DNS_BOOTSTRAP_LOADED = 0.0
     rdap._ORIGIN_LOCKS.clear()
     rdap._ORIGIN_READY.clear()
+    for client in list(rdap._HTTP_CLIENTS.values()):
+        closer = getattr(client, "close", None)
+        if callable(closer):
+            try:
+                closer()
+            except Exception:
+                pass
+    rdap._HTTP_CLIENTS.clear()
 
 
 def _write_iana(tmp: str, services) -> None:
@@ -390,12 +399,14 @@ class RdapCacheTests(unittest.TestCase):
                 ar = rdap.domain_rdap_urls("google.com.ar")
                 shop = rdap.domain_rdap_urls("google.shop")
                 io = rdap.domain_rdap_urls("github.io")
+                idn = rdap.domain_rdap_urls("google.co.id")
         self.assertEqual(uk, ["https://rdap.nominet.uk/uk/domain/bbc.co.uk"])
         self.assertEqual(tw, ["https://ccrdap.twnic.tw/tw/domain/google.com.tw"])
         self.assertEqual(fr, ["https://rdap.nic.fr/domain/google.fr"])
         self.assertEqual(ar, ["https://rdap.nic.ar/domain/google.com.ar"])
         self.assertEqual(shop, ["https://rdap.gmoregistry.net/rdap/domain/google.shop"])
         self.assertEqual(io, [])
+        self.assertEqual(idn, ["https://rdap.pandi.id/rdap/domain/google.co.id"])
 
     def test_io_in_fixture_is_used(self):
         hit = _json_resp({"ldhName": "github.io"})
@@ -769,7 +780,7 @@ class RdapCacheTests(unittest.TestCase):
 
         order = []
 
-        def slow_get(url, timeout=None):
+        def slow_get(url, timeout=None, *, http2=True):
             order.append("start")
             time.sleep(0.04)
             order.append("end")
@@ -842,3 +853,83 @@ class RdapCacheTests(unittest.TestCase):
         payload = json.loads(body)
         self.assertEqual(payload["error"], "RDAP upgrade required")
         self.assertEqual(payload["http_status"], 426)
+
+    def test_pandi_h2_reset_retries_http11(self):
+        class ConnectionTerminated(Exception):
+            def __str__(self):
+                return (
+                    "<ConnectionTerminated error_code:0, last_stream_id:1, "
+                    "additional_data:None>"
+                )
+
+        hit = _json_resp({"ldhName": "GOOGLE.CO.ID", "handle": "GOOGLE.CO.ID"})
+
+        def fake_get(url, timeout=None, *, http2=True):
+            if http2:
+                raise ConnectionTerminated()
+            return hit
+
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("looking_glass.intel.rdap._rdap_http_get", side_effect=fake_get) as get:
+                    payload = rdap.lookup_rdap("google.co.id")
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["result"]["query"], "google.co.id")
+        self.assertEqual(get.call_count, 2)
+        self.assertTrue(get.call_args_list[0][1].get("http2", True))
+        self.assertFalse(get.call_args_list[1][1].get("http2", True))
+        dumped = json.dumps(payload)
+        self.assertNotIn("ConnectionTerminated", dumped)
+        self.assertNotIn("last_stream_id", dumped)
+
+    def test_pandi_h2_reset_both_fail_is_502(self):
+        class ConnectionTerminated(Exception):
+            def __str__(self):
+                return (
+                    "<ConnectionTerminated error_code:0, last_stream_id:1, "
+                    "additional_data:None>"
+                )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch(
+                    "looking_glass.intel.rdap._rdap_http_get",
+                    side_effect=ConnectionTerminated(),
+                ) as get:
+                    payload = rdap.lookup_rdap("google.co.id")
+        self.assertEqual(get.call_count, 2)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["status"], 502)
+        self.assertEqual(payload["error"], "RDAP upstream connection reset")
+        self.assertIn("rdap.pandi.id", payload.get("url") or "")
+        dumped = json.dumps(payload)
+        self.assertNotIn("ConnectionTerminated", dumped)
+        self.assertNotIn("last_stream_id", dumped)
+        self.assertNotIn("rdap lookup failed", payload["error"])
+
+    def test_pandi_origin_serializes(self):
+        import threading
+
+        order = []
+
+        def slow_get(url, timeout=None, *, http2=True):
+            order.append("start")
+            time.sleep(0.04)
+            order.append("end")
+            return _json_resp({"ldhName": "x.co.id"})
+
+        with tempfile.TemporaryDirectory() as tmp:
+            _write_iana(tmp, _IANA_FIXTURE)
+            with _tmp_cache(tmp)[0], _tmp_cache(tmp)[1], _tmp_cache(tmp)[2]:
+                with patch("looking_glass.intel.rdap._rdap_http_get", side_effect=slow_get):
+                    threads = [
+                        threading.Thread(target=rdap.lookup_rdap, args=("one.co.id",)),
+                        threading.Thread(target=rdap.lookup_rdap, args=("two.co.id",)),
+                    ]
+                    for thread in threads:
+                        thread.start()
+                    for thread in threads:
+                        thread.join(timeout=5)
+        self.assertEqual(order, ["start", "end", "start", "end"])
