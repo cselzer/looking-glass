@@ -3,9 +3,7 @@
   <span class="status-start" id="status-start">
     {% if user %}
     <span id="status-auth-user">
-      <span id="status-serve">{{ t("status.serve.down") }}</span>
-      <span class="status-sep" aria-hidden="true">·</span>
-      <span id="status-https">{{ t("status.https.down") }}</span>
+      <button type="button" id="status-services">{{ t("status.services") }}</button>
       <span class="status-sep" aria-hidden="true">·</span>
       <button type="button" id="status-logs">{{ t("status.logs") }}</button>
       <span class="status-sep" aria-hidden="true">·</span>

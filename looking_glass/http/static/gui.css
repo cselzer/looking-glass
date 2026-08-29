@@ -209,6 +209,8 @@
       padding: 0;
     }
     .status-start button:hover, .status-end button:hover { color: var(--fg); }
+    .status-start button.is-down { color: var(--bad); }
+    .status-start button.is-warn { color: var(--warn); }
     .status-start [hidden], .status-end [hidden] { display: none !important; }
     .status-wins {
       position: absolute;
@@ -572,6 +574,55 @@
       width: min(96vw, 110rem);
       height: min(85vh, 56rem);
       max-height: none;
+    }
+    .asn-pop.services-pop {
+      width: min(96vw, 52rem);
+      height: min(80vh, 34rem);
+      max-height: none;
+    }
+    .services-host {
+      margin: 0 0 0.75rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      align-items: start;
+    }
+    @media (max-width: 640px) {
+      .services-grid { grid-template-columns: 1fr; }
+    }
+    .services-card {
+      margin: 0;
+      padding: 0.55rem 0.75rem 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      min-width: 0;
+    }
+    .services-card legend {
+      padding: 0 0.3rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .services-card legend .ok { color: var(--ok); }
+    .services-card legend .bad { color: var(--bad); }
+    .services-card legend .warn { color: var(--warn); }
+    .services-kv {
+      display: grid;
+      grid-template-columns: 8.5rem minmax(0, 1fr);
+      gap: 0.2rem 0.75rem;
+      margin: 0;
+      font-size: 0.82rem;
+    }
+    .services-kv dt { color: var(--muted); }
+    .services-kv dd {
+      margin: 0;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
     .config-form {
       display: grid;

@@ -42,6 +42,8 @@ _SKIP_FIELDS = frozenset(
         "send",
         "skipped",
         "glossary",
+        "flag_url",
+        "flag_html",
     }
 )
 
@@ -112,6 +114,7 @@ def emit(payload: Any, *, kind: Optional[str] = None, jsonl: bool = False) -> No
         "path": _render_path,
         "bench": _render_kv,
         "error": _render_error,
+        "boot": _render_boot,
     }.get(view)
     if renderer is None:
         _render_pretty(payload)
@@ -181,8 +184,19 @@ def _guess_kind(payload: Any) -> str:
         "rdap",
         "mail",
         "register",
+        "dnssec",
+        "whois",
+        "apex",
+        "bgp",
+        "ptr",
+        "tcp",
+        "pmtu",
+        "reputation",
+        "dnstrace",
     }:
         return "lookup"
+    if payload.get("linger") is not None and payload.get("intel") is not None:
+        return "boot"
     if "path" in payload and set(payload) <= {"ok", "path", "provider"}:
         return "path"
     if "key" in payload and "value" in payload:
@@ -219,7 +233,7 @@ def _render_path(payload: Any) -> None:
         return
     dest = payload.get("path") or ""
     extra = payload.get("provider")
-    text = str(dest)
+    text = f"wrote {dest}" if dest else "wrote"
     if extra:
         text += f" ({extra})"
     _console().print(text)
@@ -256,6 +270,20 @@ def _value_text(key: str, value: Any) -> Text:
     return Text(cell, style=style) if style else Text(cell)
 
 
+def _print_rows(con: Console, rows: Sequence[Tuple[str, Any]], title: str = "") -> None:
+    if title:
+        con.print(Text(title, style="dim"))
+    for key, value in rows:
+        if value in (None, "", [], {}):
+            continue
+        line = Text()
+        line.append(str(key), style="dim cyan")
+        line.append("  ")
+        cell = _value_text(key, value)
+        line.append(cell.plain, style=cell.style)
+        con.print(line)
+
+
 def _kv_table(title: str, rows: Sequence[Tuple[str, Any]]) -> Table:
     table = Table(title=title or None, show_header=False, box=None, pad_edge=False)
     table.add_column("k", style="dim cyan", no_wrap=True)
@@ -275,11 +303,15 @@ def _cell(value: Any) -> str:
     if isinstance(value, (list, tuple)):
         if not value:
             return "—"
-        if len(value) > 8:
-            return ", ".join(_cell(v) for v in value[:8]) + f" … +{len(value) - 8}"
-        return ", ".join(_cell(v) for v in value)
+        if all(not isinstance(v, (dict, list)) for v in value):
+            if len(value) > 8:
+                return ", ".join(_cell(v) for v in value[:8]) + f" … +{len(value) - 8}"
+            return ", ".join(_cell(v) for v in value)
+        return f"{len(value)} items; --json"
     if isinstance(value, dict):
-        return f"{{{len(value)} keys}}"
+        if _small_value(value):
+            return " ".join(f"{k}={_cell(v)}" for k, v in value.items())
+        return f"{len(value)} keys; --json"
     text = str(value)
     if len(text) > 120:
         return text[:117] + "…"
@@ -393,6 +425,10 @@ def _render_serve(payload: Any) -> None:
     if isinstance(intel, dict) and isinstance(https, dict):
         con.print(_serve_line("intel", intel))
         _print_serve_error(intel)
+        if not https.get("running"):
+            con.print(Text("https  stopped", style="dim"))
+            _print_serve_error(https)
+            return
         con.print(_serve_line("https", https))
         _print_serve_error(https)
         _print_serve_paths(https)
@@ -400,7 +436,9 @@ def _render_serve(payload: Any) -> None:
     name = _daemon_name(payload)
     con.print(_serve_line(name, payload))
     _print_serve_error(payload)
-    if name == "https":
+    if name == "https" and (
+        payload.get("running") or payload.get("issued") or str(payload.get("state") or "") == "issued"
+    ):
         _print_serve_paths(payload)
 
 
@@ -427,50 +465,170 @@ def _render_pretty(payload: Any) -> None:
     )
 
 
+def _boot_unit_line(name: str, blob: Any) -> str:
+    if not isinstance(blob, dict):
+        return f"{name}  no unit"
+    if not blob.get("present"):
+        return f"{name}  no unit"
+    state = blob.get("active_state") or blob.get("enabled_state") or ""
+    if blob.get("enabled"):
+        return f"{name}  enabled  {state}".rstrip()
+    return f"{name}  installed  {state}".rstrip()
+
+
+def _render_boot(payload: Any) -> None:
+    if not isinstance(payload, dict):
+        _render_pretty(payload)
+        return
+    con = _console()
+    linger = payload.get("linger") if isinstance(payload.get("linger"), dict) else {}
+    if linger.get("enabled"):
+        linger_line = "linger  on"
+    else:
+        err = str(linger.get("error") or "")
+        extra = "loginctl not found" if "not found" in err.lower() or not err else err
+        linger_line = f"linger  off  {extra}".rstrip()
+    con.print(Text(linger_line))
+    con.print(Text(_boot_unit_line("intel", payload.get("intel"))))
+    con.print(Text(_boot_unit_line("https", payload.get("https"))))
+
+
 def _result_blob(payload: Dict[str, Any]) -> Dict[str, Any]:
     result = payload.get("result")
     return result if isinstance(result, dict) else {}
 
 
-def _render_register_board(con: Console, result: Dict[str, Any]) -> None:
+def _render_register_board(con: Console, result: Dict[str, Any], *, board: bool) -> None:
     label = result.get("label") or ""
-    con.print(
-        _kv_table(
-            "result",
-            [
-                ("label", label),
-                ("tlds", result.get("tlds")),
-                ("no_dns", result.get("no_dns")),
-                ("has_ns", result.get("has_ns")),
-                ("unknown", result.get("unknown")),
-            ],
-        )
+    squares = result.get("squares") if isinstance(result.get("squares"), list) else []
+    has_names = [
+        str(item.get("tld") or "")
+        for item in squares
+        if isinstance(item, dict) and item.get("status") == "has-ns" and item.get("tld")
+    ]
+    shown = has_names[:8]
+    ns_text = ", ".join(shown) if shown else "—"
+    extra = len(has_names) - len(shown)
+    if extra > 0:
+        ns_text += f"  {extra} more; --json"
+    _print_rows(
+        con,
+        [
+            ("label", label),
+            ("tlds", result.get("tlds")),
+            ("no_dns", result.get("no_dns")),
+            ("has_ns", result.get("has_ns")),
+            ("unknown", result.get("unknown")),
+            ("has_ns names", ns_text if has_names else None),
+        ],
     )
-    squares = result.get("squares") or []
-    if not isinstance(squares, list) or not squares:
+    if not board:
+        if squares:
+            con.print(Text(f"{len(squares)} tlds; --json or --all", style="dim"))
         return
+    if not squares:
+        return
+    con.print(Text("legend  green=no-dns red=has-ns yellow=unknown", style="dim"))
+    styles = {"no-dns": "bold green", "has-ns": "red", "unknown": "yellow"}
     width = 80
     try:
         width = max(40, int(con.size.width or 80))
     except Exception:
         pass
-    col = 8
-    per = max(1, width // col)
-    styles = {"no-dns": "bold green", "has-ns": "red", "unknown": "yellow"}
     row = Text()
-    count = 0
+    used = 0
     for item in squares:
         if not isinstance(item, dict):
             continue
-        tld = str(item.get("tld") or "")[: col - 1]
-        cell = f"{tld:<{col}}"
-        row.append(cell, style=styles.get(str(item.get("status") or ""), "dim"))
-        count += 1
-        if count % per == 0:
+        tld = str(item.get("tld") or "")
+        if not tld:
+            continue
+        piece = tld + " "
+        if used and used + len(piece) > width:
             con.print(row)
             row = Text()
+            used = 0
+        row.append(piece, style=styles.get(str(item.get("status") or ""), "dim"))
+        used += len(piece)
     if row.plain:
         con.print(row)
+
+
+def _want_register_board() -> bool:
+    try:
+        ctx = click.get_current_context(silent=True)
+    except RuntimeError:
+        ctx = None
+    if ctx is None:
+        return False
+    return bool(ctx.params.get("all_flag"))
+
+
+def _via_short(value: Any) -> str:
+    text = str(value or "").strip()
+    if text.startswith("python-"):
+        return text.split("-", 1)[-1]
+    return text or "tcp"
+
+
+def _render_ping(con: Console, payload: Dict[str, Any], result: Dict[str, Any]) -> None:
+    target = result.get("target") or payload.get("query") or ""
+    ip = result.get("ip") or target
+    tx = result.get("transmitted")
+    rx = result.get("received")
+    loss = result.get("loss_percent")
+    via = _via_short(result.get("via") or payload.get("via"))
+    stats = ""
+    if result.get("min_ms") is not None:
+        stats = f"  min/avg/max {result.get('min_ms')}/{result.get('avg_ms')}/{result.get('max_ms')} ms"
+    loss_s = f"{loss}%" if loss is not None else ""
+    counts = f"{rx}/{tx}" if tx is not None else ""
+    con.print(Text(f"PING {target} ({ip})  {counts}  {loss_s}{stats}  via {via}"))
+    for row in result.get("probes") or []:
+        if not isinstance(row, dict):
+            continue
+        seq = row.get("seq")
+        rtt = row.get("rtt_ms")
+        rtt_s = f"{rtt} ms" if rtt is not None else (row.get("error") or "timeout")
+        con.print(Text(f"seq {seq}  {rtt_s}"))
+
+
+def _ip_line(result: Dict[str, Any], payload: Dict[str, Any]) -> Optional[str]:
+    ip = result.get("ip") or payload.get("ip") or payload.get("query")
+    if not ip:
+        return None
+    country = result.get("country") or ""
+    name = result.get("country_name") or ""
+    source = result.get("source") or ""
+    flag = result.get("flag") or ""
+    if not flag and country:
+        try:
+            from ..intel.flags import country_to_flag
+
+            flag = country_to_flag(country)
+        except Exception:
+            flag = ""
+    parts = [str(ip)]
+    if country:
+        parts.append(str(country))
+    if name:
+        parts.append(str(name))
+    if source:
+        parts.append(str(source))
+    if flag:
+        parts.append(str(flag))
+    return "  ".join(parts)
+
+
+def _dnssec_failed(result: Dict[str, Any]) -> bool:
+    status = str(result.get("status") or "").lower()
+    if status in {"bogus", "insecure", "indeterminate"}:
+        return True
+    if result.get("secure") is False:
+        return True
+    if result.get("broken") is True:
+        return True
+    return False
 
 
 def _render_lookup(payload: Any) -> None:
@@ -478,24 +636,24 @@ def _render_lookup(payload: Any) -> None:
         _render_pretty(payload)
         return
     con = _console()
-    if payload.get("ok") is False:
+    result = _result_blob(payload)
+    kind = str(payload.get("kind") or result.get("kind") or "")
+    if payload.get("ok") is False and not (kind == "ping" and result.get("probes")):
         _render_error(payload)
         return
-    header: List[Tuple[str, Any]] = []
-    for key in _HEADER_KEYS:
-        if key in payload and payload[key] not in (None, ""):
-            header.append((key, payload[key]))
-    if payload.get("total_ms") is not None:
-        header.append(("ms", payload["total_ms"]))
-    intel = payload.get("intel")
-    if isinstance(intel, dict) and intel.get("running") is False:
-        header.append(("intel", intel.get("message") or "not running"))
-    if header:
-        con.print(_kv_table("", header))
-    result = _result_blob(payload)
-    if payload.get("kind") == "register" or result.get("squares") is not None:
-        _render_register_board(con, result)
+    if kind == "ping" or result.get("probes"):
+        _render_ping(con, payload, result or payload)
         return
+    if kind == "register" or result.get("squares") is not None:
+        _render_register_board(con, result, board=_want_register_board())
+        return
+    if kind in {"ip", "country"} or (
+        result.get("ip") and result.get("country") and "hops" not in result
+    ):
+        line = _ip_line(result, payload)
+        if line and kind in {"ip", "country", ""} and not result.get("subject") and not result.get("mx"):
+            con.print(Text(line))
+            return
     hops = result.get("hops") or payload.get("hops")
     answers = result.get("answers") or result.get("records") or payload.get("answers")
     if isinstance(hops, list) and hops:
@@ -504,56 +662,117 @@ def _render_lookup(payload: Any) -> None:
     if isinstance(answers, list) and answers:
         con.print(_answer_table(answers))
         return
-    fields = _lookup_fields(result or payload)
+    if kind == "dnssec" and _dnssec_failed(result):
+        status = result.get("status") or "bogus"
+        con.print(Text(f"dnssec  {payload.get('query') or ''}  {status}", style="red"))
+    fields = _lookup_fields(result or payload, kind=kind)
     if fields:
-        con.print(_kv_table("result", fields))
+        _print_rows(con, fields)
     rbl = payload.get("rbl")
     if isinstance(rbl, dict):
-        con.print(
-            _kv_table(
-                "rbl",
-                [
-                    ("status", rbl.get("status")),
-                    ("listed", rbl.get("listed")),
-                    ("listed_on", rbl.get("listed_on")),
-                    ("error", rbl.get("error")),
-                ],
-            )
+        _print_rows(
+            con,
+            [
+                ("status", rbl.get("status")),
+                ("listed", rbl.get("listed")),
+                ("listed_on", rbl.get("listed_on")),
+                ("error", rbl.get("error")),
+            ],
+            title="rbl",
         )
 
 
-def _lookup_fields(result: Dict[str, Any]) -> List[Tuple[str, Any]]:
-    prefer = (
-        "ip",
-        "prefix",
-        "asn",
-        "org_name",
-        "country",
-        "country_name",
-        "status",
-        "peer",
-        "rtt_ms",
-        "subject",
-        "issuer",
-        "not_after",
-        "san",
-        "verified",
-        "count",
-        "ipv4",
-        "ipv6",
-        "mx",
-        "spf",
-        "dmarc",
-        "banner",
-        "alpn",
-        "version",
-        "cipher",
-        "ptr",
-        "mtu",
-        "name",
-        "qtype",
-        "rcode",
-    )
+def _lookup_fields(result: Dict[str, Any], kind: str = "") -> List[Tuple[str, Any]]:
+    if kind in {"rdap", "whois"}:
+        prefer = (
+            "handle",
+            "name",
+            "cidr",
+            "status",
+            "contacts",
+            "country",
+            "country_name",
+            "port43",
+            "startAddress",
+            "endAddress",
+            "type",
+        )
+        cap = 12
+    elif kind == "dnssec":
+        prefer = (
+            "status",
+            "secure",
+            "broken",
+            "bogus",
+            "qname",
+            "algorithm",
+            "ds",
+            "dnskey",
+        )
+        cap = 12
+    elif kind in {"tls", "tcp"}:
+        prefer = (
+            "peer",
+            "port",
+            "sni",
+            "version",
+            "cipher",
+            "alpn",
+            "subject",
+            "issuer",
+            "not_before",
+            "not_after",
+            "san",
+            "verified",
+            "issue",
+            "rtt_ms",
+        )
+        cap = 16
+    elif kind == "mail":
+        prefer = (
+            "mx",
+            "spf",
+            "dmarc",
+            "dkim",
+            "banner",
+            "starttls",
+            "ipv4",
+            "ipv6",
+        )
+        cap = 16
+    else:
+        prefer = (
+            "ip",
+            "prefix",
+            "asn",
+            "org_name",
+            "country",
+            "country_name",
+            "status",
+            "peer",
+            "rtt_ms",
+            "subject",
+            "issuer",
+            "not_after",
+            "san",
+            "verified",
+            "count",
+            "ipv4",
+            "ipv6",
+            "mx",
+            "spf",
+            "dmarc",
+            "banner",
+            "alpn",
+            "version",
+            "cipher",
+            "ptr",
+            "mtu",
+            "name",
+            "qtype",
+            "rcode",
+        )
+        cap = 18
     rows: List[Tuple[str, Any]] = []
     seen = set()
     for key in prefer:
@@ -562,14 +781,14 @@ def _lookup_fields(result: Dict[str, Any]) -> List[Tuple[str, Any]]:
             seen.add(key)
     extra = 0
     for key, value in result.items():
-        if key in seen or key in _SKIP_FIELDS or key in {"ok", "error", "hops", "answers"}:
+        if key in seen or key in _SKIP_FIELDS or key in {"ok", "error", "hops", "answers", "probes"}:
             continue
         if isinstance(value, (dict, list)) and not _small_value(value):
             extra += 1
             continue
         rows.append((key, _short_field(key, value)))
-        if len(rows) >= 18:
-            extra += max(0, len(result) - len(seen) - extra)
+        if len(rows) >= cap:
+            extra += 1
             break
     if extra:
         rows.append(("…", f"{extra} more fields; pass --json"))
@@ -737,13 +956,45 @@ def _render_wall_reset(payload: Any) -> None:
         _console().print(Text(str(path), style="dim"))
 
 
+def _compact_map(value: Dict[str, Any]) -> str:
+    return " ".join(f"{k}={_cell(v)}" for k, v in value.items())
+
+
+def _headers_line(value: Dict[str, Any]) -> str:
+    if value and all(v is True for v in value.values()):
+        return "all true"
+    if value and all(isinstance(v, bool) for v in value.values()):
+        on = [k for k, v in value.items() if v]
+        return ",".join(on) if on else "all false"
+    return _compact_map(value)
+
+
 def _render_config(payload: Any) -> None:
     if not isinstance(payload, dict):
         _render_pretty(payload)
         return
+    con = _console()
     skip = {"ok"}
-    data = {k: v for k, v in payload.items() if k not in skip}
-    _console().print(_kv_table("", _flatten(data)))
+    rows: List[Tuple[str, Any]] = []
+    for key, value in payload.items():
+        if key in skip:
+            continue
+        if key == "wall" and isinstance(value, dict):
+            headers = value.get("headers") if isinstance(value.get("headers"), dict) else None
+            rest = {k: v for k, v in value.items() if k != "headers"}
+            if rest:
+                rows.append(("wall", _compact_map(rest) if _small_value(rest) else rest))
+            if headers:
+                rows.append(("wall.headers", _headers_line(headers)))
+            continue
+        if isinstance(value, dict) and value:
+            if all(not isinstance(v, (dict, list)) for v in value.values()):
+                rows.append((key, _compact_map(value)))
+            else:
+                rows.append((key, f"config get {key}.*"))
+            continue
+        rows.append((key, value))
+    _print_rows(con, rows)
 
 
 def _render_cache(payload: Any) -> None:
@@ -819,37 +1070,32 @@ def _render_auth(payload: Any) -> None:
     con.print("password is not set (login disabled)")
 
 
+def _truncate(text: Any, limit: int = 36) -> str:
+    raw = str(text or "")
+    if len(raw) <= limit:
+        return raw
+    return raw[: limit - 1] + "…"
+
+
 def _render_validate(payload: Any) -> None:
     if not isinstance(payload, dict):
         _render_pretty(payload)
         return
     con = _console()
-    con.print(
-        _kv_table(
-            "",
-            [
-                ("ok", payload.get("ok")),
-                ("failed", payload.get("failed")),
-                ("warned", payload.get("warned")),
-                ("elapsed", payload.get("elapsed")),
-                ("data", payload.get("data")),
-            ],
-        )
-    )
-    checks = payload.get("checks") or []
-    table = Table(show_header=True, box=None, pad_edge=False)
-    table.add_column("status")
-    table.add_column("check", overflow="ellipsis")
-    table.add_column("detail", overflow="ellipsis")
-    for row in checks:
+    failed = payload.get("failed")
+    warned = payload.get("warned")
+    head = f"validate  failed {failed}  warned {warned}"
+    style = "green" if payload.get("ok") else "red"
+    con.print(Text(head, style=style))
+    for row in payload.get("checks") or []:
         if not isinstance(row, dict):
             continue
-        table.add_row(
-            str(row.get("status") or ""),
-            str(row.get("check") or row.get("id") or ""),
-            _cell(row.get("detail") or row.get("message") or ""),
-        )
-    con.print(table)
+        status = str(row.get("status") or "")
+        mark = {"ok": "ok", "failed": "FAIL", "warn": "WARN", "warning": "WARN"}.get(status, status.upper() or "?")
+        name = str(row.get("check") or row.get("id") or "")
+        detail = _truncate(row.get("detail") or row.get("message") or "", 40)
+        color = "green" if status == "ok" else ("yellow" if "warn" in status else "red")
+        con.print(Text(f"{name}  {mark}  {detail}".rstrip(), style=color))
 
 
 def _render_build(payload: Any) -> None:
@@ -923,7 +1169,11 @@ def _render_logs_stats(payload: Any) -> None:
     con = _console()
     day_a, day_b, day_h, day_e = _series_span(payload.get("day"))
     week_a, week_b, week_h, week_e = _series_span(payload.get("week"))
-    con.print(_kv_table("", [("step", payload.get("step"))]))
+    if not day_a and not week_a:
+        step = payload.get("step")
+        con.print(Text(f"logs stats: empty (step {step}s)" if step is not None else "logs stats: empty"))
+        return
+    _print_rows(con, [("step", payload.get("step"))])
     table = Table(show_header=True, box=None, pad_edge=False)
     table.add_column("window")
     table.add_column("hits", justify="right")

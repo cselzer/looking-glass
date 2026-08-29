@@ -3,12 +3,12 @@
   "source": "en",
   "messages": {
     "cli.apex.help": {
-      "text": "Zone and mail health (same as GET /apex/<domain>).",
-      "en": "Zone and mail health (same as GET /apex/<domain>)."
+      "text": "Zone and mail health for a domain.",
+      "en": "Zone and mail health for a domain."
     },
     "cli.asn.help": {
-      "text": "Look up an autonomous system (same as GET /AS<number>).",
-      "en": "Look up an autonomous system (same as GET /AS<number>)."
+      "text": "Look up an autonomous system by number (AS13335 or 13335).",
+      "en": "Look up an autonomous system by number (AS13335 or 13335)."
     },
     "cli.auth.help": {
       "text": "Manage the GUI password, API keys, and file sessions.\n\nAn unset password disables login (it does not open admin). API keys\nwork independently and grant the same admin rights as a password session.\n\n\b\nlooking-glass auth password set\nlooking-glass auth keys create tokyo\nlooking-glass auth sessions clear",
@@ -51,8 +51,8 @@
       "en": "File sessions under ~/.looking-glass/data/sessions."
     },
     "cli.bgp.help": {
-      "text": "Prefix origin ASN and RPKI ROA status (same as GET /bgp/<ip>).",
-      "en": "Prefix origin ASN and RPKI ROA status (same as GET /bgp/<ip>)."
+      "text": "Prefix origin ASN and RPKI ROA status.",
+      "en": "Prefix origin ASN and RPKI ROA status."
     },
     "cli.boot.check.help": {
       "text": "Show linger and whether the looking-glass user units are installed.",
@@ -171,8 +171,8 @@
       "en": "Nameserver IP (or IP:port)."
     },
     "cli.dnssec.help": {
-      "text": "Walk the DNSSEC chain of trust (same as GET /dnssec/<domain>).",
-      "en": "Walk the DNSSEC chain of trust (same as GET /dnssec/<domain>)."
+      "text": "Walk the DNSSEC chain of trust for a domain.",
+      "en": "Walk the DNSSEC chain of trust for a domain."
     },
     "cli.dnstrace.help": {
       "text": "Iterative DNS walk from the root, like dig +trace.",
@@ -235,8 +235,8 @@
       "en": "Seconds to wait for shutdown."
     },
     "cli.ip.help": {
-      "text": "Look up an IPv4 or IPv6 address (same as GET /<ip>). Also accepts ASN or country.",
-      "en": "Look up an IPv4 or IPv6 address (same as GET /<ip>). Also accepts ASN or country."
+      "text": "Look up an IPv4 or IPv6 address. Also accepts ASN or country.",
+      "en": "Look up an IPv4 or IPv6 address. Also accepts ASN or country."
     },
     "cli.locale.add.help": {
       "text": "Install LANG from FILE, or clone English placeholders.",
@@ -311,8 +311,8 @@
       "en": "Seconds to wait for shutdown."
     },
     "cli.lookup.bench.help": {
-      "text": "Hammer GET /{ip} on the intel server (IPv4 and IPv6).\n\nRequires `looking-glass lookup-server start`. Does not load RIR in this process.\nProgress is on stderr; the report is a compact terminal view (or JSON with `--json`).",
-      "en": "Hammer GET /{ip} on the intel server (IPv4 and IPv6).\n\nRequires `looking-glass lookup-server start`. Does not load RIR in this process.\nProgress is on stderr; the report is a compact terminal view (or JSON with `--json`)."
+      "text": "Hammer the intel Unix socket with IPv4 and IPv6 lookups.\n\nRequires `looking-glass lookup-server start`. Does not load RIR in this process.\nProgress is on stderr; the report is a compact terminal view (or JSON with `--json`).",
+      "en": "Hammer the intel Unix socket with IPv4 and IPv6 lookups.\n\nRequires `looking-glass lookup-server start`. Does not load RIR in this process.\nProgress is on stderr; the report is a compact terminal view (or JSON with `--json`)."
     },
     "cli.lookup.bench.opt.concurrency": {
       "text": "Concurrent workers per thread (default 200).",
@@ -411,8 +411,8 @@
       "en": "MX, SPF, DMARC, DKIM selectors, SMTP banner and STARTTLS."
     },
     "cli.mtr.help": {
-      "text": "MTR-style path report (same as GET /mtr/<host>).",
-      "en": "MTR-style path report (same as GET /mtr/<host>)."
+      "text": "MTR-style path report.",
+      "en": "MTR-style path report."
     },
     "cli.opt.as_json": {
       "text": "Print JSON on stdout instead of a compact terminal view.",
@@ -427,8 +427,8 @@
       "en": "Show the version and exit."
     },
     "cli.ping.help": {
-      "text": "ICMP ping (same as GET /ping/<host>).",
-      "en": "ICMP ping (same as GET /ping/<host>)."
+      "text": "Ping a host (ICMP, or TCP if ICMP is unavailable).",
+      "en": "Ping a host (ICMP, or TCP if ICMP is unavailable)."
     },
     "cli.pmtu.help": {
       "text": "Path MTU discovery with don't-fragment ping probes.",
@@ -439,20 +439,20 @@
       "en": "PTR plus forward-confirmed reverse DNS."
     },
     "cli.rdap.help": {
-      "text": "RDAP lookup (same as GET /rdap/<token>).",
-      "en": "RDAP lookup (same as GET /rdap/<token>)."
+      "text": "RDAP lookup for an IP, ASN, or domain.",
+      "en": "RDAP lookup for an IP, ASN, or domain."
     },
     "cli.register.help": {
-      "text": "Check a label against every IANA TLD (same as GET /register/<name>).",
-      "en": "Check a label against every IANA TLD (same as GET /register/<name>)."
+      "text": "Check a label against every IANA TLD.",
+      "en": "Check a label against every IANA TLD."
     },
     "cli.register.opt.tlds_opt": {
       "text": "Comma-separated TLD list (same as ?tlds=).",
       "en": "Comma-separated TLD list (same as ?tlds=)."
     },
     "cli.reputation.help": {
-      "text": "Domain or IP blocklists (same as GET /reputation/<name>).",
-      "en": "Domain or IP blocklists (same as GET /reputation/<name>)."
+      "text": "Domain or IP blocklists.",
+      "en": "Domain or IP blocklists."
     },
     "cli.restart.help": {
       "text": "Stop then start the intel server and the HTTPS supervisor.\n\nWhen the systemd --user units are enabled, restarts those units.\nOtherwise stop is a no-op when a daemon is already down, so this\nalso starts both from a cold state.",
@@ -467,20 +467,20 @@
       "en": "TCP connect check: RTT and an optional banner peek."
     },
     "cli.tcptraceroute.help": {
-      "text": "TCP traceroute (same as GET /tcptraceroute/<host>/<port>).",
-      "en": "TCP traceroute (same as GET /tcptraceroute/<host>/<port>)."
+      "text": "TCP traceroute to a host (default port 443).",
+      "en": "TCP traceroute to a host (default port 443)."
     },
     "cli.tls.help": {
-      "text": "Inspect a TLS handshake and certificate (same as GET /tls/<host> with optional /<port>).",
-      "en": "Inspect a TLS handshake and certificate (same as GET /tls/<host> with optional /<port>)."
+      "text": "Inspect a TLS handshake and certificate.",
+      "en": "Inspect a TLS handshake and certificate."
     },
     "cli.tls.opt.sni": {
       "text": "Override SNI hostname.",
       "en": "Override SNI hostname."
     },
     "cli.traceroute.help": {
-      "text": "UDP traceroute (same as GET /traceroute/<host>).",
-      "en": "UDP traceroute (same as GET /traceroute/<host>)."
+      "text": "UDP traceroute to a host.",
+      "en": "UDP traceroute to a host."
     },
     "cli.validate.help": {
       "text": "Check that local datasets load and look up known IPs correctly.\n\nUses ~/.looking-glass/data (the same files as `looking-glass lookup`). Does not re-download.\nLookups are random samples from those datasets, not a fixed IP list.\nStale caches warn; pass --strict to fail them. Exit 2 if a required check fails.",
@@ -915,8 +915,8 @@
       "en": "JSON."
     },
     "docs.http.serve-start.notes": {
-      "text": "401 without a session. Status bar shows ready vs building and intel uptime.",
-      "en": "401 without a session. Status bar shows ready vs building and intel uptime."
+      "text": "401 without a session. The services window shows intel ready vs building and both daemons' uptime.",
+      "en": "401 without a session. The services window shows intel ready vs building and both daemons' uptime."
     },
     "docs.http.serve-start.summary": {
       "text": "Start the intel server. Also POST /serve/stop.",
@@ -939,8 +939,8 @@
       "en": "Always JSON (Cache-Control: no-store)."
     },
     "docs.http.status.notes": {
-      "text": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user and serve.running / serve.uptime.",
-      "en": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user and serve.running / serve.uptime."
+      "text": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user, serve (intel running/ready/uptime plus pid and socket), and https (tls running/uptime/port plus cert fields when present). The services window reads this payload.",
+      "en": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user, serve (intel running/ready/uptime plus pid and socket), and https (tls running/uptime/port plus cert fields when present). The services window reads this payload."
     },
     "docs.http.status.summary": {
       "text": "Hostname, IPv4 and/or IPv6, clock, uptime, load, WSGI/ASGI.",
@@ -2134,6 +2134,134 @@
       "text": "Run a lookup. Reports paint here.",
       "en": "Run a lookup. Reports paint here."
     },
+    "gui.services.bind": {
+      "text": "bind",
+      "en": "bind"
+    },
+    "gui.services.building": {
+      "text": "building",
+      "en": "building"
+    },
+    "gui.services.cert": {
+      "text": "certificate",
+      "en": "certificate"
+    },
+    "gui.services.data": {
+      "text": "data",
+      "en": "data"
+    },
+    "gui.services.days_left": {
+      "text": "days left",
+      "en": "days left"
+    },
+    "gui.services.disabled": {
+      "text": "disabled",
+      "en": "disabled"
+    },
+    "gui.services.down": {
+      "text": "down",
+      "en": "down"
+    },
+    "gui.services.enabled": {
+      "text": "enabled",
+      "en": "enabled"
+    },
+    "gui.services.host": {
+      "text": "host",
+      "en": "host"
+    },
+    "gui.services.hostname": {
+      "text": "hostname",
+      "en": "hostname"
+    },
+    "gui.services.intel": {
+      "text": "intel",
+      "en": "intel"
+    },
+    "gui.services.issue": {
+      "text": "needs issue",
+      "en": "needs issue"
+    },
+    "gui.services.issuer": {
+      "text": "issuer",
+      "en": "issuer"
+    },
+    "gui.services.listen": {
+      "text": "listen",
+      "en": "listen"
+    },
+    "gui.services.load": {
+      "text": "load",
+      "en": "load"
+    },
+    "gui.services.no": {
+      "text": "no",
+      "en": "no"
+    },
+    "gui.services.pid": {
+      "text": "pid",
+      "en": "pid"
+    },
+    "gui.services.port": {
+      "text": "port",
+      "en": "port"
+    },
+    "gui.services.ready": {
+      "text": "ready",
+      "en": "ready"
+    },
+    "gui.services.san": {
+      "text": "SAN",
+      "en": "SAN"
+    },
+    "gui.services.socket": {
+      "text": "socket",
+      "en": "socket"
+    },
+    "gui.services.staging": {
+      "text": "staging",
+      "en": "staging"
+    },
+    "gui.services.stale": {
+      "text": "stale pidfile",
+      "en": "stale pidfile"
+    },
+    "gui.services.started": {
+      "text": "started",
+      "en": "started"
+    },
+    "gui.services.state": {
+      "text": "state",
+      "en": "state"
+    },
+    "gui.services.subject": {
+      "text": "subject",
+      "en": "subject"
+    },
+    "gui.services.title": {
+      "text": "Services",
+      "en": "Services"
+    },
+    "gui.services.tls": {
+      "text": "tls",
+      "en": "tls"
+    },
+    "gui.services.up": {
+      "text": "up",
+      "en": "up"
+    },
+    "gui.services.uptime": {
+      "text": "uptime",
+      "en": "uptime"
+    },
+    "gui.services.workers": {
+      "text": "workers",
+      "en": "workers"
+    },
+    "gui.services.yes": {
+      "text": "yes",
+      "en": "yes"
+    },
     "gui.tcp.hint": {
       "text": "Connect to a host and port, show RTT, and peek at a protocol banner if one is offered.",
       "en": "Connect to a host and port, show RTT, and peek at a protocol banner if one is offered."
@@ -3313,6 +3441,10 @@
     "status.serve.up": {
       "text": "intel up",
       "en": "intel up"
+    },
+    "status.services": {
+      "text": "services",
+      "en": "services"
     },
     "status.up": {
       "text": "up {value}",

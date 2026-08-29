@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 from looking_glass.intel_server import app as lookup_mod
 from looking_glass.http import weblog
-from looking_glass.http.site import respond
+from looking_glass.http.site import respond, _https_status_view, _serve_status_view
 
 
 def _with_static(html: bytes | str) -> str:
@@ -65,6 +65,44 @@ class ServeUptimeTests(unittest.TestCase):
         self.assertNotIn("uptime", info)
         self.assertNotIn("started_at", info)
 
+    def test_https_view_omits_privkey_and_stopped_paths(self):
+        running = _https_status_view(
+            {
+                "running": True,
+                "uptime": 12.0,
+                "port": 5555,
+                "fullchain": "/tmp/fullchain.pem",
+                "privkey": "/tmp/privkey.pem",
+                "days_left": 80,
+            }
+        )
+        self.assertEqual(running["fullchain"], "/tmp/fullchain.pem")
+        self.assertNotIn("privkey", running)
+        stopped = _https_status_view(
+            {
+                "running": False,
+                "enabled": True,
+                "hostname": "s1.example.com",
+                "port": 5555,
+                "uptime": 12.0,
+                "pid": 9,
+                "fullchain": "/tmp/fullchain.pem",
+                "privkey": "/tmp/privkey.pem",
+                "days_left": 80,
+            }
+        )
+        self.assertFalse(stopped["running"])
+        self.assertNotIn("uptime", stopped)
+        self.assertNotIn("pid", stopped)
+        self.assertNotIn("fullchain", stopped)
+        self.assertNotIn("privkey", stopped)
+        self.assertEqual(stopped["days_left"], 80)
+        self.assertEqual(stopped["hostname"], "s1.example.com")
+        down = _serve_status_view({"running": False, "ready": False, "uptime": 9, "pid": 3, "socket": "/tmp/x"})
+        self.assertNotIn("uptime", down)
+        self.assertNotIn("pid", down)
+        self.assertEqual(down["socket"], "/tmp/x")
+
     def test_status_uptime_when_running(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch("looking_glass.intel_server.app.get_data_dir", return_value=tmp):
@@ -105,6 +143,7 @@ class WebLogTests(unittest.TestCase):
                 self.assertIn('id="status-login"', home_html)
                 self.assertIn("gui.wall.note", home_html)
                 self.assertNotIn('id="status-logs"', home_html)
+                self.assertNotIn('id="status-services"', home_html)
                 self.assertNotIn('id="cache-btn"', home_html)
                 self.assertNotIn("sizeLogPopToAccess", home_html)
                 self.assertIn('id="status-wins"', home_html)
@@ -149,6 +188,7 @@ class WebLogTests(unittest.TestCase):
                 self.assertEqual(authed, 200)
                 authed_html = _with_static(authed_body)
                 self.assertIn('id="status-logs"', authed_html)
+                self.assertIn('id="status-services"', authed_html)
                 self.assertIn('id="status-history"', authed_html)
                 self.assertIn('id="status-wall"', authed_html)
                 self.assertIn("/wall/traffic", authed_html)
@@ -398,9 +438,25 @@ class WebLogTests(unittest.TestCase):
                 self.assertTrue(
                     any("issued example.com" in str(row.get("message") or "") for row in json.loads(acme_body)["rows"])
                 )
-                with patch("looking_glass.intel_server.app.status", return_value={"running": True, "ready": True, "uptime": 90.0}), patch(
+                with patch("looking_glass.intel_server.app.status", return_value={
+                    "running": True,
+                    "ready": True,
+                    "uptime": 90.0,
+                    "pid": 4242,
+                    "socket": "/tmp/intel.sock",
+                    "stale": False,
+                }), patch(
                     "looking_glass.http.https_serve.status",
-                    return_value={"running": True, "uptime": 12.0, "port": 5555},
+                    return_value={
+                        "running": True,
+                        "uptime": 12.0,
+                        "port": 5555,
+                        "hostname": "s1.example.com",
+                        "days_left": 80,
+                        "fullchain": "/tmp/fullchain.pem",
+                        "privkey": "/tmp/privkey.pem",
+                        "subject": "s1.example.com",
+                    },
                 ):
                     st, _, status_body, _ = respond(
                         "wsgi",
@@ -419,6 +475,12 @@ class WebLogTests(unittest.TestCase):
                 self.assertTrue(https["running"])
                 self.assertEqual(https["uptime"], 12.0)
                 self.assertEqual(https["port"], 5555)
+                self.assertEqual(serve["pid"], 4242)
+                self.assertEqual(serve["socket"], "/tmp/intel.sock")
+                self.assertEqual(https["hostname"], "s1.example.com")
+                self.assertEqual(https["days_left"], 80)
+                self.assertEqual(https["fullchain"], "/tmp/fullchain.pem")
+                self.assertNotIn("privkey", https)
 
     def test_access_stamps_intel_for_public_peer(self):
         intel = {"asn": 13335, "org_name": "CLOUDFLARENET", "country": "AU", "flag_url": "https://example/au.svg"}

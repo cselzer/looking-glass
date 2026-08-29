@@ -350,6 +350,86 @@ def _status_clock(now: Optional[datetime] = None) -> Dict[str, Any]:
     }
 
 
+_SERVE_STATUS_EXTRA = (
+    "pid",
+    "stale",
+    "socket_exists",
+    "uptime",
+    "started_at",
+    "socket",
+    "data",
+    "pidfile",
+)
+_HTTPS_STATUS_EXTRA = (
+    "pid",
+    "enabled",
+    "uptime",
+    "started_at",
+    "port",
+    "hostname",
+    "bind",
+    "listen",
+    "workers",
+    "staging",
+    "acme_port",
+    "http01_listen",
+    "fullchain_exists",
+    "needs_issue",
+    "not_after",
+    "days_left",
+    "subject",
+    "issuer",
+    "san",
+)
+
+
+def _status_copy(src: Dict[str, Any], keys: Sequence[str]) -> Dict[str, Any]:
+    out: Dict[str, Any] = {}
+    for key in keys:
+        if key not in src:
+            continue
+        value = src[key]
+        if value is None:
+            continue
+        out[key] = value
+    return out
+
+
+def _serve_status_view(st: Dict[str, Any]) -> Dict[str, Any]:
+    view = {
+        "running": bool(st.get("running")),
+        "ready": bool(st.get("ready")),
+    }
+    extra = _status_copy(st, _SERVE_STATUS_EXTRA)
+    if not view["running"]:
+        extra.pop("uptime", None)
+        extra.pop("pid", None)
+        extra.pop("started_at", None)
+    view.update(extra)
+    return view
+
+
+def _https_status_view(hs: Dict[str, Any]) -> Dict[str, Any]:
+    view: Dict[str, Any] = {"running": bool(hs.get("running"))}
+    extra = _status_copy(hs, _HTTPS_STATUS_EXTRA)
+    if view["running"]:
+        if hs.get("fullchain"):
+            extra["fullchain"] = str(hs["fullchain"])
+        port = extra.get("port")
+        if port is not None:
+            try:
+                extra["port"] = int(port)
+            except (TypeError, ValueError):
+                extra.pop("port", None)
+    else:
+        extra.pop("uptime", None)
+        extra.pop("pid", None)
+        extra.pop("started_at", None)
+        extra.pop("fullchain", None)
+    view.update(extra)
+    return view
+
+
 def _status_http(protocol: str, user: Optional[str] = None) -> Tuple[int, str, bytes]:
     try:
         load = [round(float(n), 2) for n in os.getloadavg()]
@@ -376,27 +456,14 @@ def _status_http(protocol: str, user: Optional[str] = None) -> Tuple[int, str, b
         from ..intel_server import app as lookup_mod
 
         st = lookup_mod.status()
-        payload["serve"] = {
-            "running": bool(st.get("running")),
-            "ready": bool(st.get("ready")),
-        }
-        if payload["serve"]["running"] and st.get("uptime") is not None:
-            payload["serve"]["uptime"] = float(st["uptime"])
+        payload["serve"] = _serve_status_view(st)
         from ..http import https_serve
 
         try:
             hs = https_serve.status()
         except Exception:
             hs = {"running": False}
-        payload["https"] = {"running": bool(hs.get("running"))}
-        if payload["https"]["running"]:
-            if hs.get("uptime") is not None:
-                payload["https"]["uptime"] = float(hs["uptime"])
-            if hs.get("port") is not None:
-                try:
-                    payload["https"]["port"] = int(hs["port"])
-                except (TypeError, ValueError):
-                    pass
+        payload["https"] = _https_status_view(hs)
     return 200, _JSON, json.dumps(payload, ensure_ascii=False).encode("utf-8")
 
 

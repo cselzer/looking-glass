@@ -151,6 +151,7 @@ class LookupCliTests(unittest.TestCase):
                 "dnssec",
                 "tls",
                 "apex",
+                "register",
                 "ping",
                 "traceroute",
                 "mtr",

@@ -41,6 +41,7 @@ class StaticFilesTests(unittest.TestCase):
         self.assertNotIn("/serve/stop", gui_text)
         self.assertIn("intel building", gui_text)
         self.assertNotIn("looking-glass serve start", gui_text)
+        self.assertIn("lookingGlassStatus", gui_text)
         self.assertIn('runLookup(window.toolPath("mtr", target, { cycles }))', index_text)
         self.assertIn('[name=cycles]', index_text)
         self.assertNotIn("erso-wall", index_text)
@@ -74,6 +75,9 @@ class StaticFilesTests(unittest.TestCase):
         self.assertEqual(text.count("const http = data.http"), 1)
         self.assertIn("const httpSec", text)
         self.assertIn("const mtrSec", text)
+        self.assertIn('WIN_ID = "services"', text)
+        self.assertIn("services-pop", text)
+        self.assertNotIn("/serve/stop", text)
 
     def test_missing_and_escape_are_404(self):
         for path in ("/static/nope.js", "/static/../site.py", "/static/%2e%2e/site.py"):

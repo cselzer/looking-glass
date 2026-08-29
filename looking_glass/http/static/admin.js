@@ -3376,3 +3376,283 @@
       if (event.key === "Escape" && pop && !pop.classList.contains("is-minimized")) closeConfig();
     });
   })();
+
+
+(function () {
+    const servicesBtn = document.getElementById("status-services");
+    if (!servicesBtn) return;
+
+    let pop = null;
+    let inner = null;
+    let z = 125;
+    const WIN_ID = "services";
+
+    function t(id, fallback) {
+      const text = window.t ? window.t(id) : "";
+      if (text && text !== id) return text;
+      return fallback || id;
+    }
+
+    function el(tag, cls, text) {
+      const node = document.createElement(tag);
+      if (cls) node.className = cls;
+      if (text != null) node.textContent = text;
+      return node;
+    }
+
+    function raise(node) {
+      if (window.lookingGlassWindows) {
+        window.lookingGlassWindows.raise(node);
+        return;
+      }
+      z += 1;
+      node.style.zIndex = String(z);
+    }
+
+    function closeServices() {
+      if (window.lookingGlassWindows) window.lookingGlassWindows.detach(WIN_ID);
+      if (pop) pop.remove();
+      pop = null;
+      inner = null;
+    }
+
+    function lockPopSize(node, opts) {
+      const rect = node.getBoundingClientRect();
+      if ((!opts || opts.width !== false) && rect.width) node.style.width = rect.width + "px";
+      if ((!opts || opts.height !== false) && rect.height) node.style.height = rect.height + "px";
+    }
+
+    function makeDraggable(node) {
+      if (window.lookingGlassWindows) return;
+      const bar = node.querySelector(".inspect-pop-bar");
+      if (!bar) return;
+      let startX = 0, startY = 0, origX = 0, origY = 0;
+      bar.addEventListener("pointerdown", (event) => {
+        if (event.target.closest("button, a, input, select, textarea, label, .inspect-pop-actions")) return;
+        if (event.button != null && event.button !== 0) return;
+        event.preventDefault();
+        raise(node);
+        bar.setPointerCapture(event.pointerId);
+        startX = event.clientX;
+        startY = event.clientY;
+        const rect = node.getBoundingClientRect();
+        origX = rect.left + window.scrollX;
+        origY = rect.top + window.scrollY;
+      });
+      bar.addEventListener("pointermove", (event) => {
+        if (!bar.hasPointerCapture(event.pointerId)) return;
+        node.style.left = Math.max(8, origX + event.clientX - startX) + "px";
+        node.style.top = Math.max(8, origY + event.clientY - startY) + "px";
+      });
+    }
+
+    function formatDuration(seconds) {
+      if (typeof window.lookingGlassFormatDuration === "function") {
+        return window.lookingGlassFormatDuration(seconds);
+      }
+      if (seconds == null || !Number.isFinite(Number(seconds))) return "";
+      let s = Math.max(0, Math.floor(Number(seconds)));
+      const days = Math.floor(s / 86400);
+      s %= 86400;
+      const hours = Math.floor(s / 3600);
+      s %= 3600;
+      const minutes = Math.floor(s / 60);
+      const parts = [];
+      if (days) parts.push(days + "d");
+      if (hours || days) parts.push(hours + "h");
+      parts.push(minutes + "m");
+      return parts.join(" ");
+    }
+
+    function formatList(value) {
+      if (Array.isArray(value)) return value.filter((item) => item != null && item !== "").map(String).join(" ");
+      if (value == null || value === "") return "";
+      return String(value);
+    }
+
+    function formatBool(value) {
+      return value ? t("gui.services.yes", "yes") : t("gui.services.no", "no");
+    }
+
+    function formatStarted(ts) {
+      const n = Number(ts);
+      if (!Number.isFinite(n) || n <= 0) return "";
+      const d = new Date(n * 1000);
+      if (Number.isNaN(d.getTime())) return "";
+      return d.toISOString().replace("T", " ").slice(0, 19) + " UTC";
+    }
+
+    function addRow(dl, key, value, cls) {
+      if (value == null || value === "") return;
+      dl.append(el("dt", "", key), el("dd", cls || "", String(value)));
+    }
+
+    function intelState(blob) {
+      if (blob && blob.ready) return [t("gui.services.up", "up"), "ok"];
+      if (blob && blob.running) return [t("gui.services.building", "building"), "warn"];
+      return [t("gui.services.down", "down"), "bad"];
+    }
+
+    function tlsState(blob) {
+      if (blob && blob.running) return [t("gui.services.up", "up"), "ok"];
+      if (blob && blob.enabled === false) return [t("gui.services.disabled", "disabled"), ""];
+      return [t("gui.services.down", "down"), "bad"];
+    }
+
+    function paintCard(title, stateWord, stateCls, rows) {
+      const card = document.createElement("fieldset");
+      card.className = "services-card";
+      const legend = document.createElement("legend");
+      legend.append(title + "  ");
+      legend.append(el("span", stateCls, stateWord));
+      card.append(legend);
+      const dl = el("dl", "services-kv");
+      rows.forEach((row) => addRow(dl, row[0], row[1], row[2]));
+      card.append(dl);
+      return card;
+    }
+
+    function paintServices(data) {
+      if (!inner) return;
+      inner.replaceChildren();
+      if (!data) {
+        inner.append(el("p", "hint", t("gui.cache.loading", "Loading…")));
+        return;
+      }
+      const hostBits = [];
+      if (data.hostname) hostBits.push(data.hostname);
+      const up = formatDuration(data.uptime);
+      if (up) hostBits.push(window.t ? window.t("status.up", { value: up }) : ("up " + up));
+      if (Array.isArray(data.load) && data.load.length) {
+        hostBits.push(t("gui.services.load", "load") + " " + data.load.map((n) => Number(n).toFixed(2)).join(" "));
+      }
+      if (data.mode) hostBits.push(String(data.mode).toUpperCase());
+      if (hostBits.length) inner.append(el("p", "services-host", hostBits.join("  ·  ")));
+      const grid = el("div", "services-grid");
+      const serve = data.serve || {};
+      const [intelWord, intelCls] = intelState(serve);
+      grid.append(paintCard(t("gui.services.intel", "intel"), intelWord, intelCls, [
+        [t("gui.services.state", "state"), intelWord, intelCls],
+        [t("gui.services.uptime", "uptime"), formatDuration(serve.uptime)],
+        [t("gui.services.pid", "pid"), serve.pid],
+        [t("gui.services.ready", "ready"), serve.running ? formatBool(!!serve.ready) : ""],
+        [t("gui.services.started", "started"), formatStarted(serve.started_at)],
+        [t("gui.services.stale", "stale pidfile"), serve.stale ? formatBool(true) : ""],
+        [t("gui.services.socket", "socket"), serve.socket],
+        [t("gui.services.data", "data"), serve.data],
+      ]));
+      const https = data.https || {};
+      const [tlsWord, tlsCls] = tlsState(https);
+      const days = https.days_left;
+      const daysText = days == null || days === "" ? "" : (Number.isFinite(Number(days)) ? Math.trunc(Number(days)) + "d" : String(days));
+      grid.append(paintCard(t("gui.services.tls", "tls"), tlsWord, tlsCls, [
+        [t("gui.services.state", "state"), tlsWord, tlsCls],
+        [t("gui.services.uptime", "uptime"), formatDuration(https.uptime)],
+        [t("gui.services.pid", "pid"), https.pid],
+        [t("gui.services.enabled", "enabled"), "enabled" in https ? formatBool(!!https.enabled) : ""],
+        [t("gui.services.hostname", "hostname"), https.hostname],
+        [t("gui.services.port", "port"), https.port],
+        [t("gui.services.bind", "bind"), https.bind],
+        [t("gui.services.listen", "listen"), formatList(https.listen)],
+        [t("gui.services.workers", "workers"), https.workers],
+        [t("gui.services.staging", "staging"), "staging" in https ? formatBool(!!https.staging) : ""],
+        [t("gui.services.issue", "needs issue"), "needs_issue" in https ? formatBool(!!https.needs_issue) : ""],
+        [t("gui.services.days_left", "days left"), daysText],
+        [t("gui.services.subject", "subject"), https.subject],
+        [t("gui.services.issuer", "issuer"), https.issuer],
+        [t("gui.services.san", "SAN"), formatList(https.san)],
+        [t("gui.services.cert", "certificate"), https.fullchain],
+        [t("gui.services.started", "started"), formatStarted(https.started_at)],
+      ]));
+      inner.append(grid);
+    }
+
+    function loadServices() {
+      if (window.lookingGlassStatus) paintServices(window.lookingGlassStatus);
+      fetch("/status", {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+      }).then((res) => {
+        if (!res.ok) throw new Error("status");
+        return res.json();
+      }).then((data) => {
+        window.lookingGlassStatus = data;
+        paintServices(data);
+      }).catch((err) => {
+        if (!inner) return;
+        inner.replaceChildren(el("p", "hint", String(err.message || err)));
+      });
+    }
+
+    function onStatusEvent(event) {
+      if (!pop || !inner) return;
+      paintServices(event.detail || window.lookingGlassStatus);
+    }
+
+    function openServices(anchor) {
+      if (pop && window.lookingGlassWindows && window.lookingGlassWindows.front(WIN_ID)) {
+        loadServices();
+        return;
+      }
+      if (pop && !window.lookingGlassWindows && document.body.contains(pop)) {
+        raise(pop);
+        loadServices();
+        return;
+      }
+      if (pop) {
+        try { pop.remove(); } catch (err) {}
+        pop = null;
+        inner = null;
+      }
+      pop = el("div", "asn-pop inspect-pop services-pop");
+      pop.setAttribute("role", "dialog");
+      pop.setAttribute("aria-labelledby", "services-title");
+      const bar = el("div", "inspect-pop-bar");
+      bar.append(el("strong", "inspect-pop-title", t("gui.services.title", "Services")));
+      bar.lastChild.id = "services-title";
+      const close = el("button", "inspect-pop-close", "×");
+      close.type = "button";
+      close.setAttribute("aria-label", t("gui.close", "Close"));
+      close.addEventListener("click", (event) => {
+        event.preventDefault();
+        closeServices();
+      });
+      bar.append(close);
+      const body = el("div", "inspect-pop-body");
+      inner = el("div", "services-inner");
+      inner.append(el("p", "hint", t("gui.cache.loading", "Loading…")));
+      body.append(inner);
+      pop.append(bar, body);
+      document.body.append(pop);
+      const rect = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : { left: 24, bottom: 48 };
+      pop.style.left = Math.max(8, rect.left + window.scrollX) + "px";
+      pop.style.top = Math.max(8, window.scrollY + 48) + "px";
+      if (window.lookingGlassWindows && window.lookingGlassWindows.place) window.lookingGlassWindows.place(pop, anchor || servicesBtn);
+      makeDraggable(pop);
+      lockPopSize(pop, { width: false });
+      if (window.lookingGlassWindows) {
+        window.lookingGlassWindows.adopt(pop, {
+          id: WIN_ID,
+          kind: "services",
+          title: t("gui.services.title", "Services"),
+          onClose: closeServices,
+          onRefresh: loadServices,
+        });
+      } else {
+        raise(pop);
+      }
+      loadServices();
+    }
+
+    servicesBtn.addEventListener("click", () => openServices(servicesBtn));
+    document.addEventListener("looking-glass-status", onStatusEvent);
+    if (window.lookingGlassWindows) {
+      window.lookingGlassWindows.register("services", function () {
+        openServices();
+      });
+    }
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && pop && !pop.classList.contains("is-minimized")) closeServices();
+    });
+  })();

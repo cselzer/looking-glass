@@ -3289,8 +3289,7 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
     const uptimeEl = document.getElementById("status-uptime");
     const loadEl = document.getElementById("status-load");
     const modeEl = document.getElementById("status-mode");
-    const serveEl = document.getElementById("status-serve");
-    const httpsEl = document.getElementById("status-https");
+    const servicesBtn = document.getElementById("status-services");
     const authedEl = document.getElementById("status-auth-user");
     const regenBtn = document.getElementById("status-docs-regen");
     const dash = "—";
@@ -3373,6 +3372,8 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
       return window.t ? window.t("status.up", { value: value }) : ("up " + value);
     }
 
+    window.lookingGlassFormatDuration = formatDuration;
+
     function paintAuth(user) {
       const name = user == null ? "" : String(user);
       if (!!name !== signedIn) {
@@ -3382,28 +3383,46 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
       paintDocsChrome();
     }
 
+    let serveHint = "";
+    let httpsHint = "";
+    let serveKind = "down";
+    let httpsKind = "down";
+
+    function paintServicesBtn() {
+      if (!servicesBtn) return;
+      const parts = [serveHint, httpsHint].filter(Boolean);
+      servicesBtn.title = parts.join(" · ");
+      servicesBtn.classList.toggle("is-down", serveKind === "down" || httpsKind === "down");
+      servicesBtn.classList.toggle("is-warn", serveKind === "building" && httpsKind !== "down");
+    }
+
     function paintServe(running, ready, uptime) {
-      if (!serveEl) return;
       if (ready) {
         const dur = formatDuration(uptime);
         const label = window.t ? window.t("status.serve.up") : "intel up";
-        serveEl.textContent = dur ? (label + " " + dur) : label;
+        serveHint = dur ? (label + " " + dur) : label;
+        serveKind = "up";
       } else if (running) {
-        serveEl.textContent = window.t ? window.t("status.serve.building") : "intel building";
+        serveHint = window.t ? window.t("status.serve.building") : "intel building";
+        serveKind = "building";
       } else {
-        serveEl.textContent = window.t ? window.t("status.serve.down") : "intel down";
+        serveHint = window.t ? window.t("status.serve.down") : "intel down";
+        serveKind = "down";
       }
+      paintServicesBtn();
     }
 
     function paintHttps(running, uptime) {
-      if (!httpsEl) return;
       if (running) {
         const dur = formatDuration(uptime);
         const label = window.t ? window.t("status.https.up") : "tls up";
-        httpsEl.textContent = dur ? (label + " " + dur) : label;
+        httpsHint = dur ? (label + " " + dur) : label;
+        httpsKind = "up";
       } else {
-        httpsEl.textContent = window.t ? window.t("status.https.down") : "tls down";
+        httpsHint = window.t ? window.t("status.https.down") : "tls down";
+        httpsKind = "down";
       }
+      paintServicesBtn();
     }
 
     function paintFail() {
@@ -3415,6 +3434,8 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
       uptimeEl.textContent = window.t ? window.t("status.up", { value: dash }) : ("up " + dash);
       loadEl.textContent = window.t ? window.t("status.load", { value: dash }) : ("load " + dash);
       modeEl.textContent = dash;
+      paintServe(false, false);
+      paintHttps(false);
     }
 
     async function poll() {
@@ -3457,6 +3478,8 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
         modeEl.textContent = mode === "ASGI" || mode === "WSGI" ? mode : dash;
         if (data.serve) paintServe(data.serve.running, data.serve.ready, data.serve.uptime);
         if (data.https) paintHttps(data.https.running, data.https.uptime);
+        window.lookingGlassStatus = data;
+        document.dispatchEvent(new CustomEvent("looking-glass-status", { detail: data }));
       } catch (err) {
         paintFail();
       }

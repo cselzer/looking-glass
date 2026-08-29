@@ -223,7 +223,7 @@ HTTP_ROUTES: List[Dict[str, Any]] = [
         "query": [],
         "cli": None,
         "accept": "Always JSON (Cache-Control: no-store).",
-        "notes": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user and serve.running / serve.uptime.",
+        "notes": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. Logged-in responses add user, serve (intel running/ready/uptime plus pid and socket), and https (tls running/uptime/port plus cert fields when present). The services window reads this payload.",
     },
     {
         "id": "docs",
@@ -293,7 +293,7 @@ HTTP_ROUTES: List[Dict[str, Any]] = [
         "query": [],
         "cli": "looking-glass lookup-server start|stop",
         "accept": "JSON.",
-        "notes": "401 without a session. Status bar shows ready vs building and intel uptime.",
+        "notes": "401 without a session. The services window shows intel ready vs building and both daemons' uptime.",
     },
     {
         "id": "cache",

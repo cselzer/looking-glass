@@ -207,3 +207,291 @@ class DaemonCliTests(unittest.TestCase):
         self.assertIn("issued", result.stdout)
         self.assertIn("/tmp/fullchain.pem", result.stdout)
         self.assertIn("/tmp/privkey.pem", result.stdout)
+
+
+def _ip_payload():
+    return {
+        "ok": True,
+        "kind": "ip",
+        "query": "1.1.1.1",
+        "ip": "1.1.1.1",
+        "via": "intel",
+        "result": {
+            "ip": "1.1.1.1",
+            "country": "AU",
+            "country_name": "Australia",
+            "source": "rir",
+            "flag": "🇦🇺",
+            "flag_url": "https://flagcdn.com/au.svg",
+            "flag_html": '<img src="https://flagcdn.com/au.svg" alt="🇦🇺 Australia">',
+            "asn": 13335,
+        },
+        "total_ms": 1.2,
+    }
+
+
+def _ping_payload(*, received=4):
+    probes = []
+    for seq in range(1, 5):
+        probes.append(
+            {
+                "seq": seq,
+                "from": "1.1.1.1",
+                "rtt_ms": 12.3 if seq <= received else None,
+                "ok": seq <= received,
+                "error": None if seq <= received else "timeout",
+                "via": "tcp",
+            }
+        )
+    return {
+        "ok": received > 0,
+        "kind": "ping",
+        "query": "1.1.1.1",
+        "result": {
+            "target": "1.1.1.1",
+            "ip": "1.1.1.1",
+            "transmitted": 4,
+            "received": received,
+            "loss_percent": round(100.0 * (4 - received) / 4, 1),
+            "min_ms": 12.3 if received else None,
+            "avg_ms": 12.3 if received else None,
+            "max_ms": 12.3 if received else None,
+            "probes": probes,
+            "via": "python-tcp",
+            "flag_html": '<img src="https://flagcdn.com/au.svg">',
+        },
+        "error": None if received else "100% loss",
+    }
+
+
+class HumanModeTests(unittest.TestCase):
+    def setUp(self):
+        self.runner = CliRunner()
+
+    def test_ip_one_line_no_html(self):
+        fake = _ip_payload()
+        with tempfile.TemporaryDirectory() as tmp:
+            with (
+                patch("looking_glass.wall.lists.get_data_dir", return_value=tmp),
+                patch("looking_glass.cli.tools.lookup_classified", return_value=fake),
+            ):
+                human = self.runner.invoke(cli, ["ip", "1.1.1.1"])
+                blob = self.runner.invoke(cli, ["--json", "ip", "1.1.1.1"])
+        self.assertEqual(human.exit_code, 0, human.output)
+        self.assertIn("1.1.1.1", human.stdout)
+        self.assertIn("AU", human.stdout)
+        self.assertIn("Australia", human.stdout)
+        self.assertNotIn("<img", human.stdout)
+        self.assertNotIn("ok true", human.stdout)
+        self.assertNotIn("flag_html", human.stdout)
+        payload = json.loads(blob.stdout)
+        self.assertIn("<img", payload["result"]["flag_html"])
+
+    def test_ping_seq_rtt_and_help(self):
+        fake = _ping_payload()
+        with tempfile.TemporaryDirectory() as tmp:
+            with (
+                patch("looking_glass.wall.lists.get_data_dir", return_value=tmp),
+                patch("looking_glass.cli.tools.lookup_classified", return_value=fake),
+            ):
+                human = self.runner.invoke(cli, ["ping", "1.1.1.1"])
+        self.assertEqual(human.exit_code, 0, human.output)
+        self.assertIn("PING 1.1.1.1", human.stdout)
+        self.assertIn("seq 1", human.stdout)
+        self.assertIn("12.3", human.stdout)
+        self.assertIn("via tcp", human.stdout)
+        self.assertNotIn("ok true", human.stdout)
+        self.assertNotIn("<img", human.stdout)
+        help_txt = self.runner.invoke(cli, ["ping", "--help"]).output
+        self.assertNotIn("ICMP ping", help_txt)
+        self.assertNotIn("same as GET", help_txt)
+        self.assertIn("TCP", help_txt)
+
+    def test_ping_rejects_bogus_and_junk_hosts(self):
+        cases = (
+            ["ping", "1.2.3"],
+            ["ping", "javascript:"],
+            ["ping", "169.254.169.254"],
+            ["ping", "fe80::1%eth0"],
+            ["tcptraceroute", "1.1.1.1/32"],
+        )
+        for args in cases:
+            with self.subTest(args=args):
+                result = self.runner.invoke(cli, args)
+                self.assertEqual(result.exit_code, 2, result.output)
+                self.assertIn("Error:", result.output)
+                self.assertNotIn("[Errno", result.output)
+                self.assertNotIn("Name or service not known", result.output)
+
+    def test_register_default_skips_board(self):
+        squares = [{"tld": "com", "status": "has-ns"}, {"tld": "accountant", "status": "no-dns"}]
+        squares += [{"tld": f"xn--mgb{i}", "status": "unknown"} for i in range(20)]
+        fake = {
+            "ok": True,
+            "kind": "register",
+            "query": "example",
+            "result": {
+                "label": "example",
+                "tlds": len(squares),
+                "no_dns": 1,
+                "has_ns": 1,
+                "unknown": 20,
+                "squares": squares,
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            with (
+                patch("looking_glass.wall.lists.get_data_dir", return_value=tmp),
+                patch("looking_glass.cli.tools.lookup_classified", return_value=fake),
+            ):
+                human = self.runner.invoke(cli, ["register", "example"])
+                board = self.runner.invoke(cli, ["register", "--all", "example"])
+        self.assertEqual(human.exit_code, 0, human.output)
+        self.assertIn("has_ns", human.stdout)
+        self.assertNotIn("xn--mgb", human.stdout)
+        self.assertIn("legend  green=no-dns", board.stdout)
+        self.assertIn("accountant", board.stdout)
+        self.assertNotIn("account ", board.stdout)
+
+    def test_dns_help_has_docstring(self):
+        listed = self.runner.invoke(cli, ["--help"])
+        dns = self.runner.invoke(cli, ["dns", "--help"])
+        self.assertEqual(listed.exit_code, 0, listed.output)
+        self.assertIn("dns", listed.output)
+        self.assertNotIn("same as GET", listed.output)
+        self.assertIn("Query like dig", listed.output)
+        self.assertIn("looking-glass dns @1.1.1.1 example.com A", dns.output)
+        self.assertIn("Default nameserver", dns.output)
+        bench = self.runner.invoke(cli, ["lookup", "bench", "--help"])
+        self.assertNotIn("GET /{ip}", bench.output)
+        self.assertNotIn("Hammer GET", bench.output)
+
+    def test_config_no_key_counts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("looking_glass.config.path", return_value=tmp + "/config.json"):
+                with patch(
+                    "looking_glass.cli.config_cmd.load",
+                    return_value={
+                        "locale": "en",
+                        "cache": {"ttl_days": 7, "gui": True},
+                        "wall": {
+                            "default": "allow",
+                            "headers": {
+                                "decision": True,
+                                "reason": True,
+                                "asn": True,
+                                "org": True,
+                                "prefix": True,
+                                "country": True,
+                                "flag_url": True,
+                                "timings": True,
+                                "iana": True,
+                            },
+                        },
+                    },
+                ):
+                    human = self.runner.invoke(cli, ["config"])
+        self.assertEqual(human.exit_code, 0, human.output)
+        self.assertNotIn("{2 keys}", human.stdout)
+        self.assertNotIn("{7 keys}", human.stdout)
+        self.assertNotIn("{9 keys}", human.stdout)
+        self.assertIn("wall.headers", human.stdout)
+        self.assertIn("all true", human.stdout)
+
+    def test_boot_check_three_lines(self):
+        fake = {
+            "ok": False,
+            "linger": {"enabled": False, "error": "loginctl: command not found"},
+            "intel": {"present": False},
+            "https": {"present": False},
+            "target": {"present": False},
+        }
+        with patch("looking_glass.cli.boot.check", return_value=fake):
+            human = self.runner.invoke(cli, ["boot", "check"])
+            blob = self.runner.invoke(cli, ["--json", "boot", "check"])
+        self.assertIn("linger  off", human.output)
+        self.assertIn("loginctl not found", human.output)
+        self.assertIn("intel  no unit", human.output)
+        self.assertIn("https  no unit", human.output)
+        self.assertNotIn("'enabled': False", human.output)
+        self.assertTrue(json.loads(blob.stdout)["linger"]["error"])
+
+    def test_logs_stats_empty(self):
+        empty = {"day": {}, "week": {}, "totals": {}, "step": 900}
+        with patch("looking_glass.http.weblog.stats_payload", return_value=empty):
+            human = self.runner.invoke(cli, ["logs", "stats"])
+        self.assertEqual(human.exit_code, 0, human.output)
+        self.assertIn("logs stats: empty (step 900s)", human.stdout)
+        self.assertNotIn("window", human.stdout)
+
+    def test_dnssec_bogus_not_green_ok(self):
+        fake = {
+            "ok": True,
+            "kind": "dnssec",
+            "query": "example.com",
+            "result": {"status": "bogus", "secure": False, "broken": True, "qname": "example.com"},
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            with (
+                patch("looking_glass.wall.lists.get_data_dir", return_value=tmp),
+                patch("looking_glass.cli.tools.lookup_classified", return_value=fake),
+            ):
+                human = self.runner.invoke(cli, ["dnssec", "example.com"])
+        self.assertNotIn("ok true", human.stdout)
+        self.assertIn("bogus", human.stdout)
+
+    def test_status_https_stopped_no_paths(self):
+        with (
+            patch("looking_glass.cli.boot.units_enabled", return_value=False),
+            patch("looking_glass.intel_server.app.status", return_value=_intel_report()),
+            patch(
+                "looking_glass.http.https_serve.status",
+                return_value={
+                    "ok": True,
+                    "running": False,
+                    "state": "stopped",
+                    "fullchain": "/tmp/fullchain.pem",
+                    "privkey": "/tmp/privkey.pem",
+                },
+            ),
+        ):
+            human = self.runner.invoke(cli, ["status"])
+        self.assertIn("https  stopped", human.stdout)
+        self.assertNotIn("/tmp/fullchain.pem", human.stdout)
+        self.assertNotIn("/tmp/privkey.pem", human.stdout)
+
+    def test_docs_wrote_prefix(self):
+        with patch("looking_glass.docs.generate.write_docs", return_value="/tmp/docs.html"):
+            human = self.runner.invoke(cli, ["docs", "/tmp/docs.html"])
+        self.assertEqual(human.exit_code, 0, human.output)
+        self.assertIn("wrote /tmp/docs.html", human.stdout)
+
+    def test_validate_one_line_no_wrap(self):
+        report = {
+            "ok": False,
+            "failed": 1,
+            "warned": 0,
+            "checks": [
+                {
+                    "status": "failed",
+                    "check": "ASN origin prefixes",
+                    "detail": "missing 2001:67c:22e8:0000:0000:0000:0000:0000/48",
+                }
+            ],
+        }
+        with patch("looking_glass.cli.entry._run_validate", return_value=report):
+            with patch.dict(os.environ, {"COLUMNS": "80"}, clear=False):
+                human = self.runner.invoke(cli, ["validate"])
+        self.assertIn("ASN origin prefixes  FAIL", human.stdout)
+        self.assertNotIn("ok true", human.stdout)
+
+    def test_apex_prints_immediately(self):
+        fake = {"ok": True, "kind": "apex", "query": "example.com", "result": {"mx": []}}
+        with tempfile.TemporaryDirectory() as tmp:
+            with (
+                patch("looking_glass.wall.lists.get_data_dir", return_value=tmp),
+                patch("looking_glass.cli.tools.lookup_classified", return_value=fake),
+            ):
+                human = self.runner.invoke(cli, ["apex", "example.com"])
+        self.assertIn("apex example.com", human.output)
+

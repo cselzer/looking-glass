@@ -7,10 +7,15 @@ from typing import Any, Dict, Optional, Sequence, Tuple
 import click
 
 from ..intel_server.pipeline import classify_query
-from ..dns.resolve import DNS_TYPE_EXAMPLES, parse_nameserver
+from ..dns.resolve import parse_nameserver
 from ..http.site import lookup_classified
 from ..i18n import t
+from ..net.host import reject_probe_target
 from .render import emit
+
+_PROBE_KINDS = frozenset(
+    {"ping", "traceroute", "mtr", "tcptraceroute", "tls", "tcp", "pmtu", "ptr"}
+)
 
 
 def _cli_history_path(kind: str, value: str, kwargs: dict) -> str:
@@ -42,11 +47,59 @@ def _cli_history_path(kind: str, value: str, kwargs: dict) -> str:
     return f"/{kind}/{value}"
 
 
+def _pretty_host_error(target: str, exc: Any) -> str:
+    text = str(exc or "").strip()
+    low = text.lower()
+    if "link-local" in low or "zone-id" in low or "cloud-gateway" in low:
+        return "link-local / cloud-gateway target"
+    if "not a valid ipv4" in low:
+        return "not a valid IPv4 address"
+    if (
+        "host is not a url" in low
+        or "errno" in low
+        or "name or service not known" in low
+        or "nodename nor servname" in low
+        or text.startswith("invalid host ")
+    ):
+        return f"invalid host {target!r}"
+    return text or f"invalid host {target!r}"
+
+
+def _is_host_error(text: Any) -> bool:
+    low = str(text or "").lower()
+    return any(
+        token in low
+        for token in (
+            "invalid host",
+            "not a valid ipv4",
+            "link-local",
+            "zone-id",
+            "cloud-gateway",
+            "host is not a url",
+            "multicast",
+            "errno",
+            "name or service not known",
+            "nodename nor servname",
+        )
+    )
+
+
 def _run(kind: str, value: str, **kwargs: Any) -> None:
-    payload = lookup_classified(kind, value, **kwargs)
+    if kind in _PROBE_KINDS:
+        try:
+            reject_probe_target(value)
+        except ValueError as e:
+            raise click.UsageError(_pretty_host_error(value, e)) from e
+    try:
+        payload = lookup_classified(kind, value, **kwargs)
+    except ValueError as e:
+        raise click.UsageError(_pretty_host_error(value, e)) from e
     if isinstance(payload, dict):
         payload.setdefault("kind", kind)
         payload.setdefault("query", value)
+        err = payload.get("error")
+        if not payload.get("ok") and _is_host_error(err):
+            raise click.UsageError(_pretty_host_error(value, err))
         from ..observe import attach_observation
 
         attach_observation(payload)
@@ -63,7 +116,7 @@ def _run(kind: str, value: str, **kwargs: Any) -> None:
         except OSError:
             pass
     emit(payload, kind="lookup")
-    if not payload.get("ok"):
+    if isinstance(payload, dict) and not payload.get("ok"):
         raise SystemExit(1)
 
 
@@ -113,29 +166,28 @@ def register_tool_commands(cli: click.Group) -> None:
     cli.add_command(pmtu_cmd)
 
 
-@click.command("ip")
+@click.command("ip", short_help="Look up an IPv4 or IPv6 address (also ASN or country)")
 @click.argument("addr")
 def ip_cmd(addr: str) -> None:
-    """Look up an IPv4 or IPv6 address (same as GET /<ip>). Also accepts ASN or country."""
+    """Look up an IPv4 or IPv6 address. Also accepts ASN or country."""
     try:
         kind, value = classify_query(addr)
     except ValueError as e:
-        emit({"ok": False, "error": str(e), "result": None}, kind="error")
-        raise SystemExit(1)
+        raise click.UsageError(str(e)) from e
     _run(kind, value)
 
 
-@click.command("asn")
+@click.command("asn", short_help="Look up an autonomous system")
 @click.argument("asn")
 def asn_cmd(asn: str) -> None:
-    """Look up an autonomous system (same as GET /AS<number>)."""
+    """Look up an autonomous system by number (AS13335 or 13335)."""
     raw = asn.strip()
     if raw.lower().startswith("as"):
         raw = raw[2:]
     _run("asn", raw)
 
 
-@click.command("dns")
+@click.command("dns", short_help="Query like dig: [@server] name [type]")
 @click.argument("args", nargs=-1)
 @click.option("-p", "--port", type=int, default=None, help="Nameserver port (default 53).")
 @click.option(
@@ -154,7 +206,7 @@ def dns_cmd(
     server_opt: Optional[str],
     timeout: float,
 ) -> None:
-    """Query DNS like dig: `looking-glass dns [@server] name [type]`.
+    """Query DNS like dig: [@server] name [type].
 
     Default nameserver comes from resolv.conf. Pass @server (or --server)
     only to override it.
@@ -167,8 +219,7 @@ def dns_cmd(
       looking-glass dns example.com AAAA -p 53 --server 9.9.9.9
 
     DS, DNSKEY, and NSEC are published at the zone apex (example.com), not www.
-    Known public examples: %s
-    """ % ", ".join(f"{t} {n}" for t, n in DNS_TYPE_EXAMPLES.items())
+    """
     at_server, name, positional_type = parse_dig_args(args)
     qtype = positional_type or rrtype or "A"
     raw_server = at_server or server_opt
@@ -182,92 +233,94 @@ def dns_cmd(
             kwargs["ns_port"] = port
         _run("dns", name, **kwargs)
     except ValueError as e:
-        emit({"ok": False, "query": name, "result": None, "error": str(e)}, kind="error")
-        raise SystemExit(1)
+        raise click.UsageError(str(e)) from e
 
 
-@click.command("dnssec")
+@click.command("dnssec", short_help="Walk the DNSSEC chain of trust")
 @click.argument("domain")
 def dnssec_cmd(domain: str) -> None:
-    """Walk the DNSSEC chain of trust (same as GET /dnssec/<domain>)."""
+    """Walk the DNSSEC chain of trust for a domain."""
     _run("dnssec", domain)
 
 
-@click.command("tls")
+@click.command("tls", short_help="Inspect a TLS handshake and certificate")
 @click.argument("host")
 @click.option("-p", "--port", type=int, default=443, show_default=True)
 @click.option("--sni", default=None, help="Override SNI hostname.")
 def tls_cmd(host: str, port: int, sni: Optional[str]) -> None:
-    """Inspect a TLS handshake and certificate (same as GET /tls/<host> with optional /<port>)."""
+    """Inspect a TLS handshake and certificate."""
     _run("tls", host, port=port, sni=sni)
 
 
-@click.command("apex")
+@click.command("apex", short_help="Zone and mail health")
 @click.argument("domain")
 def apex_cmd(domain: str) -> None:
-    """Zone and mail health (same as GET /apex/<domain>)."""
+    """Zone and mail health for a domain."""
+    click.echo(f"apex {domain} …", err=True)
     _run("apex", domain)
 
 
-@click.command("register")
+@click.command("register", short_help="Check a label against every IANA TLD")
 @click.argument("name")
-@click.option("--tlds", "tlds_opt", default=None, help="Comma-separated TLD list (same as ?tlds=).")
-def register_cmd(name: str, tlds_opt: Optional[str]) -> None:
-    """Check a label against every IANA TLD (same as GET /register/<name>)."""
+@click.option("--tlds", "tlds_opt", default=None, help="Comma-separated TLD list.")
+@click.option("--all", "all_flag", is_flag=True, help="Print the full TLD board (human mode).")
+def register_cmd(name: str, tlds_opt: Optional[str], all_flag: bool) -> None:
+    """Check a label against every IANA TLD."""
+    _ = all_flag
     kwargs: Dict[str, Any] = {}
     if tlds_opt:
         kwargs["tlds"] = [part.strip().lower().lstrip(".") for part in tlds_opt.split(",") if part.strip()]
     _run("register", name, **kwargs)
 
 
-@click.command("ping")
+@click.command("ping", short_help="Ping a host (ICMP, or TCP if ICMP is unavailable)")
 @click.argument("target")
 def ping_cmd(target: str) -> None:
-    """ICMP ping (same as GET /ping/<host>)."""
+    """Ping a host (ICMP, or TCP if ICMP is unavailable)."""
     _run("ping", target)
 
 
-@click.command("traceroute")
+@click.command("traceroute", short_help="UDP traceroute")
 @click.argument("target")
 def traceroute_cmd(target: str) -> None:
-    """UDP traceroute (same as GET /traceroute/<host>)."""
+    """UDP traceroute to a host."""
     _run("traceroute", target)
 
 
-@click.command("mtr")
+@click.command("mtr", short_help="MTR-style path report")
 @click.argument("target")
 @click.option("-c", "--cycles", type=int, default=None)
 def mtr_cmd(target: str, cycles: Optional[int]) -> None:
-    """MTR-style path report (same as GET /mtr/<host>)."""
+    """MTR-style path report."""
     _run("mtr", target, cycles=cycles)
 
 
-@click.command("tcptraceroute")
+@click.command("tcptraceroute", short_help="TCP traceroute")
 @click.argument("target")
 @click.option("-p", "--port", type=int, default=443, show_default=True)
 def tcptraceroute_cmd(target: str, port: int) -> None:
-    """TCP traceroute (same as GET /tcptraceroute/<host>/<port>)."""
+    """TCP traceroute to a host (default port 443)."""
     _run("tcptraceroute", target, port=port)
 
 
-@click.command("rdap")
+@click.command("rdap", short_help="RDAP lookup")
 @click.argument("target")
 def rdap_cmd(target: str) -> None:
-    """RDAP lookup (same as GET /rdap/<token>)."""
+    """RDAP lookup for an IP, ASN, or domain."""
     _run("rdap", target)
 
 
-@click.command("reputation")
+@click.command("reputation", short_help="Domain or IP blocklists")
 @click.argument("target")
 def reputation_cmd(target: str) -> None:
-    """Domain or IP blocklists (same as GET /reputation/<name>)."""
+    """Domain or IP blocklists."""
     _run("reputation", target)
 
 
-@click.command("bgp")
+@click.command("bgp", short_help="Prefix origin ASN and RPKI ROA status")
 @click.argument("target")
 def bgp_cmd(target: str) -> None:
-    """Prefix origin ASN and RPKI ROA status (same as GET /bgp/<ip>)."""
+    """Prefix origin ASN and RPKI ROA status."""
     _run("bgp", target)
 
 

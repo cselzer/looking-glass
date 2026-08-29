@@ -92,6 +92,7 @@ class DocsGenerateTests(unittest.TestCase):
         self.assertIn("function placePop", text)
         self.assertNotIn("<i></i><i></i><i></i>", text)
         self.assertNotIn('id="status-logs"', text)
+        self.assertNotIn('id="status-services"', text)
         self.assertNotIn('id="status-history"', text)
         self.assertNotIn('id="status-wall"', text)
         self.assertNotIn('id="cache-btn"', text)
@@ -208,6 +209,7 @@ class DocsHttpTests(unittest.TestCase):
         self.assertIn('id="status-login"', text)
         self.assertNotIn('id="status-logout"', text)
         self.assertNotIn('id="status-logs"', text)
+        self.assertNotIn('id="status-services"', text)
         self.assertNotIn('id="cache-btn"', text)
 
     def test_session_chrome_and_post_regen(self):
@@ -226,6 +228,7 @@ class DocsHttpTests(unittest.TestCase):
                 self.assertIn('id="status-auth-user"', text)
                 self.assertIn('id="status-logout"', text)
                 self.assertIn('id="status-logs"', text)
+                self.assertIn('id="status-services"', text)
                 self.assertIn('id="status-history"', text)
                 self.assertIn('id="status-wall"', text)
                 self.assertIn('id="cache-btn"', text)

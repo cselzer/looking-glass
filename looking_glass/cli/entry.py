@@ -1979,7 +1979,7 @@ def lookup_bench_cmd(
     connections: Optional[int],
     socket: Optional[str],
 ) -> None:
-    """Hammer GET /{ip} on the intel server (IPv4 and IPv6).
+    """Hammer the intel Unix socket with IPv4 and IPv6 lookups.
 
     Requires `looking-glass lookup-server start`. Does not load RIR in this process.
     Progress is on stderr; the report is a compact terminal view (or JSON with `--json`).

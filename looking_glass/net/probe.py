@@ -38,7 +38,13 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Protocol, Tuple
 from urllib.parse import unquote
 
-from .host import dns_public_host, public_from_addrinfo, public_ip_from_addrinfo, reject_probe_target, unbracket_host
+from .host import (
+    dns_public_host,
+    public_from_addrinfo,
+    public_ip_from_addrinfo,
+    reject_probe_target,
+    unbracket_host,
+)
 
 TOOLS = ("ping", "traceroute", "mtr")
 _UDP_BASE_PORT = 33434
@@ -395,6 +401,7 @@ class SocketEngine:
 
     async def resolve(self, target: str) -> Tuple[str, int, str]:
         text = unbracket_host(str(target).strip())
+        reject_probe_target(text)
         try:
             ip = guard_ip(text)
             family = socket.AF_INET if ipaddress.ip_address(ip).version == 4 else socket.AF_INET6
@@ -402,13 +409,16 @@ class SocketEngine:
         except ValueError as exc:
             if "multicast" in str(exc) or "unspecified" in str(exc):
                 raise
-        infos = await asyncio.get_running_loop().getaddrinfo(
-            text.rstrip("."),
-            None,
-            type=socket.SOCK_DGRAM,
-        )
+        try:
+            infos = await asyncio.get_running_loop().getaddrinfo(
+                text.rstrip("."),
+                None,
+                type=socket.SOCK_DGRAM,
+            )
+        except OSError as exc:
+            raise ValueError(f"invalid host {text!r}") from exc
         if not infos:
-            raise ValueError(f"could not resolve {text}")
+            raise ValueError(f"invalid host {text!r}")
         if public_from_addrinfo(infos) is None:
             dns = await asyncio.to_thread(dns_public_host, text.rstrip("."))
             if dns is not None:
@@ -1496,7 +1506,12 @@ async def ping_async(
         "via": _via_label([row.get("via") for row in probes]),
     }
     await _finalize_result(result, "ping", enrich)
-    return {"ok": True, "result": result, "error": None, "total_ms": _ms(start)}
+    return {
+        "ok": bool(received),
+        "result": result,
+        "error": None if received else "100% loss",
+        "total_ms": _ms(start),
+    }
 
 
 def _dest_hit(hit: ProbeHit, ip: str) -> bool:

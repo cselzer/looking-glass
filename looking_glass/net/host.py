@@ -65,6 +65,8 @@ def reject_probe_target(host: str) -> None:
         raise ValueError("host is required")
     if "%" in text:
         raise ValueError("zone-id is not a probe target")
+    if "/" in text:
+        raise ValueError("not a valid IPv4 address")
     reject_url_as_host(text)
     reject_bogus_ipv4(text)
     try:
