@@ -3105,6 +3105,7 @@ class HttpDemoTests(unittest.TestCase):
         self.assertIn("os", payload)
         self.assertIn("os_version", payload)
         self.assertIn("os_codename", payload)
+        self.assertIn("kernel", payload)
 
     def test_status_json_asgi(self):
         app = self._demo_app("asgi")
@@ -3145,6 +3146,7 @@ class HttpDemoTests(unittest.TestCase):
         self.assertIn("os", payload)
         self.assertIn("os_version", payload)
         self.assertIn("os_codename", payload)
+        self.assertIn("kernel", payload)
 
     def test_status_json_dual_stack(self):
         app = self._demo_app("wsgi")

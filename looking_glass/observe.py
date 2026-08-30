@@ -80,10 +80,23 @@ def _darwin_os() -> Dict[str, Optional[str]]:
     }
 
 
-def host_os() -> Dict[str, Optional[str]]:
-    """Operating system, version, and codename for GET /status. Never raises."""
-    empty: Dict[str, Optional[str]] = {"os": None, "os_version": None, "os_codename": None}
+def _kernel() -> Optional[str]:
     try:
+        return platform.release() or None
+    except Exception:
+        return None
+
+
+def host_os() -> Dict[str, Optional[str]]:
+    """Operating system, version, codename, and kernel for GET /status. Never raises."""
+    empty: Dict[str, Optional[str]] = {
+        "os": None,
+        "os_version": None,
+        "os_codename": None,
+        "kernel": None,
+    }
+    try:
+        kernel = _kernel()
         system = platform.system()
         if system == "Linux":
             info = _os_release()
@@ -91,13 +104,17 @@ def host_os() -> Dict[str, Optional[str]]:
                 "os": info.get("NAME") or "Linux",
                 "os_version": info.get("VERSION_ID") or None,
                 "os_codename": info.get("VERSION_CODENAME") or info.get("UBUNTU_CODENAME") or None,
+                "kernel": kernel,
             }
         if system == "Darwin":
-            return _darwin_os()
+            out = _darwin_os()
+            out["kernel"] = kernel
+            return out
         return {
             "os": system or None,
             "os_version": platform.release() or None,
             "os_codename": None,
+            "kernel": kernel,
         }
     except Exception:
         return empty

@@ -1,3 +1,4 @@
+import platform
 import socket
 import unittest
 from unittest.mock import patch
@@ -72,3 +73,10 @@ class EgressAddrTests(unittest.TestCase):
             self.assertIsNone(addrs["ipv4"])
             self.assertIsNone(addrs["ipv6"])
             self.assertIsNone(observe.egress_ip())
+
+
+class HostOsTests(unittest.TestCase):
+    def test_kernel_is_platform_release(self):
+        got = observe.host_os()
+        self.assertIn("kernel", got)
+        self.assertEqual(got["kernel"], platform.release() or None)
