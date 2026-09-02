@@ -833,12 +833,6 @@ function rawTextField(node, kind) {
     return node;
   }
 
-  function setSafeHref(node, url) {
-    const href = typeof window.safeHref === "function" ? window.safeHref(url) : "";
-    if (href) node.setAttribute("href", href);
-    else node.removeAttribute("href");
-  }
-
   function inspectBtn(kind, value, cls, label) {
     const btn = el("button", cls, label == null ? String(value) : label);
     btn.type = "button";
@@ -1428,7 +1422,7 @@ function paintHistoryBar(host, payload) {
   if (url && !replay) {
     const link = document.createElement("a");
     link.className = "hist-permalink";
-    setSafeHref(link, url);
+    window.setSafeHref(link, url);
     link.textContent = url;
     bindHistPermalink(link, url, payload);
     row.append(link);
@@ -1586,7 +1580,7 @@ function renderApex(payload) {
         const rfcs = el("p", "apex-rfcs");
         for (const rfc of check.rfcs) {
           const a = el("a", "rfc", rfc.section ? `RFC ${rfc.rfc} §${rfc.section}` : `RFC ${rfc.rfc}`);
-          setSafeHref(a, rfc.url || `https://www.rfc-editor.org/rfc/rfc${rfc.rfc}`);
+          window.setSafeHref(a, rfc.url || `https://www.rfc-editor.org/rfc/rfc${rfc.rfc}`);
           a.target = "_blank";
           a.rel = "noopener";
           rfcs.append(a);
@@ -1609,7 +1603,7 @@ function renderApex(payload) {
     for (const row of standards) {
       const li = document.createElement("li");
       const a = el("a", "", `RFC ${row.rfc}`);
-      setSafeHref(a, row.url || `https://www.rfc-editor.org/rfc/rfc${row.rfc}`);
+      window.setSafeHref(a, row.url || `https://www.rfc-editor.org/rfc/rfc${row.rfc}`);
       a.target = "_blank";
       a.rel = "noopener";
       li.append(a);
@@ -3128,7 +3122,7 @@ function renderWhois(payload) {
       if (url) {
         const a = document.createElement("a");
         a.className = "hist-permalink";
-        setSafeHref(a, url);
+        window.setSafeHref(a, url);
         a.textContent = url;
         if (typeof window.bindHistPermalink === "function") window.bindHistPermalink(a, url, payload);
         card.append(a);
@@ -3491,6 +3485,7 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
     }
     const hostEl = document.getElementById("status-host");
     const ipEl = document.getElementById("status-ip");
+    const ipSep = document.getElementById("status-ip-sep");
     const timeEl = document.getElementById("status-time");
     const rttEl = document.getElementById("status-rtt");
     const uptimeEl = document.getElementById("status-uptime");
@@ -3598,15 +3593,18 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
       return (x >= 10 || i === 0 ? x.toFixed(0) : x.toFixed(1)) + units[i];
     }
 
-    function setStat(el, sep, text) {
+    function setStat(el, sep, text, title) {
       if (!el) return;
       if (!text) {
         el.hidden = true;
         el.textContent = "";
+        el.removeAttribute("title");
         if (sep) sep.hidden = true;
       } else {
         el.hidden = false;
         el.textContent = text;
+        if (title) el.setAttribute("title", title);
+        else el.removeAttribute("title");
         if (sep) sep.hidden = false;
       }
     }
@@ -3616,13 +3614,15 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
       setStat(
         memEl,
         hostStatSeps[0],
-        mem && mem.total ? ("mem " + fmtBytes(mem.used) + "/" + fmtBytes(mem.total)) : ""
+        mem && mem.total ? ("mem " + fmtBytes(mem.used) + "/" + fmtBytes(mem.total)) : "",
+        mem && mem.total ? "memory used/total" : ""
       );
       const vm = data && data.vm;
       setStat(
         vmEl,
         hostStatSeps[1],
-        vm ? ("vm maj " + (vm.pgmajfault || 0) + " so " + (vm.pswpout || 0)) : ""
+        vm ? ("vm majfault " + (vm.pgmajfault || 0) + " · swapout " + (vm.pswpout || 0)) : "",
+        vm ? "major faults / pages swapped out" : ""
       );
       const io = data && data.io;
       let ioText = "";
@@ -3630,20 +3630,29 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
         const name = Object.keys(io)[0];
         if (name) {
           const row = io[name] || {};
-          ioText = name + " " + fmtBytes((row.rsec || 0) * 512) + "/" + fmtBytes((row.wsec || 0) * 512);
+          ioText = name + " ⬇️ " + fmtBytes((row.rsec || 0) * 512) + " ⬆️ " + fmtBytes((row.wsec || 0) * 512);
         }
       }
-      setStat(ioEl, hostStatSeps[2], ioText);
+      setStat(ioEl, hostStatSeps[2], ioText, ioText ? "disk read/write" : "");
       const net = data && data.net;
       let netText = "";
       if (net && typeof net === "object") {
         const name = Object.keys(net)[0];
         if (name) {
           const row = net[name] || {};
-          netText = name + " " + fmtBytes(row.rx_bytes) + "/" + fmtBytes(row.tx_bytes);
+          netText = name + " ⬇️ " + fmtBytes(row.rx_bytes) + " ⬆️ " + fmtBytes(row.tx_bytes);
         }
       }
-      setStat(netEl, hostStatSeps[3], netText);
+      setStat(netEl, hostStatSeps[3], netText, netText ? "net rx/tx" : "");
+    }
+
+    function paintIps(text) {
+      const value = text || "";
+      if (ipEl) {
+        ipEl.textContent = value;
+        ipEl.hidden = !value;
+      }
+      if (ipSep) ipSep.hidden = !value;
     }
 
     window.lookingGlassFormatDuration = formatDuration;
@@ -3701,7 +3710,7 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
 
     function paintFail() {
       hostEl.textContent = dash;
-      ipEl.textContent = "";
+      paintIps("");
       clockKnown = false;
       paintTime();
       rttEl.textContent = dash;
@@ -3731,7 +3740,7 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
         const parts = [];
         if (data.ipv4) parts.push(data.ipv4);
         if (data.ipv6) parts.push(data.ipv6);
-        ipEl.textContent = parts.join(" ") || data.ip || "";
+        paintIps(parts.join(" ") || data.ip || "");
         const epoch = Number(data.time_epoch);
         if (Number.isFinite(epoch)) {
           clockSkewMs = epoch * 1000 - Date.now();

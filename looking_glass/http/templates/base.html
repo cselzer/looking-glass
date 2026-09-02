@@ -43,6 +43,12 @@
       } catch (err) {}
       return "";
     };
+    window.setSafeHref = function (node, url) {
+      if (!node) return;
+      var href = window.safeHref(url);
+      if (href) node.setAttribute("href", href);
+      else node.removeAttribute("href");
+    };
   </script>
   <link rel="stylesheet" href="{{ static_url('gui.css') }}">
   {% block extra_head %}{% endblock %}
@@ -68,7 +74,6 @@
     <span class="site-head-end">
       <span class="status-id">
         <span id="status-host">—</span>
-        <span id="status-ip"></span>
       </span>
       <span id="status-time">—</span>
     </span>
