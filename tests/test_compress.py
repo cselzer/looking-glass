@@ -381,6 +381,26 @@ class ApplyResponseTests(unittest.TestCase):
         headers = merge_vary([("Vary", "Origin"), ("Vary", "Accept-Encoding")])
         self.assertEqual(_hdr(headers, "Vary"), "Origin, Accept-Encoding")
 
+    def test_gzip_level_changes_size(self):
+        body = _pad_json()
+        low = encode_body("gzip", body, CompressSettings(gzip_level=1))
+        high = encode_body("gzip", body, CompressSettings(gzip_level=9))
+        self.assertIsNotNone(low)
+        self.assertIsNotNone(high)
+        self.assertEqual(gzip.decompress(low), body)
+        self.assertEqual(gzip.decompress(high), body)
+        self.assertGreaterEqual(len(low), len(high))
+
+    def test_brotli_quality_changes_size(self):
+        body = _pad_json()
+        low = encode_body("br", body, CompressSettings(brotli_quality=1))
+        high = encode_body("br", body, CompressSettings(brotli_quality=11))
+        self.assertIsNotNone(low)
+        self.assertIsNotNone(high)
+        self.assertEqual(brotli.decompress(low), body)
+        self.assertEqual(brotli.decompress(high), body)
+        self.assertGreaterEqual(len(low), len(high))
+
 
 class DecodeRequestTests(unittest.TestCase):
     def test_gzip_and_br(self):
@@ -533,6 +553,10 @@ class ConfigToggleTests(unittest.TestCase):
             self.assertFalse(cfg["http"]["compress"]["gzip"])
             self.assertTrue(cfg["http"]["compress"]["brotli"])
             self.assertEqual(cfg["http"]["compress"]["min_bytes"], 1024)
+            levels = set_value("http.compress.gzip_level", "9")
+            self.assertEqual(levels["http"]["compress"]["gzip_level"], 9)
+            quality = set_value("http.compress.brotli_quality", "11")
+            self.assertEqual(quality["http"]["compress"]["brotli_quality"], 11)
             again = load()
             self.assertFalse(again["http"]["compress"]["gzip"])
             result = runner.invoke(
@@ -557,6 +581,8 @@ class ConfigToggleTests(unittest.TestCase):
             "http.compress.gzip",
             "http.compress.brotli",
             "http.compress.min_bytes",
+            "http.compress.gzip_level",
+            "http.compress.brotli_quality",
         ):
             self.assertIn(key, keys)
             self.assertIn(f'field("{key}"', src.replace(" ", ""))

@@ -115,6 +115,8 @@ INVENTORY: Dict[str, str] = {
     "gui.config.http.compress.gzip": "Compress responses with gzip",
     "gui.config.http.compress.brotli": "Compress responses with Brotli",
     "gui.config.http.compress.min_bytes": "Minimum bytes to compress",
+    "gui.config.http.compress.gzip_level": "Gzip compression level (0–9)",
+    "gui.config.http.compress.brotli_quality": "Brotli quality (0–11)",
     "gui.login": "login",
     "gui.logout": "logout",
     "gui.login.title": "Login",

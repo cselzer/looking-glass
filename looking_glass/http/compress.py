@@ -19,6 +19,8 @@ AsgiHeaders = List[Tuple[bytes, bytes]]
 
 GZIP_LEVEL = 5
 BROTLI_QUALITY = 4
+GZIP_LEVEL_MAX = 9
+BROTLI_QUALITY_MAX = 11
 DEFAULT_MIN_BYTES = 1024
 DEFAULT_MAX_REQUEST = 1024 * 1024
 ACME_PREFIX = "/.well-known/acme-challenge/"
@@ -35,8 +37,8 @@ _SKIP_STATUS = frozenset({204, 304})
 _CACHE_MAX = 32
 
 _cache_lock = threading.Lock()
-_cache: Dict[Tuple[str, bytes], bytes] = {}
-_cache_order: List[Tuple[str, bytes]] = []
+_cache: Dict[Tuple[str, int, bytes], bytes] = {}
+_cache_order: List[Tuple[str, int, bytes]] = []
 
 
 class PayloadTooLarge(Exception):
@@ -56,6 +58,8 @@ class CompressSettings:
     gzip: bool = True
     brotli: bool = True
     min_bytes: int = DEFAULT_MIN_BYTES
+    gzip_level: int = GZIP_LEVEL
+    brotli_quality: int = BROTLI_QUALITY
     max_request_bytes: int = DEFAULT_MAX_REQUEST
 
     @property
@@ -84,6 +88,12 @@ def settings_from_raw(raw: Any) -> CompressSettings:
         min_bytes = DEFAULT_MIN_BYTES
     if min_bytes < 0:
         min_bytes = 0
+    gzip_level = _clamp_level(
+        data.get("gzip_level", GZIP_LEVEL), 0, GZIP_LEVEL_MAX, GZIP_LEVEL
+    )
+    brotli_quality = _clamp_level(
+        data.get("brotli_quality", BROTLI_QUALITY), 0, BROTLI_QUALITY_MAX, BROTLI_QUALITY
+    )
     try:
         max_request = int(data.get("max_request_bytes", DEFAULT_MAX_REQUEST))
     except (TypeError, ValueError):
@@ -94,8 +104,22 @@ def settings_from_raw(raw: Any) -> CompressSettings:
         gzip=gzip_on,
         brotli=brotli_on,
         min_bytes=min_bytes,
+        gzip_level=gzip_level,
+        brotli_quality=brotli_quality,
         max_request_bytes=max_request,
     )
+
+
+def _clamp_level(raw: Any, lo: int, hi: int, default: int) -> int:
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return default
+    if value < lo:
+        return lo
+    if value > hi:
+        return hi
+    return value
 
 
 def compress(app, config: dict | None = None):
@@ -290,11 +314,16 @@ def response_eligible(
     return is_compressible_type(ctype)
 
 
-def encode_body(codec: str, body: bytes) -> Optional[bytes]:
+def encode_body(
+    codec: str,
+    body: bytes,
+    settings: Optional[CompressSettings] = None,
+) -> Optional[bytes]:
+    cfg = settings if settings is not None else CompressSettings()
     if codec == "gzip":
-        encoded = gzip.compress(body, compresslevel=GZIP_LEVEL, mtime=0)
+        encoded = gzip.compress(body, compresslevel=cfg.gzip_level, mtime=0)
     elif codec == "br":
-        encoded = brotli.compress(body, quality=BROTLI_QUALITY)
+        encoded = brotli.compress(body, quality=cfg.brotli_quality)
     else:
         return None
     if len(encoded) >= len(body):
@@ -302,8 +331,13 @@ def encode_body(codec: str, body: bytes) -> Optional[bytes]:
     return encoded
 
 
-def _cache_get(codec: str, body: bytes) -> Optional[bytes]:
-    key = (codec, hashlib.blake2b(body, digest_size=16).digest())
+def _cache_key(codec: str, body: bytes, settings: CompressSettings) -> Tuple[str, int, bytes]:
+    level = settings.gzip_level if codec == "gzip" else settings.brotli_quality
+    return (codec, level, hashlib.blake2b(body, digest_size=16).digest())
+
+
+def _cache_get(codec: str, body: bytes, settings: CompressSettings) -> Optional[bytes]:
+    key = _cache_key(codec, body, settings)
     with _cache_lock:
         hit = _cache.get(key)
         if hit is None:
@@ -316,8 +350,8 @@ def _cache_get(codec: str, body: bytes) -> Optional[bytes]:
         return hit
 
 
-def _cache_put(codec: str, body: bytes, encoded: bytes) -> None:
-    key = (codec, hashlib.blake2b(body, digest_size=16).digest())
+def _cache_put(codec: str, body: bytes, encoded: bytes, settings: CompressSettings) -> None:
+    key = _cache_key(codec, body, settings)
     with _cache_lock:
         if key not in _cache and len(_cache) >= _CACHE_MAX and _cache_order:
             old = _cache_order.pop(0)
@@ -330,19 +364,24 @@ def _cache_put(codec: str, body: bytes, encoded: bytes) -> None:
         _cache_order.append(key)
 
 
-def encode_cached(codec: str, body: bytes, headers: HeaderList) -> Optional[bytes]:
+def encode_cached(
+    codec: str,
+    body: bytes,
+    headers: HeaderList,
+    settings: CompressSettings,
+) -> Optional[bytes]:
     use_cache = _cache_control_immutable(headers)
     if use_cache:
-        hit = _cache_get(codec, body)
+        hit = _cache_get(codec, body, settings)
         if hit is not None:
             if len(hit) >= len(body):
                 return None
             return hit
-    encoded = encode_body(codec, body)
+    encoded = encode_body(codec, body, settings)
     if encoded is None:
         return None
     if use_cache:
-        _cache_put(codec, body, encoded)
+        _cache_put(codec, body, encoded, settings)
     return encoded
 
 
@@ -377,7 +416,7 @@ def apply_response(
         return status, headers, body
     if not response_eligible(status, headers, body, path, cfg, check_size=True):
         return status, headers, body
-    encoded = encode_cached(codec, body, headers)
+    encoded = encode_cached(codec, body, headers, cfg)
     if encoded is None:
         return status, headers, body
     headers = _set_header(headers, "Content-Encoding", codec)

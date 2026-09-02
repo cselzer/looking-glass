@@ -30,6 +30,8 @@ def config_group(ctx: click.Context) -> None:
     looking-glass config set http.controller_origins https://monitor.example
     looking-glass config set http.compress.gzip false
     looking-glass config set http.compress.brotli true
+    looking-glass config set http.compress.gzip_level 5
+    looking-glass config set http.compress.brotli_quality 4
     looking-glass config hostname
     looking-glass config hostname s1.example.com
     """

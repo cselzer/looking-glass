@@ -131,8 +131,8 @@
       "en": "Print one dotted key (locale, cache.gui, refresh.rir, …)."
     },
     "cli.config.help": {
-      "text": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config set http.controller_origins https://monitor.example\nlooking-glass config set http.compress.gzip false\nlooking-glass config set http.compress.brotli true\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com",
-      "en": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config set http.controller_origins https://monitor.example\nlooking-glass config set http.compress.gzip false\nlooking-glass config set http.compress.brotli true\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com"
+      "text": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config set http.controller_origins https://monitor.example\nlooking-glass config set http.compress.gzip false\nlooking-glass config set http.compress.brotli true\nlooking-glass config set http.compress.gzip_level 5\nlooking-glass config set http.compress.brotli_quality 4\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com",
+      "en": "Show and edit ~/.looking-glass/config.json (locale, cache TTL/GUI, dataset refresh).\n\nLocale catalogs stay in ~/.looking-glass/locales. Datasets stay in ~/.looking-glass/data.\nLookup caches stay in ~/.looking-glass/data/cache. Admin: `looking-glass auth password set`.\n\n\b\nlooking-glass config\nlooking-glass config get locale\nlooking-glass config set cache.gui true\nlooking-glass config set docs.enabled true\nlooking-glass config set refresh.rir 2\nlooking-glass config set history.snapshots -1\nlooking-glass config set wall.challenge_ttl_days 5\nlooking-glass config set http.controller_origins https://monitor.example\nlooking-glass config set http.compress.gzip false\nlooking-glass config set http.compress.brotli true\nlooking-glass config set http.compress.gzip_level 5\nlooking-glass config set http.compress.brotli_quality 4\nlooking-glass config hostname\nlooking-glass config hostname s1.example.com"
     },
     "cli.config.hostname.help": {
       "text": "Set http.hostname from the node FQDN (Python getfqdn) or NAME.",
@@ -1286,9 +1286,17 @@
       "text": "Compress responses with Brotli",
       "en": "Compress responses with Brotli"
     },
+    "gui.config.http.compress.brotli_quality": {
+      "text": "Brotli quality (0–11)",
+      "en": "Brotli quality (0–11)"
+    },
     "gui.config.http.compress.gzip": {
       "text": "Compress responses with gzip",
       "en": "Compress responses with gzip"
+    },
+    "gui.config.http.compress.gzip_level": {
+      "text": "Gzip compression level (0–9)",
+      "en": "Gzip compression level (0–9)"
     },
     "gui.config.http.compress.min_bytes": {
       "text": "Minimum bytes to compress",

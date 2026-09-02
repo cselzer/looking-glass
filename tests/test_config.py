@@ -59,6 +59,8 @@ class ConfigLoaderTests(unittest.TestCase):
             self.assertTrue(cfg["http"]["compress"]["gzip"])
             self.assertTrue(cfg["http"]["compress"]["brotli"])
             self.assertEqual(cfg["http"]["compress"]["min_bytes"], 1024)
+            self.assertEqual(cfg["http"]["compress"]["gzip_level"], 5)
+            self.assertEqual(cfg["http"]["compress"]["brotli_quality"], 4)
             dest = path()
             self.assertEqual(dest, os.path.join(tmp, "config.json"))
             self.assertTrue(os.path.isfile(dest))
@@ -278,6 +280,8 @@ class KnownKeysTests(unittest.TestCase):
         self.assertIn("http.compress.gzip", known_keys())
         self.assertIn("http.compress.brotli", known_keys())
         self.assertIn("http.compress.min_bytes", known_keys())
+        self.assertIn("http.compress.gzip_level", known_keys())
+        self.assertIn("http.compress.brotli_quality", known_keys())
 
     def test_every_known_key_parses_its_default(self):
         with tempfile.TemporaryDirectory() as tmp, _root(tmp):

@@ -60,12 +60,20 @@ DEFAULTS: Dict[str, Any] = {
         "bind": "*",
         "staging": False,
         "controller_origins": [],
-        "compress": {"gzip": True, "brotli": True, "min_bytes": 1024},
+        "compress": {
+            "gzip": True,
+            "brotli": True,
+            "min_bytes": 1024,
+            "gzip_level": 5,
+            "brotli_quality": 4,
+        },
     },
 }
 
 MTR_HARD_CEILING = 50
 HTTP_WORKERS_MAX = 32
+GZIP_LEVEL_MAX = 9
+BROTLI_QUALITY_MAX = 11
 
 _TRUE = {"1", "true", "yes", "on"}
 _FALSE = {"0", "false", "no", "off"}
@@ -326,15 +334,19 @@ def _normalize_email(value: Any) -> str:
     return text
 
 
-def _clamp_workers(raw: Any, default: int) -> int:
+def _clamp_int(raw: Any, default: int, lo: int, hi: int) -> int:
     parsed = _parse_days(raw if not isinstance(raw, str) else raw.strip())
     if parsed is None:
         return default
-    if parsed < 1:
-        return 1
-    if parsed > HTTP_WORKERS_MAX:
-        return HTTP_WORKERS_MAX
+    if parsed < lo:
+        return lo
+    if parsed > hi:
+        return hi
     return parsed
+
+
+def _clamp_workers(raw: Any, default: int) -> int:
+    return _clamp_int(raw, default, 1, HTTP_WORKERS_MAX)
 
 
 def _merge_compress(raw: Any) -> Dict[str, Any]:
@@ -358,6 +370,14 @@ def _merge_compress(raw: Any) -> Dict[str, Any]:
         parsed = _parse_days(value)
         if parsed is not None:
             out["min_bytes"] = parsed
+    if "gzip_level" in raw:
+        out["gzip_level"] = _clamp_int(
+            raw.get("gzip_level"), out["gzip_level"], 0, GZIP_LEVEL_MAX
+        )
+    if "brotli_quality" in raw:
+        out["brotli_quality"] = _clamp_int(
+            raw.get("brotli_quality"), out["brotli_quality"], 0, BROTLI_QUALITY_MAX
+        )
     return out
 
 
@@ -539,6 +559,16 @@ def _parse_set_value(dotted: str, raw: Any) -> Any:
         if parsed is None:
             raise ValueError("http.compress.min_bytes must be a non-negative integer")
         return parsed
+    if key == "http.compress.gzip_level":
+        parsed = _parse_days(raw if not isinstance(raw, str) else raw.strip())
+        if parsed is None:
+            raise ValueError("http.compress.gzip_level must be an integer 0–9")
+        return _clamp_int(parsed, 5, 0, GZIP_LEVEL_MAX)
+    if key == "http.compress.brotli_quality":
+        parsed = _parse_days(raw if not isinstance(raw, str) else raw.strip())
+        if parsed is None:
+            raise ValueError("http.compress.brotli_quality must be an integer 0–11")
+        return _clamp_int(parsed, 4, 0, BROTLI_QUALITY_MAX)
     if key == "cache.ttl_days" or key.startswith("refresh."):
         days = _parse_days(raw if not isinstance(raw, str) else raw.strip())
         if days is None:

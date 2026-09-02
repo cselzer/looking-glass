@@ -3198,6 +3198,8 @@ function rawTextField(node, kind) {
       httpSec.append(field("http.compress.gzip", t("gui.config.http.compress.gzip", "Compress responses with gzip"), "checkbox", compress.gzip !== false));
       httpSec.append(field("http.compress.brotli", t("gui.config.http.compress.brotli", "Compress responses with Brotli"), "checkbox", compress.brotli !== false));
       httpSec.append(field("http.compress.min_bytes", t("gui.config.http.compress.min_bytes", "Minimum bytes to compress"), "number", compress.min_bytes, { min: "0", step: "1" }));
+      httpSec.append(field("http.compress.gzip_level", t("gui.config.http.compress.gzip_level", "Gzip compression level (0–9)"), "number", compress.gzip_level, { min: "0", max: "9", step: "1" }));
+      httpSec.append(field("http.compress.brotli_quality", t("gui.config.http.compress.brotli_quality", "Brotli quality (0–11)"), "number", compress.brotli_quality, { min: "0", max: "11", step: "1" }));
       form.append(httpSec);
 
       const refSec = el("fieldset", "config-sec config-span");
