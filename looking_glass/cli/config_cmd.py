@@ -28,6 +28,8 @@ def config_group(ctx: click.Context) -> None:
     looking-glass config set history.snapshots -1
     looking-glass config set wall.challenge_ttl_days 5
     looking-glass config set http.controller_origins https://monitor.example
+    looking-glass config set http.compress.gzip false
+    looking-glass config set http.compress.brotli true
     looking-glass config hostname
     looking-glass config hostname s1.example.com
     """

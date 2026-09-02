@@ -60,6 +60,7 @@ DEFAULTS: Dict[str, Any] = {
         "bind": "*",
         "staging": False,
         "controller_origins": [],
+        "compress": {"gzip": True, "brotli": True, "min_bytes": 1024},
     },
 }
 
@@ -336,9 +337,34 @@ def _clamp_workers(raw: Any, default: int) -> int:
     return parsed
 
 
+def _merge_compress(raw: Any) -> Dict[str, Any]:
+    out = dict(DEFAULTS["http"]["compress"])
+    if not isinstance(raw, dict):
+        return out
+    if "gzip" in raw:
+        try:
+            out["gzip"] = _parse_bool(raw.get("gzip"), "http.compress.gzip")
+        except ValueError:
+            pass
+    if "brotli" in raw:
+        try:
+            out["brotli"] = _parse_bool(raw.get("brotli"), "http.compress.brotli")
+        except ValueError:
+            pass
+    if "min_bytes" in raw:
+        value = raw.get("min_bytes")
+        if isinstance(value, str):
+            value = value.strip()
+        parsed = _parse_days(value)
+        if parsed is not None:
+            out["min_bytes"] = parsed
+    return out
+
+
 def _merge_http(raw: Any) -> Dict[str, Any]:
     out = dict(DEFAULTS["http"])
     out["controller_origins"] = list(out.get("controller_origins") or [])
+    out["compress"] = dict(DEFAULTS["http"]["compress"])
     if not isinstance(raw, dict):
         return out
     if "enabled" in raw:
@@ -376,6 +402,8 @@ def _merge_http(raw: Any) -> Dict[str, Any]:
         from .http.security import parse_controller_origins
 
         out["controller_origins"] = parse_controller_origins(raw.get("controller_origins"))
+    if "compress" in raw:
+        out["compress"] = _merge_compress(raw.get("compress"))
     return out
 
 
@@ -481,7 +509,7 @@ def _parse_set_value(dotted: str, raw: Any) -> Any:
         return lang
     if key == "cache.gui" or key == "docs.enabled":
         return _parse_bool(raw, key)
-    if key in {"http.enabled", "http.staging"}:
+    if key in {"http.enabled", "http.staging", "http.compress.gzip", "http.compress.brotli"}:
         return _parse_bool(raw, key)
     if key == "http.hostname":
         return _normalize_hostname(raw)
@@ -506,6 +534,11 @@ def _parse_set_value(dotted: str, raw: Any) -> Any:
         from .http.security import parse_controller_origins
 
         return parse_controller_origins(raw, strict=True)
+    if key == "http.compress.min_bytes":
+        parsed = _parse_days(raw if not isinstance(raw, str) else raw.strip())
+        if parsed is None:
+            raise ValueError("http.compress.min_bytes must be a non-negative integer")
+        return parsed
     if key == "cache.ttl_days" or key.startswith("refresh."):
         days = _parse_days(raw if not isinstance(raw, str) else raw.strip())
         if days is None:

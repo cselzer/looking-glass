@@ -13,6 +13,7 @@ from __future__ import annotations
 from http import HTTPStatus
 from wsgiref.simple_server import make_server
 
+from .compress import compress
 from .site import respond
 from ..auth.session import effective_scheme
 from ..wall import wall
@@ -74,7 +75,7 @@ def inner(environ, start_response):
     return [body]
 
 
-app = wall(inner)
+app = compress(wall(inner))
 
 
 def serve(host: str = "127.0.0.1", port: int = 8000) -> None:

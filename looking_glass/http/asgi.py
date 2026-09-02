@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from .compress import compress
 from .site import respond_async
 from ..auth.session import effective_scheme
 from ..wall import wall
@@ -90,7 +91,7 @@ async def inner(scope, receive, send):
     await send({"type": "http.response.body", "body": body})
 
 
-app = wall(inner)
+app = compress(wall(inner))
 
 
 def serve(host: str = "127.0.0.1", port: int = 8001) -> None:

@@ -3194,6 +3194,10 @@ function rawTextField(node, kind) {
       httpSec.append(field("http.staging", t("gui.config.http.staging", "Use Let's Encrypt staging"), "checkbox", http.staging));
       const origins = Array.isArray(http.controller_origins) ? http.controller_origins.join(", ") : (http.controller_origins || "");
       httpSec.append(field("http.controller_origins", t("gui.config.http.controller_origins", "Controller origins (CORS, comma-separated)"), "text", origins));
+      const compress = http.compress || {};
+      httpSec.append(field("http.compress.gzip", t("gui.config.http.compress.gzip", "Compress responses with gzip"), "checkbox", compress.gzip !== false));
+      httpSec.append(field("http.compress.brotli", t("gui.config.http.compress.brotli", "Compress responses with Brotli"), "checkbox", compress.brotli !== false));
+      httpSec.append(field("http.compress.min_bytes", t("gui.config.http.compress.min_bytes", "Minimum bytes to compress"), "number", compress.min_bytes, { min: "0", step: "1" }));
       form.append(httpSec);
 
       const refSec = el("fieldset", "config-sec config-span");
