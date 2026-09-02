@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import ipaddress
 import platform
+import re
 import socket
 import subprocess
+import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 
 def hostname() -> str:
@@ -179,6 +181,155 @@ def observed_at(now: Optional[datetime] = None) -> str:
     if current.tzinfo is None:
         current = current.replace(tzinfo=timezone.utc)
     return current.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+_KB = 1024
+_DISK_NAME = re.compile(r"^(sd[a-z]+|vd[a-z]+|xvd[a-z]+|nvme\d+n\d+|hd[a-z]+)$")
+_VM_WANT = frozenset({"pgpgin", "pgpgout", "pswpin", "pswpout", "pgmajfault"})
+_NET_SKIP_PREFIX = ("docker", "veth", "br-")
+_RESOURCE_TTL_S = 1.0
+_resource_cache: Optional[Tuple[float, Dict[str, Any]]] = None
+
+
+def _proc_lines(path: Path) -> list[str]:
+    try:
+        return path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return []
+
+
+def _parse_meminfo(root: Path) -> Optional[Dict[str, int]]:
+    raw: Dict[str, int] = {}
+    for line in _proc_lines(root / "meminfo"):
+        if ":" not in line:
+            continue
+        key, rest = line.split(":", 1)
+        parts = rest.split()
+        if not parts:
+            continue
+        try:
+            raw[key.strip()] = int(parts[0]) * _KB
+        except ValueError:
+            continue
+    total = raw.get("MemTotal")
+    available = raw.get("MemAvailable")
+    if total is None or available is None:
+        return None
+    rss = 0
+    for line in _proc_lines(root / "self" / "status"):
+        if line.startswith("VmRSS:"):
+            parts = line.split()
+            if len(parts) >= 2:
+                try:
+                    rss = int(parts[1]) * _KB
+                except ValueError:
+                    rss = 0
+            break
+    return {
+        "total": total,
+        "available": available,
+        "used": total - available,
+        "swap_total": raw.get("SwapTotal", 0),
+        "swap_free": raw.get("SwapFree", 0),
+        "rss": rss,
+    }
+
+
+def _parse_vmstat(root: Path) -> Optional[Dict[str, int]]:
+    out: Dict[str, int] = {}
+    for line in _proc_lines(root / "vmstat"):
+        parts = line.split()
+        if len(parts) != 2 or parts[0] not in _VM_WANT:
+            continue
+        try:
+            out[parts[0]] = int(parts[1])
+        except ValueError:
+            continue
+    return out or None
+
+
+def _parse_diskstats(root: Path) -> Optional[Dict[str, Dict[str, int]]]:
+    out: Dict[str, Dict[str, int]] = {}
+    for line in _proc_lines(root / "diskstats"):
+        parts = line.split()
+        if len(parts) < 14 or not _DISK_NAME.match(parts[2]):
+            continue
+        try:
+            out[parts[2]] = {
+                "reads": int(parts[3]),
+                "writes": int(parts[7]),
+                "rsec": int(parts[5]),
+                "wsec": int(parts[9]),
+                "in_progress": int(parts[11]),
+            }
+        except (IndexError, ValueError):
+            continue
+    return out or None
+
+
+def _parse_netdev(root: Path) -> Optional[Dict[str, Dict[str, int]]]:
+    out: Dict[str, Dict[str, int]] = {}
+    for index, line in enumerate(_proc_lines(root / "net" / "dev")):
+        if index < 2 or ":" not in line:
+            continue
+        name, rest = line.split(":", 1)
+        iface = name.strip()
+        if not iface or iface == "lo" or iface.startswith(_NET_SKIP_PREFIX):
+            continue
+        cols = rest.split()
+        if len(cols) < 12:
+            continue
+        try:
+            nums = [int(col) for col in cols[:12]]
+        except ValueError:
+            continue
+        out[iface] = {
+            "rx_bytes": nums[0],
+            "rx_packets": nums[1],
+            "rx_errs": nums[2],
+            "rx_drop": nums[3],
+            "tx_bytes": nums[8],
+            "tx_packets": nums[9],
+            "tx_errs": nums[10],
+            "tx_drop": nums[11],
+        }
+    return out or None
+
+
+def clear_host_resources_cache() -> None:
+    global _resource_cache
+    _resource_cache = None
+
+
+def host_resources(*, proc_root: Optional[Path] = None, now: Optional[float] = None) -> Dict[str, Any]:
+    """Linux /proc memory, vm, disk, and net counters. Never raises."""
+    global _resource_cache
+    live = proc_root is None
+    stamp = time.monotonic() if now is None else float(now)
+    if live and _resource_cache is not None:
+        cached_at, cached = _resource_cache
+        if stamp - cached_at < _RESOURCE_TTL_S:
+            return dict(cached)
+    root = Path(proc_root) if proc_root is not None else Path("/proc")
+    out: Dict[str, Any] = {}
+    try:
+        mem = _parse_meminfo(root)
+        if mem:
+            out["memory"] = mem
+        vm = _parse_vmstat(root)
+        if vm:
+            out["vm"] = vm
+        io = _parse_diskstats(root)
+        if io:
+            out["io"] = io
+        net = _parse_netdev(root)
+        if net:
+            out["net"] = net
+    except Exception:
+        out = {}
+    if live:
+        _resource_cache = (stamp, dict(out))
+    return out
 
 
 def attach_observation(payload: Dict[str, Any]) -> Dict[str, Any]:

@@ -236,6 +236,8 @@ _RESULT_GUI_PREFIXES = (
     "gui.tool.",
     "gui.choose_tool",
     "gui.close",
+    "gui.cancel",
+    "gui.ok",
     "gui.minimize",
     "gui.refresh",
     "gui.looking_up",

@@ -6,8 +6,18 @@
   <title>{% block title %}{{ site }}{% endblock %}</title>
   <script src="/i18n/{{ locale|default('en') }}.js"></script>
   <script nonce="{{ csp_nonce }}">
-    window.t = function (id, vars) {
-      var text = (window.__i18n && window.__i18n[id]) || id;
+    var _missingI18n = {};
+    window.t = function (id, fallback, vars) {
+      if (fallback && typeof fallback === "object" && !Array.isArray(fallback) && vars == null) {
+        vars = fallback;
+        fallback = undefined;
+      }
+      var hit = window.__i18n && window.__i18n[id];
+      if (!hit && !_missingI18n[id]) {
+        _missingI18n[id] = true;
+        if (window.console && console.warn) console.warn("i18n: no message for " + id);
+      }
+      var text = hit || (fallback === undefined || fallback === null ? id : fallback);
       if (vars) {
         Object.keys(vars).forEach(function (key) {
           text = String(text).split("{" + key + "}").join(String(vars[key]));
@@ -15,11 +25,54 @@
       }
       return text;
     };
+    window.escHtml = function (value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    };
+    window.safeHref = function (url) {
+      var text = String(url || "").trim();
+      if (!text) return "";
+      if (text.charAt(0) === "/" && text.charAt(1) !== "/") return text;
+      try {
+        var parsed = new URL(text, window.location.href);
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.href;
+      } catch (err) {}
+      return "";
+    };
   </script>
   <link rel="stylesheet" href="{{ static_url('gui.css') }}">
   {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
+  <header class="site-head">
+    <h1><a href="/">{{ site }}</a></h1>
+    <span class="site-head-cluster">
+      <span id="status-rtt">—</span>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <span id="status-uptime">system uptime —</span>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <span id="status-load">load —</span>
+      <span class="status-sep status-host-sep" aria-hidden="true" hidden>·</span>
+      <span id="status-mem" hidden>—</span>
+      <span class="status-sep status-host-sep" aria-hidden="true" hidden>·</span>
+      <span id="status-vm" hidden>—</span>
+      <span class="status-sep status-host-sep" aria-hidden="true" hidden>·</span>
+      <span id="status-io" hidden>—</span>
+      <span class="status-sep status-host-sep" aria-hidden="true" hidden>·</span>
+      <span id="status-net" hidden>—</span>
+    </span>
+    <span class="site-head-end">
+      <span class="status-id">
+        <span id="status-host">—</span>
+        <span id="status-ip"></span>
+      </span>
+      <span id="status-time">—</span>
+    </span>
+  </header>
   <main>
     {% block body %}{% endblock %}
   </main>

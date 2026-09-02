@@ -3,14 +3,13 @@
 {% block title %}{{ site }}{% endblock %}
 {% block body_class %}gui{% endblock %}
 {% block body %}
-  <header class="site-head">
-    <h1><a href="/">{{ site }}</a></h1>
+  <div class="page-head">
     <div class="chip" title="{{ t('gui.peer_title') }}">
       <span>{{ t("gui.you") }}</span>
       <strong id="visitor-ip">{{ visitor or "—" }}</strong>
       <button type="button" class="ghost" id="lookup-self">{{ t("gui.lookup") }}</button>
     </div>
-  </header>
+  </div>
 
   <nav class="tool-nav" id="tool-nav" role="tablist" aria-label="{{ t('gui.tools_label') }}">
     <div class="tool-group">

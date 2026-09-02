@@ -174,3 +174,33 @@ class StaticFilesTests(unittest.TestCase):
         self.assertIn('autocorrect="off"', host)
         self.assertIn('autocapitalize="off"', host)
         self.assertIn('autocomplete="off"', host)
+
+    def test_xss_hardening(self):
+        _, _, gui, _ = respond("wsgi", "127.0.0.1", "/static/gui.js", {})
+        _, _, admin, _ = respond("wsgi", "127.0.0.1", "/static/admin.js", {})
+        _, _, html, _ = respond(
+            "wsgi",
+            "127.0.0.1",
+            "/",
+            {},
+            accept="text/html",
+            host="lg.example.com",
+        )
+        gui_text = gui.decode("utf-8")
+        admin_text = admin.decode("utf-8")
+        page = html.decode("utf-8")
+        self.assertNotIn("svg.innerHTML", admin_text)
+        self.assertNotIn("legend.innerHTML", admin_text)
+        self.assertNotIn("wrap.innerHTML", gui_text)
+        self.assertNotRegex(admin_text, r"innerHTML\s*=\s*[`'\"].*formatTs")
+        self.assertIn("window.lookingGlassPopConfirm", gui_text)
+        self.assertIn("function setSafeHref", gui_text)
+        self.assertIn("window.safeHref", page)
+        self.assertIn("fallback === undefined", page)
+        self.assertIn("function (id, fallback, vars)", page)
+        self.assertIn('id="status-mem"', page)
+        self.assertIn("site-head-cluster", page)
+        self.assertIn("inspect-pop-max", gui_text)
+        self.assertIn('id="status-host"', page)
+        self.assertNotIn('id="status-host"', page.split('id="status-bar"', 1)[-1])
+

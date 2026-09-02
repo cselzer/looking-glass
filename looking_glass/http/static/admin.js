@@ -115,6 +115,16 @@ function rawTextField(node, kind) {
         const y = pad.t + (1 - val / max) * innerH;
         return [x.toFixed(1), y.toFixed(1)];
       }
+      function svgNode(name, attrs, text) {
+        const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+        if (attrs) {
+          Object.keys(attrs).forEach((key) => {
+            if (attrs[key] != null) node.setAttribute(key, String(attrs[key]));
+          });
+        }
+        if (text != null) node.textContent = String(text);
+        return node;
+      }
       function area(values, color) {
         const base0 = xy(rows[0].t, 0);
         let d = "M " + base0[0] + " " + base0[1];
@@ -124,13 +134,37 @@ function rawTextField(node, kind) {
         });
         const last = xy(rows[rows.length - 1].t, 0);
         d += " L " + last[0] + " " + last[1] + " Z";
-        return '<path d="' + d + '" fill="' + color + '" fill-opacity="0.38" stroke="' + color + '" stroke-width="1.2"/>';
+        return svgNode("path", {
+          d: d,
+          fill: color,
+          "fill-opacity": "0.38",
+          stroke: color,
+          "stroke-width": "1.2",
+        });
       }
-      const grid = [];
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+      svg.setAttribute("class", "log-chart-svg");
       for (let g = 0; g <= 4; g++) {
         const y = pad.t + (g / 4) * innerH;
-        grid.push('<line x1="' + pad.l + '" x2="' + (w - pad.r) + '" y1="' + y + '" y2="' + y + '" stroke="currentColor" stroke-opacity="0.12"/>');
+        svg.append(svgNode("line", {
+          x1: pad.l,
+          x2: w - pad.r,
+          y1: y,
+          y2: y,
+          stroke: "currentColor",
+          "stroke-opacity": "0.12",
+        }));
       }
+      svg.append(area(hits, "var(--ok, #8ee29a)"));
+      svg.append(area(errors, "var(--bad, #ff8d8d)"));
+      svg.append(svgNode("text", {
+        x: pad.l,
+        y: 12,
+        fill: "currentColor",
+        "font-size": "10",
+        opacity: "0.7",
+      }, max));
       const wantTicks = rows.length === 1
         ? [0]
         : [0, Math.floor((rows.length - 1) / 2), rows.length - 1];
@@ -142,31 +176,31 @@ function rawTextField(node, kind) {
         seenTick[stamp] = 1;
         tickIdx.push(i);
       });
-      const ticks = tickIdx.map((i, n) => {
+      tickIdx.forEach((i, n) => {
         const anchor = n === 0 ? "start" : n === tickIdx.length - 1 ? "end" : "middle";
         const p = xy(rows[i].t, 0);
-        return (
-          '<text class="log-chart-tick" x="' + p[0] + '" y="' + (h - 6) +
-          '" text-anchor="' + anchor + '" fill="currentColor" font-size="9" opacity="0.7">' +
-          formatTs(rows[i].t, tickKind) + "</text>"
-        );
+        svg.append(svgNode("text", {
+          class: "log-chart-tick",
+          x: p[0],
+          y: h - 6,
+          "text-anchor": anchor,
+          fill: "currentColor",
+          "font-size": "9",
+          opacity: "0.7",
+        }, formatTs(rows[i].t, tickKind)));
       });
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("viewBox", "0 0 " + w + " " + h);
-      svg.setAttribute("class", "log-chart-svg");
-      svg.innerHTML =
-        grid.join("") +
-        area(hits, "var(--ok, #8ee29a)") +
-        area(errors, "var(--bad, #ff8d8d)") +
-        '<text x="' + pad.l + '" y="12" fill="currentColor" font-size="10" opacity="0.7">' + max + "</text>" +
-        ticks.join("");
       wrap.append(svg);
       const legend = el("p", "log-chart-legend");
-      legend.innerHTML =
-        '<span class="log-swatch ok"></span> ' + t("gui.logs.hits", "hits") +
-        ' <span class="log-swatch bad"></span> ' + t("gui.logs.errors", "errors") +
-        " · " + t("gui.logs.peak", "peak") + " " + peakHits +
-        " · " + t("gui.logs.last", "last") + " " + lastHits;
+      legend.append(
+        el("span", "log-swatch ok"),
+        document.createTextNode(" " + t("gui.logs.hits", "hits") + " "),
+        el("span", "log-swatch bad"),
+        document.createTextNode(
+          " " + t("gui.logs.errors", "errors") +
+          " · " + t("gui.logs.peak", "peak") + " " + peakHits +
+          " · " + t("gui.logs.last", "last") + " " + lastHits
+        )
+      );
       wrap.append(legend);
       return wrap;
     }
@@ -190,7 +224,14 @@ function rawTextField(node, kind) {
         const y = h - (hits[i] / max) * (h - 2) - 1;
         d += (i ? " L " : "M ") + x.toFixed(1) + " " + y.toFixed(1);
       });
-      svg.innerHTML = '<path d="' + d + '" fill="none" stroke="var(--ok, #8ee29a)" stroke-width="1.2"/>';
+      svg.appendChild((function () {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", d);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "var(--ok, #8ee29a)");
+        path.setAttribute("stroke-width", "1.2");
+        return path;
+      })());
       return svg;
     }
 
@@ -3215,6 +3256,8 @@ function rawTextField(node, kind) {
       const clearBtn = el("button", "ghost", t("gui.config.password.clear", "Disable login"));
       clearBtn.type = "button";
       clearBtn.addEventListener("click", async () => {
+        const host = authBox.closest(".inspect-pop-body") || authBox;
+        if (window.lookingGlassPopConfirm && !(await window.lookingGlassPopConfirm(host, t("gui.config.password.clear", "Disable login")))) return;
         try {
           await fetchJson("/auth/password/clear", { method: "POST" });
           if (note) note.textContent = t("gui.config.saved", "Saved");
@@ -3233,6 +3276,8 @@ function rawTextField(node, kind) {
         const rev = el("button", "ghost", t("gui.config.keys.revoke", "Revoke"));
         rev.type = "button";
         rev.addEventListener("click", async () => {
+          const host = row.closest(".inspect-pop-body") || row;
+          if (window.lookingGlassPopConfirm && !(await window.lookingGlassPopConfirm(host, t("gui.config.keys.revoke", "Revoke") + " " + (item.name || item.id)))) return;
           try {
             await fetchJson("/auth/keys/" + encodeURIComponent(item.id), { method: "DELETE" });
             loadAuth();

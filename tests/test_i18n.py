@@ -224,5 +224,8 @@ class ResultPageGuiKeysTests(unittest.TestCase):
             "gui.howto.curl",
             "gui.howto.httpie",
             "gui.howto.cli",
+            "gui.ok",
+            "gui.cancel",
+            "gui.maximize",
         ):
             self.assertIn(key, msgs)

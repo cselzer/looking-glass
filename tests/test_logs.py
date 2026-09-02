@@ -152,7 +152,10 @@ class WebLogTests(unittest.TestCase):
                 self.assertNotIn("restoreAll", home_html)
                 self.assertIn("status-win-stack", home_html)
                 self.assertIn("inspect-pop-min", home_html)
+                self.assertIn("inspect-pop-max", home_html)
                 self.assertIn("inspect-pop-refresh", home_html)
+                self.assertIn("site-head-cluster", home_html)
+                self.assertIn('id="status-mem"', home_html)
                 self.assertIn("resize: both", home_html)
                 respond("wsgi", "127.0.0.1", "/status", {}, accept="application/json")
                 from looking_glass.auth import password as admin_password

@@ -3106,6 +3106,9 @@ class HttpDemoTests(unittest.TestCase):
         self.assertIn("os_version", payload)
         self.assertIn("os_codename", payload)
         self.assertIn("kernel", payload)
+        for key in ("memory", "vm", "io", "net"):
+            if key in payload:
+                self.assertIsInstance(payload[key], dict)
 
     def test_status_json_asgi(self):
         app = self._demo_app("asgi")
@@ -3147,6 +3150,57 @@ class HttpDemoTests(unittest.TestCase):
         self.assertIn("os_version", payload)
         self.assertIn("os_codename", payload)
         self.assertIn("kernel", payload)
+        for key in ("memory", "vm", "io", "net"):
+            if key in payload:
+                self.assertIsInstance(payload[key], dict)
+
+    def test_status_json_host_resources(self):
+        app = self._demo_app("wsgi")
+        fake = {
+            "memory": {
+                "total": 2048,
+                "available": 512,
+                "used": 1536,
+                "swap_total": 0,
+                "swap_free": 0,
+                "rss": 128,
+            },
+            "vm": {"pgpgin": 1, "pgpgout": 2, "pswpin": 0, "pswpout": 3, "pgmajfault": 4},
+            "io": {"vda": {"reads": 1, "writes": 2, "rsec": 3, "wsec": 4, "in_progress": 0}},
+            "net": {
+                "enp1s0": {
+                    "rx_bytes": 10,
+                    "rx_packets": 1,
+                    "rx_errs": 0,
+                    "rx_drop": 0,
+                    "tx_bytes": 20,
+                    "tx_packets": 2,
+                    "tx_errs": 0,
+                    "tx_drop": 0,
+                }
+            },
+        }
+        with (
+            patch("looking_glass.http.site._status_hostname", return_value="box.example"),
+            patch(
+                "looking_glass.http.site._status_addrs",
+                return_value={"ipv4": "192.0.2.10", "ipv6": None},
+            ),
+            patch("looking_glass.http.site._status_uptime", return_value=1.0),
+            patch("looking_glass.http.site.os.getloadavg", return_value=(0.0, 0.0, 0.0)),
+            patch(
+                "looking_glass.http.site._status_clock",
+                return_value={"time_epoch": 1.0, "utc_offset": 0, "tz": "UTC"},
+            ),
+            patch("looking_glass.observe.host_resources", return_value=fake),
+        ):
+            status, _, body = _wsgi_get(app, remote="127.0.0.1", path="/status")
+        self.assertEqual(status, 200)
+        payload = json.loads(body)
+        self.assertEqual(payload["memory"], fake["memory"])
+        self.assertEqual(payload["vm"], fake["vm"])
+        self.assertEqual(payload["io"], fake["io"])
+        self.assertEqual(payload["net"], fake["net"])
 
     def test_status_json_dual_stack(self):
         app = self._demo_app("wsgi")

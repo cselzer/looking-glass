@@ -1214,6 +1214,10 @@
       "text": "Cancel",
       "en": "Cancel"
     },
+    "gui.ok": {
+      "text": "OK",
+      "en": "OK"
+    },
     "gui.choose_tool": {
       "text": "Choose a tool…",
       "en": "Choose a tool…"
@@ -3479,8 +3483,8 @@
       "en": "services"
     },
     "status.up": {
-      "text": "up {value}",
-      "en": "up {value}"
+      "text": "system uptime {value}",
+      "en": "system uptime {value}"
     },
     "status.wall": {
       "text": "firewall",

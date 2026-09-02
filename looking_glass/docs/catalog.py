@@ -219,11 +219,11 @@ HTTP_ROUTES: List[Dict[str, Any]] = [
         "id": "status",
         "method": "GET",
         "path": "/status",
-        "summary": "Hostname, IPv4 and/or IPv6, clock, uptime, load, WSGI/ASGI, package version, OS, kernel.",
+        "summary": "Hostname, IPv4 and/or IPv6, clock, uptime, load, memory, vm, io, net, WSGI/ASGI, package version, OS, kernel.",
         "query": [],
         "cli": None,
         "accept": "Always JSON (Cache-Control: no-store).",
-        "notes": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. `version` is the installed looking-glass package (PEP 440). `os` / `os_version` / `os_codename` are the distro or macOS; `kernel` is uname -r (platform.release). Logged-in responses add user, serve (intel running/ready/uptime plus pid and socket), and https (tls running/uptime/port plus cert fields when present). The services window reads this payload.",
+        "notes": "Not GUI-gated. Used by the status bar. `ip` is ipv4 or ipv6; both families are also in ipv4 / ipv6. `version` is the installed looking-glass package (PEP 440). `os` / `os_version` / `os_codename` are the distro or macOS; `kernel` is uname -r (platform.release). Linux hosts add `memory` (bytes: total/available/used/swap_total/swap_free/rss), `vm` (pgpgin/pgpgout/pswpin/pswpout/pgmajfault), `io` (per disk reads/writes/rsec/wsec/in_progress), and `net` (per iface rx/tx bytes/packets/errs/drop; lo, docker*, veth*, br-* omitted). Missing sections mean that /proc file was not readable. Logged-in responses add user, serve (intel running/ready/uptime plus pid and socket), and https (tls running/uptime/port plus cert fields when present). The services window reads this payload.",
     },
     {
         "id": "docs",

@@ -1,4 +1,4 @@
-"""looking-glass HTTP: GET / looks up the TCP peer; GET /<token> auto-detects IP, ASN, or country; GET /dns/<name> and GET /dns/<name>/<type> query DNS; GET /reputation/<name> checks domain or IP blocklists; GET /apex/<domain> is zone and mail health; GET /register/<name> is a TLD chessboard; GET /dnssec/<domain> walks the DNSSEC chain; GET /tls/<host> inspects a certificate; GET /rdap/<token> is RDAP; GET /ping/<host>, /traceroute/<host>, /mtr/<host>, and /tcptraceroute/<host>/<port> are Python path probes; GET /status is hostname, IP, time, uptime, load, ASGI/WSGI, package version, OS, and kernel."""
+"""looking-glass HTTP: GET / looks up the TCP peer; GET /<token> auto-detects IP, ASN, or country; GET /dns/<name> and GET /dns/<name>/<type> query DNS; GET /reputation/<name> checks domain or IP blocklists; GET /apex/<domain> is zone and mail health; GET /register/<name> is a TLD chessboard; GET /dnssec/<domain> walks the DNSSEC chain; GET /tls/<host> inspects a certificate; GET /rdap/<token> is RDAP; GET /ping/<host>, /traceroute/<host>, /mtr/<host>, and /tcptraceroute/<host>/<port> are Python path probes; GET /status is hostname, IP, time, uptime, load, memory, vm, io, net, ASGI/WSGI, package version, OS, and kernel."""
 
 from __future__ import annotations
 
@@ -454,9 +454,10 @@ def _status_http(protocol: str, user: Optional[str] = None) -> Tuple[int, str, b
     from ..config import docs_enabled, docs_generated
 
     payload["docs"] = {"enabled": docs_enabled(), "generated": docs_generated()}
-    from ..observe import host_os
+    from ..observe import host_os, host_resources
 
     payload.update(host_os())
+    payload.update(host_resources())
     if user:
         from ..intel_server import app as lookup_mod
 

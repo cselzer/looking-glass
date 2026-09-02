@@ -24,9 +24,7 @@ function rawTextField(node, kind) {
     let pending = null;
 
     function t(id, fallback) {
-      const text = window.t ? window.t(id) : "";
-      if (text && text !== id) return text;
-      return fallback || id;
+      return window.t ? window.t(id, fallback) : (fallback || id);
     }
 
     try {
@@ -47,6 +45,7 @@ function rawTextField(node, kind) {
           title: e.title,
           meta: e.meta || {},
           minimized: !!e.minimized,
+          maximized: e.node.classList.contains("is-maximized"),
           left: e.node.style.left || "",
           top: e.node.style.top || "",
           width: e.node.style.width || "",
@@ -178,6 +177,49 @@ function rawTextField(node, kind) {
     }
 
     const GAP = 8;
+    const CHROME_FALLBACK = 36;
+
+    function chromeTop() {
+      const head = document.querySelector(".site-head");
+      if (head) {
+        const r = head.getBoundingClientRect();
+        if (r.height > 0) return Math.ceil(r.bottom);
+      }
+      return CHROME_FALLBACK;
+    }
+
+    function chromeBottom() {
+      const bar = document.querySelector(".status-bar");
+      if (bar) {
+        const r = bar.getBoundingClientRect();
+        if (r.height > 0) return Math.ceil(window.innerHeight - r.top);
+      }
+      return CHROME_FALLBACK;
+    }
+
+    function syncMaxChrome(node) {
+      if (!node) return;
+      const max = node.querySelector(".inspect-pop-max");
+      if (max) max.setAttribute("aria-pressed", node.classList.contains("is-maximized") ? "true" : "false");
+    }
+
+    function applyMaximized(node, entry, saved) {
+      const on = !!(saved && saved.maximized);
+      if (on) {
+        if (!entry._preMax) {
+          entry._preMax = {
+            left: node.style.left || "",
+            top: node.style.top || "",
+            width: node.style.width || "",
+            height: node.style.height || "",
+          };
+        }
+        node.classList.add("is-maximized");
+      } else {
+        node.classList.remove("is-maximized");
+      }
+      syncMaxChrome(node);
+    }
 
     function overlapArea(a, b) {
       const x = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
@@ -214,11 +256,13 @@ function rawTextField(node, kind) {
     }
 
     function clampView(left, top, w, h) {
+      const insetT = chromeTop() + GAP;
+      const insetB = chromeBottom() + GAP;
       const maxL = Math.max(GAP, window.innerWidth - w - GAP);
-      const maxT = Math.max(GAP, window.innerHeight - h - GAP);
+      const maxT = Math.max(insetT, window.innerHeight - h - insetB);
       return {
         left: Math.min(Math.max(GAP, left), maxL),
-        top: Math.min(Math.max(GAP, top), maxT),
+        top: Math.min(Math.max(insetT, top), maxT),
       };
     }
 
@@ -307,7 +351,7 @@ function rawTextField(node, kind) {
         const clamped = clampView(open.left, open.top, w, h);
         const bar = asRect(src.left, src.top, src.width, barHeight(srcPop));
         if (overlapArea(asRect(clamped.left, clamped.top, w, h), bar) > 0) {
-          chosen = { left: clamped.left, top: Math.min(open.top, Math.max(GAP, window.innerHeight - h - GAP)) };
+          chosen = { left: clamped.left, top: Math.min(open.top, Math.max(chromeTop() + GAP, window.innerHeight - h - chromeBottom() - GAP)) };
           if (overlapArea(asRect(chosen.left, chosen.top, w, h), bar) > 0) {
             chosen = { left: chosen.left, top: src.top + barHeight(srcPop) + GAP };
           }
@@ -380,7 +424,7 @@ function rawTextField(node, kind) {
     }
 
     function fit(node) {
-      if (!node || node.classList.contains("wall-menu")) return;
+      if (!node || node.classList.contains("wall-menu") || node.classList.contains("is-maximized")) return;
       const body = node.querySelector(".inspect-pop-body") || node;
       const need = contentWidth(body);
       if (!need) return;
@@ -439,19 +483,36 @@ function rawTextField(node, kind) {
         else if (closeBtn) closeBtn.before(refresh);
         else actions.append(refresh);
       }
-      if (actions.querySelector(".inspect-pop-min")) return;
-      const min = document.createElement("button");
-      min.type = "button";
-      min.className = "inspect-pop-min";
-      min.setAttribute("aria-label", t("gui.minimize", "Minimize"));
-      min.textContent = "–";
-      min.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        minimize(id);
-      });
-      if (closeBtn) closeBtn.before(min);
-      else actions.append(min);
+      if (!actions.querySelector(".inspect-pop-min")) {
+        const min = document.createElement("button");
+        min.type = "button";
+        min.className = "inspect-pop-min";
+        min.setAttribute("aria-label", t("gui.minimize", "Minimize"));
+        min.textContent = "–";
+        min.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          minimize(id);
+        });
+        if (closeBtn) closeBtn.before(min);
+        else actions.append(min);
+      }
+      if (!actions.querySelector(".inspect-pop-max")) {
+        const max = document.createElement("button");
+        max.type = "button";
+        max.className = "inspect-pop-max";
+        max.setAttribute("aria-label", t("gui.maximize", "Maximize"));
+        max.title = t("gui.maximize", "Maximize");
+        max.setAttribute("aria-pressed", node.classList.contains("is-maximized") ? "true" : "false");
+        max.textContent = "□";
+        max.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          toggleMax(id);
+        });
+        if (actions.querySelector(".inspect-pop-close")) actions.querySelector(".inspect-pop-close").before(max);
+        else actions.append(max);
+      }
     }
 
     function makeDraggable(node) {
@@ -460,6 +521,7 @@ function rawTextField(node, kind) {
       bar.dataset.winDrag = "1";
       let startX = 0, startY = 0, origX = 0, origY = 0, moved = false;
       bar.addEventListener("pointerdown", (event) => {
+        if (node.classList.contains("is-maximized")) return;
         if (event.target.closest(BAR_CONTROL)) return;
         if (event.button != null && event.button !== 0) return;
         event.preventDefault();
@@ -473,10 +535,11 @@ function rawTextField(node, kind) {
         origY = rect.top + window.scrollY;
       });
       bar.addEventListener("pointermove", (event) => {
+        if (node.classList.contains("is-maximized")) return;
         if (!bar.hasPointerCapture(event.pointerId)) return;
         if (Math.abs(event.clientX - startX) + Math.abs(event.clientY - startY) > 2) moved = true;
-        node.style.left = Math.max(8, origX + event.clientX - startX) + "px";
-        node.style.top = Math.max(8, origY + event.clientY - startY) + "px";
+        node.style.left = Math.max(GAP, origX + event.clientX - startX) + "px";
+        node.style.top = Math.max(chromeTop() + GAP, origY + event.clientY - startY) + "px";
       });
       bar.addEventListener("pointerup", () => {
         if (moved) nudge(node);
@@ -529,6 +592,31 @@ function rawTextField(node, kind) {
       e.node.classList.remove("is-minimized");
       raise(e.node);
       paintDock();
+      persist();
+    }
+
+    function toggleMax(id) {
+      const e = entries.get(id);
+      if (!e || !e.node) return;
+      const node = e.node;
+      if (node.classList.contains("is-maximized")) {
+        node.classList.remove("is-maximized");
+        const pre = e._preMax || {};
+        if (pre.left != null) node.style.left = pre.left;
+        if (pre.top != null) node.style.top = pre.top;
+        if (pre.width != null) node.style.width = pre.width;
+        if (pre.height != null) node.style.height = pre.height;
+        e._preMax = null;
+      } else {
+        e._preMax = {
+          left: node.style.left || "",
+          top: node.style.top || "",
+          width: node.style.width || "",
+          height: node.style.height || "",
+        };
+        node.classList.add("is-maximized");
+      }
+      syncMaxChrome(node);
       persist();
     }
 
@@ -594,6 +682,7 @@ function rawTextField(node, kind) {
         if (entries.has(win.id)) {
           const e = entries.get(win.id);
           applyGeom(e.node, win);
+          applyMaximized(e.node, e, win);
           if (win.minimized) minimize(win.id);
           else restore(win.id);
           continue;
@@ -615,6 +704,7 @@ function rawTextField(node, kind) {
           continue;
         }
         applyGeom(e.node, win);
+        applyMaximized(e.node, e, win);
         if (win.minimized) minimize(win.id);
       }
       pending = leftover.length ? { z, wins: leftover } : null;
@@ -638,6 +728,82 @@ function rawTextField(node, kind) {
     } else {
       paintDock();
     }
+
+    function popConfirm(host, copy, opts) {
+      opts = opts || {};
+      return new Promise(function (resolve) {
+        if (!host) {
+          resolve(false);
+          return;
+        }
+        const existing = host.querySelector(".pop-confirm");
+        if (existing) {
+          if (typeof existing._popCancel === "function") existing._popCancel();
+          else existing.remove();
+        }
+        const previous = document.activeElement;
+        const panel = document.createElement("div");
+        panel.className = "pop-confirm";
+        panel.setAttribute("role", "alertdialog");
+        panel.setAttribute("aria-modal", "true");
+        const copyId = "pop-confirm-copy-" + String(Date.now());
+        const p = document.createElement("p");
+        p.className = "pop-confirm-copy";
+        p.id = copyId;
+        p.textContent = copy || "";
+        const actions = document.createElement("div");
+        actions.className = "pop-confirm-actions";
+        const cancelBtn = document.createElement("button");
+        cancelBtn.type = "button";
+        cancelBtn.className = "ghost pop-confirm-cancel";
+        cancelBtn.textContent = t("gui.cancel", "Cancel");
+        const okBtn = document.createElement("button");
+        okBtn.type = "button";
+        okBtn.className = "go pop-confirm-ok";
+        okBtn.textContent = opts.okLabel || t("gui.ok", "OK");
+        actions.append(cancelBtn, okBtn);
+        panel.append(p, actions);
+        panel.setAttribute("aria-describedby", copyId);
+        let done = false;
+        function finish(ok) {
+          if (done) return;
+          done = true;
+          document.removeEventListener("keydown", onKey, true);
+          panel.remove();
+          if (previous && typeof previous.focus === "function") {
+            try { previous.focus(); } catch (err) {}
+          }
+          resolve(!!ok);
+        }
+        function onKey(event) {
+          if (!panel.isConnected) return;
+          if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            finish(false);
+            return;
+          }
+          if (event.key !== "Tab") return;
+          const first = cancelBtn;
+          const last = okBtn;
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+        panel._popCancel = function () { finish(false); };
+        okBtn.addEventListener("click", function () { finish(true); });
+        cancelBtn.addEventListener("click", function () { finish(false); });
+        document.addEventListener("keydown", onKey, true);
+        host.append(panel);
+        okBtn.focus();
+      });
+    }
+
+    window.lookingGlassPopConfirm = popConfirm;
 
     window.lookingGlassWindows = {
       raise,
@@ -665,6 +831,12 @@ function rawTextField(node, kind) {
     if (cls) node.className = cls;
     if (text != null) node.textContent = text;
     return node;
+  }
+
+  function setSafeHref(node, url) {
+    const href = typeof window.safeHref === "function" ? window.safeHref(url) : "";
+    if (href) node.setAttribute("href", href);
+    else node.removeAttribute("href");
   }
 
   function inspectBtn(kind, value, cls, label) {
@@ -1256,7 +1428,7 @@ function paintHistoryBar(host, payload) {
   if (url && !replay) {
     const link = document.createElement("a");
     link.className = "hist-permalink";
-    link.href = url;
+    setSafeHref(link, url);
     link.textContent = url;
     bindHistPermalink(link, url, payload);
     row.append(link);
@@ -1414,7 +1586,7 @@ function renderApex(payload) {
         const rfcs = el("p", "apex-rfcs");
         for (const rfc of check.rfcs) {
           const a = el("a", "rfc", rfc.section ? `RFC ${rfc.rfc} §${rfc.section}` : `RFC ${rfc.rfc}`);
-          a.href = rfc.url || `https://www.rfc-editor.org/rfc/rfc${rfc.rfc}`;
+          setSafeHref(a, rfc.url || `https://www.rfc-editor.org/rfc/rfc${rfc.rfc}`);
           a.target = "_blank";
           a.rel = "noopener";
           rfcs.append(a);
@@ -1437,7 +1609,7 @@ function renderApex(payload) {
     for (const row of standards) {
       const li = document.createElement("li");
       const a = el("a", "", `RFC ${row.rfc}`);
-      a.href = row.url || `https://www.rfc-editor.org/rfc/rfc${row.rfc}`;
+      setSafeHref(a, row.url || `https://www.rfc-editor.org/rfc/rfc${row.rfc}`);
       a.target = "_blank";
       a.rel = "noopener";
       li.append(a);
@@ -2584,22 +2756,43 @@ function renderWhois(payload) {
     const uid = "howto-" + (++howtoSeq);
     const wrap = document.createElement("section");
     wrap.className = "howto";
-    wrap.title = window.t ? window.t("gui.howto.copy") : "";
-    wrap.innerHTML = [
-      '<div class="tabs term">',
-      `<input type="radio" name="${uid}" id="${uid}-curl" checked>`,
-      `<input type="radio" name="${uid}" id="${uid}-httpie">`,
-      `<input type="radio" name="${uid}" id="${uid}-cli">`,
-      '<div class="term-bar"><div class="tablist">',
-      `<label for="${uid}-curl">${window.t ? window.t("gui.howto.curl") : "curl"}</label>`,
-      `<label for="${uid}-httpie">${window.t ? window.t("gui.howto.httpie") : "HTTPie"}</label>`,
-      `<label for="${uid}-cli">${window.t ? window.t("gui.howto.cli") : "CLI"}</label>`,
-      "</div></div>",
-      '<div class="panel panel-curl"><pre></pre></div>',
-      '<div class="panel panel-httpie"><pre></pre></div>',
-      '<div class="panel panel-cli"><pre></pre></div>',
-      "</div>",
-    ].join("");
+    wrap.title = window.t ? window.t("gui.howto.copy", "Double-click a command to copy") : "";
+    const tabs = document.createElement("div");
+    tabs.className = "tabs term";
+    function radio(id, checked) {
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = uid;
+      input.id = id;
+      if (checked) input.checked = true;
+      return input;
+    }
+    tabs.append(radio(uid + "-curl", true), radio(uid + "-httpie", false), radio(uid + "-cli", false));
+    const bar = document.createElement("div");
+    bar.className = "term-bar";
+    const tablist = document.createElement("div");
+    tablist.className = "tablist";
+    function tabLabel(id, key, fallback) {
+      const label = document.createElement("label");
+      label.htmlFor = id;
+      label.textContent = window.t ? window.t(key, fallback) : fallback;
+      return label;
+    }
+    tablist.append(
+      tabLabel(uid + "-curl", "gui.howto.curl", "curl"),
+      tabLabel(uid + "-httpie", "gui.howto.httpie", "HTTPie"),
+      tabLabel(uid + "-cli", "gui.howto.cli", "CLI")
+    );
+    bar.append(tablist);
+    tabs.append(bar);
+    function panel(cls) {
+      const div = document.createElement("div");
+      div.className = "panel " + cls;
+      div.append(document.createElement("pre"));
+      return div;
+    }
+    tabs.append(panel("panel-curl"), panel("panel-httpie"), panel("panel-cli"));
+    wrap.append(tabs);
     wrap.querySelector(".panel-curl pre").textContent = lines.curl;
     wrap.querySelector(".panel-httpie pre").textContent = lines.httpie;
     wrap.querySelector(".panel-cli pre").textContent = lines.cli;
@@ -2935,7 +3128,7 @@ function renderWhois(payload) {
       if (url) {
         const a = document.createElement("a");
         a.className = "hist-permalink";
-        a.href = url;
+        setSafeHref(a, url);
         a.textContent = url;
         if (typeof window.bindHistPermalink === "function") window.bindHistPermalink(a, url, payload);
         card.append(a);
@@ -3302,6 +3495,11 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
     const rttEl = document.getElementById("status-rtt");
     const uptimeEl = document.getElementById("status-uptime");
     const loadEl = document.getElementById("status-load");
+    const memEl = document.getElementById("status-mem");
+    const vmEl = document.getElementById("status-vm");
+    const ioEl = document.getElementById("status-io");
+    const netEl = document.getElementById("status-net");
+    const hostStatSeps = document.querySelectorAll(".site-head-cluster .status-host-sep");
     const modeEl = document.getElementById("status-mode");
     const verEl = document.getElementById("status-ver");
     const servicesBtn = document.getElementById("status-services");
@@ -3384,7 +3582,68 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
     function formatUptime(seconds) {
       const dur = formatDuration(seconds);
       const value = dur || dash;
-      return window.t ? window.t("status.up", { value: value }) : ("up " + value);
+      return window.t ? window.t("status.up", { value: value }) : ("system uptime " + value);
+    }
+
+    function fmtBytes(n) {
+      const v = Number(n);
+      if (!Number.isFinite(v) || v < 0) return dash;
+      const units = ["B", "K", "M", "G", "T"];
+      let x = v;
+      let i = 0;
+      while (x >= 1024 && i < units.length - 1) {
+        x /= 1024;
+        i += 1;
+      }
+      return (x >= 10 || i === 0 ? x.toFixed(0) : x.toFixed(1)) + units[i];
+    }
+
+    function setStat(el, sep, text) {
+      if (!el) return;
+      if (!text) {
+        el.hidden = true;
+        el.textContent = "";
+        if (sep) sep.hidden = true;
+      } else {
+        el.hidden = false;
+        el.textContent = text;
+        if (sep) sep.hidden = false;
+      }
+    }
+
+    function paintHostStats(data) {
+      const mem = data && data.memory;
+      setStat(
+        memEl,
+        hostStatSeps[0],
+        mem && mem.total ? ("mem " + fmtBytes(mem.used) + "/" + fmtBytes(mem.total)) : ""
+      );
+      const vm = data && data.vm;
+      setStat(
+        vmEl,
+        hostStatSeps[1],
+        vm ? ("vm maj " + (vm.pgmajfault || 0) + " so " + (vm.pswpout || 0)) : ""
+      );
+      const io = data && data.io;
+      let ioText = "";
+      if (io && typeof io === "object") {
+        const name = Object.keys(io)[0];
+        if (name) {
+          const row = io[name] || {};
+          ioText = name + " " + fmtBytes((row.rsec || 0) * 512) + "/" + fmtBytes((row.wsec || 0) * 512);
+        }
+      }
+      setStat(ioEl, hostStatSeps[2], ioText);
+      const net = data && data.net;
+      let netText = "";
+      if (net && typeof net === "object") {
+        const name = Object.keys(net)[0];
+        if (name) {
+          const row = net[name] || {};
+          netText = name + " " + fmtBytes(row.rx_bytes) + "/" + fmtBytes(row.tx_bytes);
+        }
+      }
+      setStat(netEl, hostStatSeps[3], netText);
     }
 
     window.lookingGlassFormatDuration = formatDuration;
@@ -3448,6 +3707,7 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
       rttEl.textContent = dash;
       uptimeEl.textContent = window.t ? window.t("status.up", { value: dash }) : ("up " + dash);
       loadEl.textContent = window.t ? window.t("status.load", { value: dash }) : ("load " + dash);
+      paintHostStats(null);
       modeEl.textContent = dash;
       if (verEl) verEl.textContent = dash;
       paintServe(false, false);
@@ -3490,6 +3750,7 @@ document.querySelectorAll(".term pre, .howto pre, pre.cli").forEach(function (el
         } else {
           loadEl.textContent = window.t ? window.t("status.load", { value: dash }) : ("load " + dash);
         }
+        paintHostStats(data);
         const mode = String(data.mode || "").toUpperCase();
         modeEl.textContent = mode === "ASGI" || mode === "WSGI" ? mode : dash;
         if (verEl) verEl.textContent = data.version || dash;
